@@ -1,50 +1,51 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este archivo ofrece orientación a Claude Code (claude.ai/code) al trabajar con el código de este repositorio.
 
-# Bookmark Triage
+# Triaje de marcadores
 
-Visual triage app for cleaning browser bookmarks (Netscape HTML file or Chrome extension).
+App de triaje visual para limpiar los marcadores del navegador (archivo HTML en formato Netscape o extensión de Chrome).
 
 ## Stack
 
-Vite + React + TypeScript. Zustand for state. Vitest for tests. No backend.
+Vite + React + TypeScript. Zustand para el estado. Vitest para los tests. Sin backend.
 
-## Commands
+## Comandos
 
 ```bash
-npm run dev        # start dev server
-npm run build      # type-check + build
-npm run preview    # preview production build
-npm run test       # run all tests once (Vitest)
-npm run test:watch # run tests in watch mode
-npx vitest run src/core/parser.test.ts   # run a single test file
+npm run dev        # arranca el servidor de desarrollo
+npm run build      # comprueba tipos + build
+npm run preview    # sirve el build de producción
+npm run test       # ejecuta todos los tests una vez (Vitest)
+npm run test:watch # ejecuta los tests en modo watch
+npx vitest run src/core/parser.test.ts   # ejecuta un solo archivo de tests
 npm run lint       # ESLint
 ```
 
-## Directory layout
+## Estructura de directorios
 
 ```
 src/
   core/
     ports/
-      BookmarkSource.ts   # the port interface — only thing UI depends on
+      BookmarkSource.ts   # la interfaz del puerto — lo único que la UI conoce
     adapters/
-      NetscapeAdapter.ts  # parses uploaded .html (Netscape format)
-      ChromeAdapter.ts    # wraps chrome.bookmarks for extension build
+      NetscapeAdapter.ts  # parsea el .html subido (formato Netscape)
+      ChromeAdapter.ts    # envuelve chrome.bookmarks para el build de extensión
     types.ts              # Bookmark, BookmarkFolder, etc.
-    parser.ts             # Netscape HTML → types (pure, testable)
-    normalizeUrl.ts       # URL normalization for duplicate detection
+    parser.ts             # HTML Netscape → tipos (puro, testeable)
+    serializer.ts         # tipos → HTML Netscape (puro, testeable)
+    normalizeUrl.ts       # normalización de URLs para detectar duplicados
   store/
-    useBookmarkStore.ts   # Zustand store
-  components/             # UI only — no knowledge of adapters or format
+    useBookmarkStore.ts   # store de Zustand
+  components/             # solo UI — sin conocimiento de adapters ni del formato
 ```
 
-## Architecture rule (critical)
+## Regla de arquitectura (crítica)
 
-All bookmark reading/writing goes through the `BookmarkSource` port at `src/core/ports/BookmarkSource.ts`. No file outside `src/core/adapters/` may know about the Netscape HTML format or the `chrome.bookmarks` API. This decouples the UI from the data source so the app can migrate to a Chrome extension without rewriting any UI code.
+Toda lectura y escritura de marcadores pasa por el puerto `BookmarkSource` en `src/core/ports/BookmarkSource.ts`. Ningún archivo fuera de `src/core/adapters/` puede conocer el formato HTML Netscape ni la API `chrome.bookmarks`. Esto desacopla la UI de la fuente de datos y permite migrar la app a una extensión de Chrome sin reescribir código de UI.
 
-`BookmarkSource` interface:
+Interfaz `BookmarkSource`:
 
 ```ts
 interface BookmarkSource {
@@ -53,21 +54,21 @@ interface BookmarkSource {
 }
 ```
 
-## Core types
+## Tipos base
 
 ```ts
 interface Bookmark {
-  id: string;        // generated (crypto.randomUUID or index-based)
+  id: string;        // generado (crypto.randomUUID o basado en índice)
   title: string;
   url: string;
-  addedAt?: number;  // unix ms, from ADD_DATE attribute
-  tags?: string[];   // from TAGS attribute
+  addedAt?: number;  // ms unix, del atributo ADD_DATE
+  tags?: string[];   // del atributo TAGS
 }
 ```
 
-## State model
+## Modelo de estado
 
-Deletions are **non-destructive**: marked IDs accumulate in a `Set<string>` inside the Zustand store. The actual export filters them out at commit time. Nothing is permanently deleted until the user triggers an explicit export action.
+Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `Set<string>` dentro del store de Zustand. La exportación real los filtra en el momento del commit. Nada se elimina de forma permanente hasta que el usuario dispara una acción explícita de exportación.
 
 ```ts
 interface BookmarkStore {
@@ -82,15 +83,23 @@ interface BookmarkStore {
 }
 ```
 
-Keyboard shortcuts: `j`/`k` move focus, `x` marks focused bookmark for deletion, `u` unmarks it.
+Atajos de teclado: `j`/`k` mueven el foco, `x` marca el marcador enfocado para eliminarlo, `u` lo desmarca.
 
-## Implementation order
+## Orden de implementación
 
-1. ✅ Core types + Netscape HTML parser + Vitest tests (no UI)
-2. `BookmarkSource` port + `NetscapeAdapter`
-3. Zustand store
-4. Card grid with real data (file upload → parse → render)
-5. Keyboard navigation (j/k/x/u) + undo
-6. Filters: by domain, by duplicate URL (normalized)
-7. Export (write filtered Netscape HTML, trigger download)
-8. External metadata (og:image) — last, using IntersectionObserver with a fetch queue of max 5 concurrent requests
+1. ✅ Tipos base + parser de HTML Netscape + tests con Vitest (sin UI)
+2. ✅ Puerto `BookmarkSource` + `NetscapeAdapter`
+3. ✅ Store de Zustand
+4. ✅ Grid de tarjetas con datos reales (subir archivo → parsear → renderizar)
+5. ✅ Navegación por teclado (j/k/x/u) + deshacer
+6. Jerarquía de carpetas: parser recorre el árbol `<DL>/<H3>` y añade `folderPath?: string[]` a cada `Bookmark`; el serializer reconstruye la jerarquía al exportar y omite carpetas que queden vacías tras el filtrado
+7. Filtros: por dominio, por URL duplicada (normalizada), por carpeta
+8. Exportar (generar HTML Netscape filtrado y disparar la descarga) + modal post-export con instrucciones de reimportación por navegador y aviso de que Chrome importa de forma aditiva (no reemplaza)
+9. Metadatos externos (og:image) — usando IntersectionObserver con una cola de fetch de máximo 5 requests concurrentes
+10. **Opcional (refinamientos aplazados)** — favicon inline (`ICON=data:…`) leído del HTML y mostrado en la card; preservar atributos de carpetas raíz (`PERSONAL_TOOLBAR_FOLDER`, `UNFILED_BOOKMARKS_FOLDER`) al reserializar; preservar `<H1>` raíz localizado del archivo original
+
+## Limitación del ciclo web-app pura
+
+Chrome (y otros navegadores) importan HTML de bookmarks de forma **aditiva, no destructiva**: todo lo importado va a una subcarpeta nueva dentro de "Other Bookmarks" (ej. `Imported YYYY-MM-DD`) sin borrar nada del perfil actual. Las raíces `bookmark_bar`, `other` y `synced` ("Mobile Bookmarks") son especiales y no se eliminan aunque el HTML no las incluya.
+
+Consecuencia: el HTML filtrado que exporta la app es una **herramienta de decisión** ("qué borrar"), no de aplicación ("bórralo"). Para aplicar el triaje al perfil real hace falta borrar manualmente los descartados en el navegador o usar el `ChromeAdapter` (extensión) cuando exista.

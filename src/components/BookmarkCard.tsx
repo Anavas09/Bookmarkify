@@ -1,0 +1,103 @@
+import { useEffect, useRef, type CSSProperties } from 'react'
+import type { Bookmark } from '../core/types.ts'
+import { domainOf } from '../lib/domain.ts'
+import { cx } from '../lib/cx.ts'
+
+interface Props {
+  bookmark: Bookmark
+  index: number
+  marked: boolean
+  focused: boolean
+}
+
+function formatDate(ms: number | undefined): string | null {
+  if (ms === undefined) return null
+  const d = new Date(ms)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}·${mm}·${dd}`
+}
+
+function catalogNumber(index: number): string {
+  return '№' + String(index + 1).padStart(3, '0')
+}
+
+export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
+  const domain = domainOf(bookmark.url)
+  const date = formatDate(bookmark.addedAt)
+  const cardStyle = { '--i': Math.min(index, 24) } as CSSProperties
+  const ref = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (focused) {
+      ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }
+  }, [focused])
+
+  return (
+    <article
+      ref={ref}
+      style={cardStyle}
+      className={cx(
+        'card-in relative flex min-h-[170px] flex-col rounded-sm border p-4',
+        'transition-[border-color,transform,opacity,background-color] duration-150 ease-out',
+        marked
+          ? 'border-edge bg-paper-soft opacity-55 hover:opacity-75'
+          : 'border-edge bg-paper-card hover:-translate-y-px hover:border-ink-mute',
+        focused && 'outline outline-2 outline-offset-4 outline-accent',
+      )}
+    >
+      <header className="mb-2 flex items-start justify-between">
+        <span className="font-mono text-[0.7rem] tracking-wider text-ink-mute">
+          {catalogNumber(index)}
+        </span>
+        {marked && (
+          <span
+            className="font-mono text-[0.95rem] leading-none text-accent"
+            aria-label="marked for deletion"
+          >
+            ⨯
+          </span>
+        )}
+      </header>
+
+      <a
+        href={bookmark.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 block text-inherit no-underline"
+      >
+        <h3
+          className={cx(
+            'font-display text-[1.0625rem] leading-tight text-ink m-0 mb-2',
+            'line-clamp-3 break-words',
+            marked && 'strike-mark',
+          )}
+        >
+          {bookmark.title || domain}
+        </h3>
+        <p className="font-mono text-[0.72rem] text-ink-soft m-0 truncate">
+          {domain}
+        </p>
+      </a>
+
+      <footer className="mt-3 flex flex-col gap-2">
+        <span className="block h-px bg-edge" aria-hidden="true" />
+        <div className="flex items-baseline justify-between gap-3 font-mono text-[0.68rem] text-ink-mute">
+          {date && <span className="whitespace-nowrap">{date}</span>}
+          {bookmark.tags && bookmark.tags.length > 0 && (
+            <span className="min-w-0 truncate text-right text-ink-mute">
+              {bookmark.tags.map((t, i) => (
+                <span key={t}>
+                  {i > 0 && <span className="text-edge"> · </span>}
+                  {t}
+                </span>
+              ))}
+            </span>
+          )}
+        </div>
+      </footer>
+    </article>
+  )
+}
