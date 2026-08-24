@@ -18,7 +18,7 @@ export function AppHeader() {
     <header className="flex flex-wrap items-start justify-between gap-8 px-4 pt-10 pb-6 sm:px-8 lg:px-12">
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-4xl sm:text-5xl leading-none tracking-tight text-ink m-0">
-          Bookmarktify
+          Bookmarkify
         </h1>
         <span className="h-px w-12 bg-ink" aria-hidden="true" />
         <p className="mt-1 font-mono text-[11px] text-ink-mute m-0 flex flex-wrap items-center gap-x-2 gap-y-1">

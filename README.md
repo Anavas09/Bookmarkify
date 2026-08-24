@@ -1,4 +1,4 @@
-# Bookmarktify
+# Bookmarkify
 
 App de triaje visual para limpiar los marcadores del navegador. Sube un archivo `.html` en formato Netscape (exportación de Chrome, Firefox, Edge, Safari o cualquier otro navegador), revisa tus marcadores en un grid de tarjetas navegable con el teclado, marca los que ya no valgan y descarga un `.html` filtrado.
 
