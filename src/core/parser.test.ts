@@ -51,10 +51,111 @@ describe('parseNetscape', () => {
     expect(parseNetscape('')).toHaveLength(0)
   })
 
-  it('handles missing ADD_DATE gracefully', () => {
-    const html = `<DT><A HREF="https://nodates.com">No dates</A>`
+  it('handles missing ADD_DATE and TAGS gracefully', () => {
+    const html = `<DL><DT><A HREF="https://nodates.com">No dates</A></DL>`
     const [b] = parseNetscape(html)
     expect(b.addedAt).toBeUndefined()
     expect(b.tags).toBeUndefined()
+  })
+
+  describe('folder hierarchy', () => {
+    it('root-level bookmarks have no folderPath', () => {
+      const [first] = parseNetscape(MINIMAL)
+      expect(first.folderPath).toBeUndefined()
+    })
+
+    it('bookmarks inside a folder get folderPath: [folder name]', () => {
+      const html = `<DL>
+        <DT><H3>Personal</H3>
+        <DL>
+          <DT><A HREF="https://a.com">A</A>
+        </DL>
+      </DL>`
+      const [b] = parseNetscape(html)
+      expect(b.folderPath).toEqual(['Personal'])
+    })
+
+    it('nested folders build up folderPath deeply', () => {
+      const html = `<DL>
+        <DT><H3>Work</H3>
+        <DL>
+          <DT><H3>Frontend</H3>
+          <DL>
+            <DT><A HREF="https://react.dev">React</A>
+          </DL>
+        </DL>
+      </DL>`
+      const [b] = parseNetscape(html)
+      expect(b.folderPath).toEqual(['Work', 'Frontend'])
+    })
+
+    it('sibling folders do not leak paths across each other', () => {
+      const html = `<DL>
+        <DT><H3>Work</H3>
+        <DL>
+          <DT><A HREF="https://work.com">W</A>
+        </DL>
+        <DT><H3>Personal</H3>
+        <DL>
+          <DT><A HREF="https://personal.com">P</A>
+        </DL>
+      </DL>`
+      const bs = parseNetscape(html)
+      expect(bs).toHaveLength(2)
+      expect(bs[0].folderPath).toEqual(['Work'])
+      expect(bs[1].folderPath).toEqual(['Personal'])
+    })
+
+    it('mixes root-level bookmarks with folders correctly', () => {
+      const html = `<DL>
+        <DT><A HREF="https://root.com">Root</A>
+        <DT><H3>Sub</H3>
+        <DL>
+          <DT><A HREF="https://sub.com">Inside</A>
+        </DL>
+        <DT><A HREF="https://root2.com">Root2</A>
+      </DL>`
+      const bs = parseNetscape(html)
+      expect(bs).toHaveLength(3)
+      const map = Object.fromEntries(bs.map(b => [b.url, b.folderPath]))
+      expect(map['https://root.com']).toBeUndefined()
+      expect(map['https://sub.com']).toEqual(['Sub'])
+      expect(map['https://root2.com']).toBeUndefined()
+    })
+
+    it('an empty folder produces no bookmarks and does not error', () => {
+      const html = `<DL>
+        <DT><H3>Empty</H3>
+        <DL></DL>
+        <DT><A HREF="https://a.com">A</A>
+      </DL>`
+      const bs = parseNetscape(html)
+      expect(bs).toHaveLength(1)
+      expect(bs[0].folderPath).toBeUndefined()
+    })
+
+    it('folder with empty name is skipped (bookmarks lifted to parent scope? no — dropped)', () => {
+      const html = `<DL>
+        <DT><H3></H3>
+        <DL>
+          <DT><A HREF="https://ghost.com">Ghost</A>
+        </DL>
+      </DL>`
+      const bs = parseNetscape(html)
+      expect(bs).toHaveLength(0)
+    })
+
+    it('handles the fallback nested-DL pattern (DL inside DT)', () => {
+      const html = `<DL>
+        <DT><H3>Wrap</H3>
+          <DL>
+            <DT><A HREF="https://in.com">In</A>
+          </DL>
+        </DT>
+      </DL>`
+      const bs = parseNetscape(html)
+      expect(bs).toHaveLength(1)
+      expect(bs[0].folderPath).toEqual(['Wrap'])
+    })
   })
 })

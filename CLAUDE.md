@@ -96,7 +96,7 @@ Atajos de teclado: `j`/`k` mueven el foco, `x` marca el marcador enfocado para e
 7. Filtros: por dominio, por URL duplicada (normalizada), por carpeta
 8. Exportar (generar HTML Netscape filtrado y disparar la descarga) + modal post-export con instrucciones de reimportación por navegador y aviso de que Chrome importa de forma aditiva (no reemplaza)
 9. Metadatos externos (og:image) — usando IntersectionObserver con una cola de fetch de máximo 5 requests concurrentes
-10. **Opcional (refinamientos aplazados)** — favicon inline (`ICON=data:…`) leído del HTML y mostrado en la card; preservar atributos de carpetas raíz (`PERSONAL_TOOLBAR_FOLDER`, `UNFILED_BOOKMARKS_FOLDER`) al reserializar; preservar `<H1>` raíz localizado del archivo original
+10. **Opcional (refinamientos aplazados)** — favicon inline (`ICON=data:…`) leído del HTML y mostrado en la card; preservar atributos de carpetas raíz (`PERSONAL_TOOLBAR_FOLDER`, `UNFILED_BOOKMARKS_FOLDER`) al reserializar; preservar `<H1>` raíz localizado del archivo original; dark mode toggle (sol/luna) con paleta derivada de minimal-nordic, respetando `prefers-color-scheme` en el primer load y persistiendo en `localStorage`
 
 ## Limitación del ciclo web-app pura
 
