@@ -23,19 +23,14 @@ export function AppHeader() {
         <span className="h-px w-12 bg-ink" aria-hidden="true" />
         <p className="mt-1 font-mono text-[11px] text-ink-mute m-0 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="flex items-center gap-1">
-            <Key>j</Key>
-            <Key>k</Key>
+            <Key>←</Key>
+            <Key>→</Key>
             <span>move</span>
           </span>
           <span className="text-edge" aria-hidden="true">·</span>
           <span className="flex items-center gap-1">
-            <Key>x</Key>
-            <span>mark</span>
-          </span>
-          <span className="text-edge" aria-hidden="true">·</span>
-          <span className="flex items-center gap-1">
-            <Key>u</Key>
-            <span>unmark</span>
+            <Key>space</Key>
+            <span>toggle mark</span>
           </span>
         </p>
       </div>

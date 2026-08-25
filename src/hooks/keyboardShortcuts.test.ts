@@ -3,20 +3,18 @@ import { handleShortcut, isEditableTarget, type ShortcutActions } from './keyboa
 
 function makeActions() {
   const moveFocus = vi.fn<(d: number) => void>()
-  const markAndAdvance = vi.fn<() => void>()
-  const unmark = vi.fn<() => void>()
-  const actions: ShortcutActions = { moveFocus, markAndAdvance, unmark }
-  return { actions, moveFocus, markAndAdvance, unmark }
+  const toggleMark = vi.fn<() => void>()
+  const actions: ShortcutActions = { moveFocus, toggleMark }
+  return { actions, moveFocus, toggleMark }
 }
 
 describe('handleShortcut', () => {
   let actions: ShortcutActions
   let moveFocus: ReturnType<typeof vi.fn>
-  let markAndAdvance: ReturnType<typeof vi.fn>
-  let unmark: ReturnType<typeof vi.fn>
+  let toggleMark: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    ;({ actions, moveFocus, markAndAdvance, unmark } = makeActions())
+    ;({ actions, moveFocus, toggleMark } = makeActions())
   })
 
   it('j moves focus forward', () => {
@@ -24,8 +22,8 @@ describe('handleShortcut', () => {
     expect(moveFocus).toHaveBeenCalledWith(1)
   })
 
-  it('ArrowDown moves focus forward', () => {
-    expect(handleShortcut('ArrowDown', actions)).toBe(true)
+  it('ArrowRight moves focus forward', () => {
+    expect(handleShortcut('ArrowRight', actions)).toBe(true)
     expect(moveFocus).toHaveBeenCalledWith(1)
   })
 
@@ -34,29 +32,26 @@ describe('handleShortcut', () => {
     expect(moveFocus).toHaveBeenCalledWith(-1)
   })
 
-  it('ArrowUp moves focus backward', () => {
-    expect(handleShortcut('ArrowUp', actions)).toBe(true)
+  it('ArrowLeft moves focus backward', () => {
+    expect(handleShortcut('ArrowLeft', actions)).toBe(true)
     expect(moveFocus).toHaveBeenCalledWith(-1)
   })
 
-  it('x marks and advances', () => {
-    expect(handleShortcut('x', actions)).toBe(true)
-    expect(markAndAdvance).toHaveBeenCalledOnce()
-  })
-
-  it('u unmarks without moving', () => {
-    expect(handleShortcut('u', actions)).toBe(true)
-    expect(unmark).toHaveBeenCalledOnce()
+  it('space toggles the mark', () => {
+    expect(handleShortcut(' ', actions)).toBe(true)
+    expect(toggleMark).toHaveBeenCalledOnce()
     expect(moveFocus).not.toHaveBeenCalled()
   })
 
   it('unhandled keys return false and trigger nothing', () => {
     expect(handleShortcut('Enter', actions)).toBe(false)
     expect(handleShortcut('a', actions)).toBe(false)
-    expect(handleShortcut(' ', actions)).toBe(false)
+    expect(handleShortcut('x', actions)).toBe(false)
+    expect(handleShortcut('u', actions)).toBe(false)
+    expect(handleShortcut('ArrowUp', actions)).toBe(false)
+    expect(handleShortcut('ArrowDown', actions)).toBe(false)
     expect(moveFocus).not.toHaveBeenCalled()
-    expect(markAndAdvance).not.toHaveBeenCalled()
-    expect(unmark).not.toHaveBeenCalled()
+    expect(toggleMark).not.toHaveBeenCalled()
   })
 })
 

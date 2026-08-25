@@ -40,7 +40,7 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
       ref={ref}
       style={cardStyle}
       className={cx(
-        'card-in relative flex min-h-[170px] flex-col rounded-sm border p-4',
+        'card-in relative flex min-h-[170px] flex-col rounded-md border p-4',
         'transition-[border-color,transform,opacity,background-color] duration-150 ease-out',
         marked
           ? 'border-edge bg-paper-soft opacity-55 hover:opacity-75'

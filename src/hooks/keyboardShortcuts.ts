@@ -3,25 +3,21 @@ import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 
 export interface ShortcutActions {
   moveFocus: (delta: number) => void
-  markAndAdvance: () => void
-  unmark: () => void
+  toggleMark: () => void
 }
 
 export function handleShortcut(key: string, actions: ShortcutActions): boolean {
   switch (key) {
     case 'j':
-    case 'ArrowDown':
+    case 'ArrowRight':
       actions.moveFocus(1)
       return true
     case 'k':
-    case 'ArrowUp':
+    case 'ArrowLeft':
       actions.moveFocus(-1)
       return true
-    case 'x':
-      actions.markAndAdvance()
-      return true
-    case 'u':
-      actions.unmark()
+    case ' ':
+      actions.toggleMark()
       return true
     default:
       return false
@@ -53,14 +49,13 @@ export function useKeyboardShortcuts(): void {
 
       const handled = handleShortcut(e.key, {
         moveFocus: (d) => store.moveFocus(d),
-        markAndAdvance: () => {
+        toggleMark: () => {
           if (currentId === undefined) return
-          store.mark(currentId)
-          store.moveFocus(1)
-        },
-        unmark: () => {
-          if (currentId === undefined) return
-          store.unmark(currentId)
+          if (store.pendingDeletes.has(currentId)) {
+            store.unmark(currentId)
+          } else {
+            store.mark(currentId)
+          }
         },
       })
 

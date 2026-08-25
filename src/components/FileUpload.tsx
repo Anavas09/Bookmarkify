@@ -81,7 +81,7 @@ export function FileUpload({ variant = 'dropzone' }: Props) {
       onDrop={onDrop}
       className={cx(
         'mx-auto flex w-full max-w-[560px] min-h-[420px] items-center justify-center',
-        'cursor-pointer rounded-sm border border-dashed p-10 sm:p-12',
+        'cursor-pointer rounded-md border border-dashed p-10 sm:p-12',
         'transition-colors duration-200 text-ink-soft',
         dragging || status === 'idle' ? '' : '',
         !dragging && status === 'idle' && 'border-ink-mute hover:border-accent hover:bg-paper-soft hover:text-ink',
