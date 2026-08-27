@@ -18,6 +18,11 @@ describe('NetscapeAdapter', () => {
     expect(bookmarks[1].tags).toEqual(['ai'])
   })
 
+  it('load() throws when constructed without a file', async () => {
+    const adapter = new NetscapeAdapter(null, 'out.html')
+    await expect(adapter.load()).rejects.toThrow(/without a file/i)
+  })
+
   describe('export()', () => {
     beforeEach(() => {
       URL.createObjectURL = vi.fn(() => 'blob:mock')

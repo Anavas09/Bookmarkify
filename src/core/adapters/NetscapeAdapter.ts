@@ -6,15 +6,18 @@ import { serializeNetscape } from '../serializer.ts'
 const DEFAULT_FILENAME = 'bookmarks.html'
 
 export class NetscapeAdapter implements BookmarkSource {
-  private readonly file: File
+  private readonly file: File | null
   private readonly downloadName: string
 
-  constructor(file: File, downloadName: string = DEFAULT_FILENAME) {
+  constructor(file: File | null, downloadName: string = DEFAULT_FILENAME) {
     this.file = file
     this.downloadName = downloadName
   }
 
   async load(): Promise<Bookmark[]> {
+    if (this.file === null) {
+      throw new Error('NetscapeAdapter was constructed without a file; cannot load')
+    }
     const html = await this.file.text()
     return parseNetscape(html)
   }

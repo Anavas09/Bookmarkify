@@ -3,6 +3,7 @@ import { useKeyboardShortcuts } from './hooks/keyboardShortcuts.ts'
 import { FileUpload } from './components/FileUpload.tsx'
 import { AppHeader } from './components/AppHeader.tsx'
 import { BookmarkGrid } from './components/BookmarkGrid.tsx'
+import { FilterBarTabs } from './components/FilterBarTabs.tsx'
 
 function App() {
   const hasBookmarks = useBookmarkStore(s => s.bookmarks.length > 0)
@@ -13,7 +14,8 @@ function App() {
       {hasBookmarks ? (
         <>
           <AppHeader />
-          <main className="flex-1 px-4 pb-16 sm:px-8 lg:px-12">
+          <FilterBarTabs />
+          <main className="flex-1 px-4 pt-4 pb-16 sm:px-8 lg:px-12">
             <BookmarkGrid />
           </main>
         </>

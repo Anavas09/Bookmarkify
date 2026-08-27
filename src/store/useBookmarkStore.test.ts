@@ -20,10 +20,11 @@ class FakeSource implements BookmarkSource {
   }
 }
 
-const B = (id: string, url = `https://${id}.com`): Bookmark => ({
+const B = (id: string, url = `https://${id}.com`, folderPath?: string[]): Bookmark => ({
   id,
   title: id,
   url,
+  ...(folderPath !== undefined && { folderPath }),
 })
 
 beforeEach(() => {
@@ -152,6 +153,69 @@ describe('useBookmarkStore', () => {
       await useBookmarkStore.getState().exportFiltered(source)
 
       expect(useBookmarkStore.getState().pendingDeletes.has('a')).toBe(true)
+    })
+  })
+
+  describe('activeFilter', () => {
+    it('starts as null', () => {
+      expect(useBookmarkStore.getState().activeFilter).toBeNull()
+    })
+
+    it('setFilter stores the filter and resets focus to 0', async () => {
+      const source = new FakeSource([
+        B('a', 'https://a.com'),
+        B('b', 'https://b.com'),
+        B('c', 'https://c.com'),
+      ])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().moveFocus(2)
+      expect(useBookmarkStore.getState().focusedIndex).toBe(2)
+
+      useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+
+      expect(useBookmarkStore.getState().activeFilter).toEqual({ kind: 'domain', value: 'a.com' })
+      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
+    })
+
+    it('setFilter is a no-op if the filter is equal', () => {
+      const store = useBookmarkStore.getState()
+      store.setFilter({ kind: 'domain', value: 'x.com' })
+      const before = useBookmarkStore.getState()
+      store.setFilter({ kind: 'domain', value: 'x.com' })
+      const after = useBookmarkStore.getState()
+      expect(after.activeFilter).toBe(before.activeFilter)
+    })
+
+    it('clearFilter goes back to null and resets focus', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().setFilter({ kind: 'duplicate' })
+      useBookmarkStore.getState().moveFocus(2)
+
+      useBookmarkStore.getState().clearFilter()
+
+      expect(useBookmarkStore.getState().activeFilter).toBeNull()
+      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
+    })
+
+    it('moveFocus clamps to the visible list length when a filter is active', async () => {
+      const source = new FakeSource([
+        B('a', 'https://a.com'),
+        B('b', 'https://b.com'),
+        B('c', 'https://a.com'),
+      ])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+
+      useBookmarkStore.getState().moveFocus(99)
+      expect(useBookmarkStore.getState().focusedIndex).toBe(1)
+    })
+
+    it('load resets activeFilter to null', async () => {
+      useBookmarkStore.getState().setFilter({ kind: 'duplicate' })
+      const source = new FakeSource([B('a')])
+      await useBookmarkStore.getState().load(source)
+      expect(useBookmarkStore.getState().activeFilter).toBeNull()
     })
   })
 })

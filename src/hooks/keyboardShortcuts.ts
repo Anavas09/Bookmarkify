@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useBookmarkStore } from '../store/useBookmarkStore.ts'
+import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
 
 export interface ShortcutActions {
   moveFocus: (delta: number) => void
@@ -35,17 +35,17 @@ export function isEditableTarget(target: EventTarget | null): boolean {
 
 export function useKeyboardShortcuts(): void {
   const focusedIndex = useBookmarkStore(s => s.focusedIndex)
-  const bookmarks = useBookmarkStore(s => s.bookmarks)
+  const visible = useVisibleBookmarks()
 
   useEffect(() => {
-    if (bookmarks.length === 0) return
+    if (visible.length === 0) return
 
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if (isEditableTarget(e.target)) return
 
       const store = useBookmarkStore.getState()
-      const currentId = bookmarks[focusedIndex]?.id
+      const currentId = visible[focusedIndex]?.id
 
       const handled = handleShortcut(e.key, {
         moveFocus: (d) => store.moveFocus(d),
@@ -64,5 +64,5 @@ export function useKeyboardShortcuts(): void {
 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [focusedIndex, bookmarks])
+  }, [focusedIndex, visible])
 }
