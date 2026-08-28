@@ -1,8 +1,11 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { Bookmark } from '../core/types.ts'
 import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
 import { selectVisibleBookmarks, type Filter } from './selectors.ts'
+
+export const PERSIST_KEY = 'bookmarkify:v1'
 
 export interface BookmarkStore {
   bookmarks: Bookmark[]
@@ -30,68 +33,95 @@ export function getInitialState(): Pick<
   }
 }
 
-export const useBookmarkStore = create<BookmarkStore>()((set, get) => ({
-  ...getInitialState(),
+export const useBookmarkStore = create<BookmarkStore>()(
+  persist(
+    (set, get) => ({
+      ...getInitialState(),
 
-  async load(source) {
-    const bookmarks = await source.load()
-    set({
-      bookmarks,
-      pendingDeletes: new Set(),
-      focusedIndex: 0,
-      activeFilter: null,
-    })
-  },
+      async load(source) {
+        const bookmarks = await source.load()
+        set({
+          bookmarks,
+          pendingDeletes: new Set(),
+          focusedIndex: 0,
+          activeFilter: null,
+        })
+      },
 
-  mark(id) {
-    set(state => {
-      if (state.pendingDeletes.has(id)) return state
-      const next = new Set(state.pendingDeletes)
-      next.add(id)
-      return { pendingDeletes: next }
-    })
-  },
+      mark(id) {
+        set(state => {
+          if (state.pendingDeletes.has(id)) return state
+          const next = new Set(state.pendingDeletes)
+          next.add(id)
+          return { pendingDeletes: next }
+        })
+      },
 
-  unmark(id) {
-    set(state => {
-      if (!state.pendingDeletes.has(id)) return state
-      const next = new Set(state.pendingDeletes)
-      next.delete(id)
-      return { pendingDeletes: next }
-    })
-  },
+      unmark(id) {
+        set(state => {
+          if (!state.pendingDeletes.has(id)) return state
+          const next = new Set(state.pendingDeletes)
+          next.delete(id)
+          return { pendingDeletes: next }
+        })
+      },
 
-  moveFocus(delta) {
-    set(state => {
-      const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
-      if (visible.length === 0) return state
-      const max = visible.length - 1
-      const next = Math.max(0, Math.min(max, state.focusedIndex + delta))
-      if (next === state.focusedIndex) return state
-      return { focusedIndex: next }
-    })
-  },
+      moveFocus(delta) {
+        set(state => {
+          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          if (visible.length === 0) return state
+          const max = visible.length - 1
+          const next = Math.max(0, Math.min(max, state.focusedIndex + delta))
+          if (next === state.focusedIndex) return state
+          return { focusedIndex: next }
+        })
+      },
 
-  setFilter(f) {
-    set(state => {
-      if (filtersEqual(state.activeFilter, f)) return state
-      return { activeFilter: f, focusedIndex: 0 }
-    })
-  },
+      setFilter(f) {
+        set(state => {
+          if (filtersEqual(state.activeFilter, f)) return state
+          return { activeFilter: f, focusedIndex: 0 }
+        })
+      },
 
-  clearFilter() {
-    set(state => {
-      if (state.activeFilter === null) return state
-      return { activeFilter: null, focusedIndex: 0 }
-    })
-  },
+      clearFilter() {
+        set(state => {
+          if (state.activeFilter === null) return state
+          return { activeFilter: null, focusedIndex: 0 }
+        })
+      },
 
-  async exportFiltered(source) {
-    const { bookmarks, pendingDeletes } = get()
-    const filtered = bookmarks.filter(b => !pendingDeletes.has(b.id))
-    await source.export(filtered)
-  },
-}))
+      async exportFiltered(source) {
+        const { bookmarks, pendingDeletes } = get()
+        const filtered = bookmarks.filter(b => !pendingDeletes.has(b.id))
+        await source.export(filtered)
+      },
+    }),
+    {
+      name: PERSIST_KEY,
+      storage: createJSONStorage(() => localStorage, {
+        replacer: (_key, value) =>
+          value instanceof Set ? { __set: [...value] } : value,
+        reviver: (_key, value) =>
+          isEncodedSet(value) ? new Set(value.__set) : value,
+      }),
+      partialize: state => ({
+        bookmarks: state.bookmarks,
+        pendingDeletes: state.pendingDeletes,
+        activeFilter: state.activeFilter,
+      }),
+    },
+  ),
+)
+
+function isEncodedSet(value: unknown): value is { __set: string[] } {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    '__set' in value &&
+    Array.isArray((value as { __set: unknown }).__set)
+  )
+}
 
 export function useVisibleBookmarks(): Bookmark[] {
   const bookmarks = useBookmarkStore(s => s.bookmarks)

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useBookmarkStore, getInitialState } from './useBookmarkStore.ts'
+import { useBookmarkStore, getInitialState, PERSIST_KEY } from './useBookmarkStore.ts'
 import type { Bookmark } from '../core/types.ts'
 import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
 
@@ -28,6 +28,7 @@ const B = (id: string, url = `https://${id}.com`, folderPath?: string[]): Bookma
 })
 
 beforeEach(() => {
+  localStorage.clear()
   useBookmarkStore.setState(getInitialState())
 })
 
@@ -216,6 +217,64 @@ describe('useBookmarkStore', () => {
       const source = new FakeSource([B('a')])
       await useBookmarkStore.getState().load(source)
       expect(useBookmarkStore.getState().activeFilter).toBeNull()
+    })
+  })
+
+  describe('persistence', () => {
+    interface PersistedShape {
+      state: {
+        bookmarks: Array<{ id: string }>
+        pendingDeletes: { __set: string[] }
+        activeFilter: unknown
+        focusedIndex?: number
+      }
+    }
+
+    it('writes bookmarks, pendingDeletes and activeFilter to localStorage', async () => {
+      const source = new FakeSource([B('a', 'https://a.com'), B('b', 'https://b.com')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().mark('a')
+      useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+
+      const raw = localStorage.getItem(PERSIST_KEY)
+      expect(raw).not.toBeNull()
+      const parsed = JSON.parse(raw as string) as PersistedShape
+      expect(parsed.state.bookmarks.map(b => b.id)).toEqual(['a', 'b'])
+      expect(parsed.state.pendingDeletes).toEqual({ __set: ['a'] })
+      expect(parsed.state.activeFilter).toEqual({ kind: 'domain', value: 'a.com' })
+    })
+
+    it('does not persist focusedIndex', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().moveFocus(2)
+
+      const raw = localStorage.getItem(PERSIST_KEY)
+      const parsed = JSON.parse(raw as string) as PersistedShape
+      expect(parsed.state.focusedIndex).toBeUndefined()
+    })
+
+    it('rehydrates from localStorage and revives pendingDeletes as a Set', async () => {
+      localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: {
+            bookmarks: [B('x'), B('y')],
+            pendingDeletes: { __set: ['x'] },
+            activeFilter: { kind: 'duplicate' },
+          },
+          version: 0,
+        }),
+      )
+
+      await useBookmarkStore.persist.rehydrate()
+
+      const s = useBookmarkStore.getState()
+      expect(s.bookmarks.map(b => b.id)).toEqual(['x', 'y'])
+      expect(s.pendingDeletes).toBeInstanceOf(Set)
+      expect(s.pendingDeletes.has('x')).toBe(true)
+      expect(s.pendingDeletes.has('y')).toBe(false)
+      expect(s.activeFilter).toEqual({ kind: 'duplicate' })
     })
   })
 })
