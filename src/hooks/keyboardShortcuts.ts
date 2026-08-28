@@ -4,9 +4,14 @@ import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore
 export interface ShortcutActions {
   moveFocus: (delta: number) => void
   toggleMark: () => void
+  extendMark: () => void
 }
 
-export function handleShortcut(key: string, actions: ShortcutActions): boolean {
+export function handleShortcut(
+  key: string,
+  shift: boolean,
+  actions: ShortcutActions,
+): boolean {
   switch (key) {
     case 'j':
     case 'ArrowRight':
@@ -17,7 +22,8 @@ export function handleShortcut(key: string, actions: ShortcutActions): boolean {
       actions.moveFocus(-1)
       return true
     case ' ':
-      actions.toggleMark()
+      if (shift) actions.extendMark()
+      else actions.toggleMark()
       return true
     default:
       return false
@@ -34,29 +40,21 @@ export function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function useKeyboardShortcuts(): void {
-  const focusedIndex = useBookmarkStore(s => s.focusedIndex)
-  const visible = useVisibleBookmarks()
+  const hasVisible = useVisibleBookmarks().length > 0
 
   useEffect(() => {
-    if (visible.length === 0) return
+    if (!hasVisible) return
 
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if (isEditableTarget(e.target)) return
 
       const store = useBookmarkStore.getState()
-      const currentId = visible[focusedIndex]?.id
 
-      const handled = handleShortcut(e.key, {
+      const handled = handleShortcut(e.key, e.shiftKey, {
         moveFocus: (d) => store.moveFocus(d),
-        toggleMark: () => {
-          if (currentId === undefined) return
-          if (store.pendingDeletes.has(currentId)) {
-            store.unmark(currentId)
-          } else {
-            store.mark(currentId)
-          }
-        },
+        toggleMark: () => store.toggleFocused(),
+        extendMark: () => store.extendMarkFromAnchor(),
       })
 
       if (handled) e.preventDefault()
@@ -64,5 +62,5 @@ export function useKeyboardShortcuts(): void {
 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [focusedIndex, visible])
+  }, [hasVisible])
 }

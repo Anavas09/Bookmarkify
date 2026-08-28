@@ -4,54 +4,64 @@ import { handleShortcut, isEditableTarget, type ShortcutActions } from './keyboa
 function makeActions() {
   const moveFocus = vi.fn<(d: number) => void>()
   const toggleMark = vi.fn<() => void>()
-  const actions: ShortcutActions = { moveFocus, toggleMark }
-  return { actions, moveFocus, toggleMark }
+  const extendMark = vi.fn<() => void>()
+  const actions: ShortcutActions = { moveFocus, toggleMark, extendMark }
+  return { actions, moveFocus, toggleMark, extendMark }
 }
 
 describe('handleShortcut', () => {
   let actions: ShortcutActions
   let moveFocus: ReturnType<typeof vi.fn>
   let toggleMark: ReturnType<typeof vi.fn>
+  let extendMark: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    ;({ actions, moveFocus, toggleMark } = makeActions())
+    ;({ actions, moveFocus, toggleMark, extendMark } = makeActions())
   })
 
   it('j moves focus forward', () => {
-    expect(handleShortcut('j', actions)).toBe(true)
+    expect(handleShortcut('j', false, actions)).toBe(true)
     expect(moveFocus).toHaveBeenCalledWith(1)
   })
 
   it('ArrowRight moves focus forward', () => {
-    expect(handleShortcut('ArrowRight', actions)).toBe(true)
+    expect(handleShortcut('ArrowRight', false, actions)).toBe(true)
     expect(moveFocus).toHaveBeenCalledWith(1)
   })
 
   it('k moves focus backward', () => {
-    expect(handleShortcut('k', actions)).toBe(true)
+    expect(handleShortcut('k', false, actions)).toBe(true)
     expect(moveFocus).toHaveBeenCalledWith(-1)
   })
 
   it('ArrowLeft moves focus backward', () => {
-    expect(handleShortcut('ArrowLeft', actions)).toBe(true)
+    expect(handleShortcut('ArrowLeft', false, actions)).toBe(true)
     expect(moveFocus).toHaveBeenCalledWith(-1)
   })
 
   it('space toggles the mark', () => {
-    expect(handleShortcut(' ', actions)).toBe(true)
+    expect(handleShortcut(' ', false, actions)).toBe(true)
     expect(toggleMark).toHaveBeenCalledOnce()
+    expect(extendMark).not.toHaveBeenCalled()
     expect(moveFocus).not.toHaveBeenCalled()
   })
 
+  it('shift+space extends the mark from the anchor', () => {
+    expect(handleShortcut(' ', true, actions)).toBe(true)
+    expect(extendMark).toHaveBeenCalledOnce()
+    expect(toggleMark).not.toHaveBeenCalled()
+  })
+
   it('unhandled keys return false and trigger nothing', () => {
-    expect(handleShortcut('Enter', actions)).toBe(false)
-    expect(handleShortcut('a', actions)).toBe(false)
-    expect(handleShortcut('x', actions)).toBe(false)
-    expect(handleShortcut('u', actions)).toBe(false)
-    expect(handleShortcut('ArrowUp', actions)).toBe(false)
-    expect(handleShortcut('ArrowDown', actions)).toBe(false)
+    expect(handleShortcut('Enter', false, actions)).toBe(false)
+    expect(handleShortcut('a', false, actions)).toBe(false)
+    expect(handleShortcut('x', false, actions)).toBe(false)
+    expect(handleShortcut('u', false, actions)).toBe(false)
+    expect(handleShortcut('ArrowUp', false, actions)).toBe(false)
+    expect(handleShortcut('ArrowDown', false, actions)).toBe(false)
     expect(moveFocus).not.toHaveBeenCalled()
     expect(toggleMark).not.toHaveBeenCalled()
+    expect(extendMark).not.toHaveBeenCalled()
   })
 })
 

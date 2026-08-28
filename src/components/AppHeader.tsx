@@ -1,10 +1,14 @@
-import { useState } from 'react'
-import { useBookmarkStore } from '../store/useBookmarkStore.ts'
+import { useMemo, useState } from 'react'
+import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
 import { NetscapeAdapter } from '../core/adapters/NetscapeAdapter.ts'
 import { buildExportFilename } from '../lib/exportFilename.ts'
 import { cx } from '../lib/cx.ts'
 import { FileUpload } from './FileUpload.tsx'
 import { ExportModal } from './ExportModal.tsx'
+
+const BULK_BTN_CLASS =
+  'font-mono text-[11px] text-ink-mute hover:text-ink underline underline-offset-2 ' +
+  'decoration-transparent hover:decoration-current transition-colors cursor-pointer'
 
 function Key({ children }: { children: string }) {
   return (
@@ -24,7 +28,17 @@ export function AppHeader() {
   const total = useBookmarkStore(s => s.bookmarks.length)
   const marked = useBookmarkStore(s => s.pendingDeletes.size)
   const exportFiltered = useBookmarkStore(s => s.exportFiltered)
+  const markAllVisible = useBookmarkStore(s => s.markAllVisible)
+  const unmarkAllVisible = useBookmarkStore(s => s.unmarkAllVisible)
+  const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
+  const visible = useVisibleBookmarks()
   const kept = total - marked
+
+  const { markedInVisible, unmarkedInVisible } = useMemo(() => {
+    let m = 0
+    for (const b of visible) if (pendingDeletes.has(b.id)) m++
+    return { markedInVisible: m, unmarkedInVisible: visible.length - m }
+  }, [visible, pendingDeletes])
 
   const [exporting, setExporting] = useState(false)
   const [lastExport, setLastExport] = useState<ExportedInfo | null>(null)
@@ -63,11 +77,18 @@ export function AppHeader() {
               <Key>space</Key>
               <span>toggle mark</span>
             </span>
+            <span className="text-edge" aria-hidden="true">·</span>
+            <span className="flex items-center gap-1">
+              <Key>shift</Key>
+              <span aria-hidden="true">+</span>
+              <Key>space</Key>
+              <span>extend range</span>
+            </span>
           </p>
         </div>
 
         <div className="flex flex-col items-end gap-3 pt-2">
-          <p className="font-mono text-[13px] tracking-wide text-ink-soft m-0 flex items-baseline gap-1.5">
+          <p className="font-mono text-[13px] tracking-wide text-ink-soft m-0 flex items-baseline gap-1.5 flex-wrap justify-end">
             <span>{total} total</span>
             <span className="text-ink-mute" aria-hidden="true">·</span>
             <span>{kept} kept</span>
@@ -75,6 +96,32 @@ export function AppHeader() {
             <span className={marked > 0 ? 'text-accent' : undefined}>
               {marked} marked
             </span>
+            {unmarkedInVisible > 0 && (
+              <>
+                <span className="text-ink-mute" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  onClick={markAllVisible}
+                  className={BULK_BTN_CLASS}
+                  title="mark every visible bookmark"
+                >
+                  mark all {unmarkedInVisible}
+                </button>
+              </>
+            )}
+            {markedInVisible > 0 && (
+              <>
+                <span className="text-ink-mute" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  onClick={unmarkAllVisible}
+                  className={BULK_BTN_CLASS}
+                  title="unmark every visible bookmark"
+                >
+                  unmark all {markedInVisible}
+                </button>
+              </>
+            )}
           </p>
           <div className="flex items-center gap-4">
             <FileUpload variant="button" />

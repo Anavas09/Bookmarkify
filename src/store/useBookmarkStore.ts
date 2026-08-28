@@ -7,14 +7,24 @@ import { selectVisibleBookmarks, type Filter } from './selectors.ts'
 
 export const PERSIST_KEY = 'bookmarkify:v1'
 
+export interface MarkAnchor {
+  index: number
+  action: 'mark' | 'unmark'
+}
+
 export interface BookmarkStore {
   bookmarks: Bookmark[]
   pendingDeletes: Set<string>
   focusedIndex: number
   activeFilter: Filter
+  anchor: MarkAnchor | null
   load(source: BookmarkSource): Promise<void>
   mark(id: string): void
   unmark(id: string): void
+  toggleFocused(): void
+  extendMarkFromAnchor(): void
+  markAllVisible(): void
+  unmarkAllVisible(): void
   moveFocus(delta: number): void
   setFilter(f: Filter): void
   clearFilter(): void
@@ -23,13 +33,14 @@ export interface BookmarkStore {
 
 export function getInitialState(): Pick<
   BookmarkStore,
-  'bookmarks' | 'pendingDeletes' | 'focusedIndex' | 'activeFilter'
+  'bookmarks' | 'pendingDeletes' | 'focusedIndex' | 'activeFilter' | 'anchor'
 > {
   return {
     bookmarks: [],
     pendingDeletes: new Set(),
     focusedIndex: 0,
     activeFilter: null,
+    anchor: null,
   }
 }
 
@@ -45,6 +56,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           pendingDeletes: new Set(),
           focusedIndex: 0,
           activeFilter: null,
+          anchor: null,
         })
       },
 
@@ -66,6 +78,94 @@ export const useBookmarkStore = create<BookmarkStore>()(
         })
       },
 
+      toggleFocused() {
+        set(state => {
+          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          const b = visible[state.focusedIndex]
+          if (!b) return state
+          const isMarked = state.pendingDeletes.has(b.id)
+          const next = new Set(state.pendingDeletes)
+          if (isMarked) next.delete(b.id)
+          else next.add(b.id)
+          return {
+            pendingDeletes: next,
+            anchor: { index: state.focusedIndex, action: isMarked ? 'unmark' : 'mark' },
+          }
+        })
+      },
+
+      extendMarkFromAnchor() {
+        set(state => {
+          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          if (visible.length === 0) return state
+          if (state.anchor === null) {
+            const b = visible[state.focusedIndex]
+            if (!b) return state
+            const isMarked = state.pendingDeletes.has(b.id)
+            const next = new Set(state.pendingDeletes)
+            if (isMarked) next.delete(b.id)
+            else next.add(b.id)
+            return {
+              pendingDeletes: next,
+              anchor: { index: state.focusedIndex, action: isMarked ? 'unmark' : 'mark' },
+            }
+          }
+          const from = Math.min(state.anchor.index, state.focusedIndex)
+          const to = Math.max(state.anchor.index, state.focusedIndex)
+          const next = new Set(state.pendingDeletes)
+          let changed = false
+          for (let i = from; i <= to; i++) {
+            const b = visible[i]
+            if (!b) continue
+            if (state.anchor.action === 'mark') {
+              if (!next.has(b.id)) {
+                next.add(b.id)
+                changed = true
+              }
+            } else if (next.has(b.id)) {
+              next.delete(b.id)
+              changed = true
+            }
+          }
+          if (!changed) return state
+          return { pendingDeletes: next }
+        })
+      },
+
+      markAllVisible() {
+        set(state => {
+          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          if (visible.length === 0) return state
+          const next = new Set(state.pendingDeletes)
+          let changed = false
+          for (const b of visible) {
+            if (!next.has(b.id)) {
+              next.add(b.id)
+              changed = true
+            }
+          }
+          if (!changed) return state
+          return { pendingDeletes: next }
+        })
+      },
+
+      unmarkAllVisible() {
+        set(state => {
+          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          if (visible.length === 0) return state
+          const next = new Set(state.pendingDeletes)
+          let changed = false
+          for (const b of visible) {
+            if (next.has(b.id)) {
+              next.delete(b.id)
+              changed = true
+            }
+          }
+          if (!changed) return state
+          return { pendingDeletes: next }
+        })
+      },
+
       moveFocus(delta) {
         set(state => {
           const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
@@ -80,14 +180,14 @@ export const useBookmarkStore = create<BookmarkStore>()(
       setFilter(f) {
         set(state => {
           if (filtersEqual(state.activeFilter, f)) return state
-          return { activeFilter: f, focusedIndex: 0 }
+          return { activeFilter: f, focusedIndex: 0, anchor: null }
         })
       },
 
       clearFilter() {
         set(state => {
           if (state.activeFilter === null) return state
-          return { activeFilter: null, focusedIndex: 0 }
+          return { activeFilter: null, focusedIndex: 0, anchor: null }
         })
       },
 
