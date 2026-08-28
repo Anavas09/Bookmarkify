@@ -1,6 +1,7 @@
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Bookmark } from '../core/types.ts'
 import { domainOf } from '../lib/domain.ts'
+import { faviconUrl } from '../lib/faviconUrl.ts'
 import { cx } from '../lib/cx.ts'
 
 interface Props {
@@ -26,6 +27,8 @@ function catalogNumber(index: number): string {
 export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
+  const favicon = faviconUrl(bookmark.url)
+  const [faviconBroken, setFaviconBroken] = useState(false)
   const cardStyle = { '--i': Math.min(index, 24) } as CSSProperties
   const ref = useRef<HTMLElement>(null)
 
@@ -77,8 +80,18 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
         >
           {bookmark.title || domain}
         </h3>
-        <p className="font-mono text-[0.72rem] text-ink-soft m-0 truncate">
-          {domain}
+        <p className="font-mono text-[0.72rem] text-ink-soft m-0 flex items-center gap-1.5 min-w-0">
+          {favicon && !faviconBroken && (
+            <img
+              src={favicon}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="h-3.5 w-3.5 shrink-0 rounded-[3px]"
+              onError={() => setFaviconBroken(true)}
+            />
+          )}
+          <span className="truncate">{domain}</span>
         </p>
       </a>
 
