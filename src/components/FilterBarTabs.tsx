@@ -6,10 +6,11 @@ import {
   selectDuplicateCount,
   selectFolderCounts,
   type Filter,
+  type Sort,
 } from '../store/selectors.ts'
 import { cx } from '../lib/cx.ts'
 
-type OpenMenu = 'domain' | 'folder' | null
+type OpenMenu = 'domain' | 'folder' | 'sort' | null
 
 function formatFolder(path: string[]): string {
   return path.length === 0 ? '(root)' : path.join(' / ')
@@ -23,15 +24,37 @@ function folderLabel(f: Filter): string | null {
   return f?.kind === 'folder' ? formatFolder(f.path) : null
 }
 
+const SORT_OPTIONS: Array<{ label: string; sort: Sort }> = [
+  { label: 'original', sort: null },
+  { label: 'title A→Z', sort: { kind: 'title', dir: 'asc' } },
+  { label: 'title Z→A', sort: { kind: 'title', dir: 'desc' } },
+  { label: 'newest first', sort: { kind: 'date', dir: 'desc' } },
+  { label: 'oldest first', sort: { kind: 'date', dir: 'asc' } },
+  { label: 'domain A→Z', sort: { kind: 'domain' } },
+]
+
+function sortLabel(s: Sort): string {
+  if (s === null) return 'original'
+  switch (s.kind) {
+    case 'title':  return s.dir === 'asc' ? 'title A→Z' : 'title Z→A'
+    case 'date':   return s.dir === 'desc' ? 'newest first' : 'oldest first'
+    case 'domain': return 'domain A→Z'
+  }
+}
+
 export function FilterBarTabs() {
   const bookmarks = useBookmarkStore(s => s.bookmarks)
   const activeFilter = useBookmarkStore(s => s.activeFilter)
+  const activeSort = useBookmarkStore(s => s.activeSort)
   const setFilter = useBookmarkStore(s => s.setFilter)
   const clearFilter = useBookmarkStore(s => s.clearFilter)
+  const setSort = useBookmarkStore(s => s.setSort)
+  const clearSort = useBookmarkStore(s => s.clearSort)
 
   const domainCounts = useMemo(() => selectDomainCounts(bookmarks), [bookmarks])
   const folderCounts = useMemo(() => selectFolderCounts(bookmarks), [bookmarks])
   const duplicateCount = useMemo(() => selectDuplicateCount(bookmarks), [bookmarks])
+  const activeSortLabel = sortLabel(activeSort)
 
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -138,6 +161,28 @@ export function FilterBarTabs() {
           setOpenMenu(null)
         }}
       />
+
+      <span className="text-ink-mute tracking-wide ml-2 mr-1">sort</span>
+      <ChipDropdown
+        label={activeSort === null ? 'original' : activeSortLabel}
+        active={activeSort !== null}
+        open={openMenu === 'sort'}
+        onToggle={() => toggleMenu('sort')}
+      >
+        {SORT_OPTIONS.map(opt => (
+          <MenuItem
+            key={opt.label}
+            active={activeSortLabel === opt.label}
+            onClick={() => {
+              if (opt.sort === null) clearSort()
+              else setSort(opt.sort)
+              setOpenMenu(null)
+            }}
+          >
+            {opt.label}
+          </MenuItem>
+        ))}
+      </ChipDropdown>
     </div>
   )
 }
@@ -204,7 +249,7 @@ function ChipDropdown({ label, active, open, onToggle, children }: ChipDropdownP
 
 interface MenuItemProps {
   active: boolean
-  count: number
+  count?: number
   onClick: () => void
   children: ReactNode
 }
@@ -220,7 +265,7 @@ function MenuItem({ active, count, onClick, children }: MenuItemProps) {
       )}
     >
       <span className="truncate">{children}</span>
-      <span className="text-ink-mute shrink-0">{count}</span>
+      {count !== undefined && <span className="text-ink-mute shrink-0">{count}</span>}
     </button>
   )
 }

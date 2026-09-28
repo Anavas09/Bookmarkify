@@ -220,6 +220,79 @@ describe('useBookmarkStore', () => {
     })
   })
 
+  describe('activeSort', () => {
+    it('starts as null', () => {
+      expect(useBookmarkStore.getState().activeSort).toBeNull()
+    })
+
+    it('setSort stores the sort and resets focus to 0', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().moveFocus(2)
+
+      useBookmarkStore.getState().setSort({ kind: 'title', dir: 'desc' })
+
+      const s = useBookmarkStore.getState()
+      expect(s.activeSort).toEqual({ kind: 'title', dir: 'desc' })
+      expect(s.focusedIndex).toBe(0)
+    })
+
+    it('setSort is a no-op if the sort is equal', () => {
+      const store = useBookmarkStore.getState()
+      store.setSort({ kind: 'date', dir: 'asc' })
+      const before = useBookmarkStore.getState()
+      store.setSort({ kind: 'date', dir: 'asc' })
+      const after = useBookmarkStore.getState()
+      expect(after.activeSort).toBe(before.activeSort)
+    })
+
+    it('setSort resets the anchor', async () => {
+      const source = new FakeSource([B('a'), B('b')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().toggleFocused()
+      expect(useBookmarkStore.getState().anchor).not.toBeNull()
+
+      useBookmarkStore.getState().setSort({ kind: 'domain' })
+
+      expect(useBookmarkStore.getState().anchor).toBeNull()
+    })
+
+    it('clearSort goes back to null and resets focus + anchor', async () => {
+      const source = new FakeSource([B('a'), B('b')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().setSort({ kind: 'title', dir: 'asc' })
+      useBookmarkStore.getState().toggleFocused()
+      useBookmarkStore.getState().moveFocus(1)
+
+      useBookmarkStore.getState().clearSort()
+
+      const s = useBookmarkStore.getState()
+      expect(s.activeSort).toBeNull()
+      expect(s.focusedIndex).toBe(0)
+      expect(s.anchor).toBeNull()
+    })
+
+    it('load resets activeSort to null', async () => {
+      useBookmarkStore.getState().setSort({ kind: 'date', dir: 'desc' })
+      await useBookmarkStore.getState().load(new FakeSource([B('a')]))
+      expect(useBookmarkStore.getState().activeSort).toBeNull()
+    })
+
+    it('moveFocus operates on the sorted order (bulk ops follow the sort)', async () => {
+      const source = new FakeSource([
+        { id: '1', title: 'Charlie', url: 'https://c.com' },
+        { id: '2', title: 'alpha',   url: 'https://a.com' },
+        { id: '3', title: 'Bravo',   url: 'https://b.com' },
+      ])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().setSort({ kind: 'title', dir: 'asc' })
+
+      useBookmarkStore.getState().toggleFocused()
+
+      expect(useBookmarkStore.getState().pendingDeletes.has('2')).toBe(true)
+    })
+  })
+
   describe('bulk selection', () => {
     describe('toggleFocused', () => {
       it('marks the focused bookmark and sets the anchor to mark', async () => {
@@ -428,6 +501,35 @@ describe('useBookmarkStore', () => {
       expect(parsed.state.bookmarks.map(b => b.id)).toEqual(['a', 'b'])
       expect(parsed.state.pendingDeletes).toEqual({ __set: ['a'] })
       expect(parsed.state.activeFilter).toEqual({ kind: 'domain', value: 'a.com' })
+    })
+
+    it('writes activeSort to localStorage', async () => {
+      const source = new FakeSource([B('a'), B('b')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().setSort({ kind: 'title', dir: 'desc' })
+
+      const raw = localStorage.getItem(PERSIST_KEY)
+      const parsed = JSON.parse(raw as string) as { state: { activeSort: unknown } }
+      expect(parsed.state.activeSort).toEqual({ kind: 'title', dir: 'desc' })
+    })
+
+    it('rehydrates activeSort from localStorage', async () => {
+      localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: {
+            bookmarks: [B('a')],
+            pendingDeletes: { __set: [] },
+            activeFilter: null,
+            activeSort: { kind: 'date', dir: 'asc' },
+          },
+          version: 0,
+        }),
+      )
+
+      await useBookmarkStore.persist.rehydrate()
+
+      expect(useBookmarkStore.getState().activeSort).toEqual({ kind: 'date', dir: 'asc' })
     })
 
     it('does not persist focusedIndex', async () => {

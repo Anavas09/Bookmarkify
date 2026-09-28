@@ -8,6 +8,12 @@ export type Filter =
   | { kind: 'duplicate' }
   | null
 
+export type Sort =
+  | { kind: 'title'; dir: 'asc' | 'desc' }
+  | { kind: 'date'; dir: 'asc' | 'desc' }
+  | { kind: 'domain' }
+  | null
+
 export interface DomainCount {
   domain: string
   count: number
@@ -95,6 +101,39 @@ export function selectVisibleBookmarks(
     case 'duplicate': {
       const dupIds = selectDuplicateIds(bookmarks)
       return bookmarks.filter(b => dupIds.has(b.id))
+    }
+  }
+}
+
+export function selectVisibleSortedBookmarks(
+  bookmarks: Bookmark[],
+  activeFilter: Filter,
+  activeSort: Sort,
+): Bookmark[] {
+  const filtered = selectVisibleBookmarks(bookmarks, activeFilter)
+  if (activeSort === null) return filtered
+  const sorted = [...filtered]
+  switch (activeSort.kind) {
+    case 'title': {
+      const dir = activeSort.dir === 'asc' ? 1 : -1
+      sorted.sort((a, b) => dir * a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
+      return sorted
+    }
+    case 'date': {
+      const dir = activeSort.dir === 'asc' ? 1 : -1
+      sorted.sort((a, b) => {
+        if (a.addedAt === undefined && b.addedAt === undefined) return 0
+        if (a.addedAt === undefined) return 1
+        if (b.addedAt === undefined) return -1
+        return dir * (a.addedAt - b.addedAt)
+      })
+      return sorted
+    }
+    case 'domain': {
+      sorted.sort((a, b) =>
+        domainOf(a.url).localeCompare(domainOf(b.url), undefined, { sensitivity: 'base' }),
+      )
+      return sorted
     }
   }
 }

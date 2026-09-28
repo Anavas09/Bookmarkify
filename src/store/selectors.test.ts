@@ -7,6 +7,7 @@ import {
   selectDuplicateIds,
   selectDuplicateCount,
   selectVisibleBookmarks,
+  selectVisibleSortedBookmarks,
 } from './selectors.ts'
 
 const B = (id: string, url: string, folderPath?: string[]): Bookmark => ({
@@ -123,5 +124,105 @@ describe('selectVisibleBookmarks', () => {
 
   it('filters by duplicate (only urls that appear more than once)', () => {
     expect(selectVisibleBookmarks(list, { kind: 'duplicate' }).map(b => b.id)).toEqual(['3', '4'])
+  })
+})
+
+describe('selectVisibleSortedBookmarks', () => {
+  const list: Bookmark[] = [
+    { id: '1', title: 'Charlie', url: 'https://b.com/c', addedAt: 300 },
+    { id: '2', title: 'alpha',   url: 'https://a.com/a', addedAt: 100 },
+    { id: '3', title: 'Bravo',   url: 'https://c.com/b', addedAt: 200 },
+    { id: '4', title: 'delta',   url: 'https://a.com/d' },
+  ]
+
+  it('returns filtered list untouched when sort is null (Original)', () => {
+    expect(selectVisibleSortedBookmarks(list, null, null).map(b => b.id)).toEqual([
+      '1', '2', '3', '4',
+    ])
+  })
+
+  describe('by title', () => {
+    it('asc: A→Z, case-insensitive', () => {
+      expect(
+        selectVisibleSortedBookmarks(list, null, { kind: 'title', dir: 'asc' }).map(b => b.title),
+      ).toEqual(['alpha', 'Bravo', 'Charlie', 'delta'])
+    })
+
+    it('desc: Z→A', () => {
+      expect(
+        selectVisibleSortedBookmarks(list, null, { kind: 'title', dir: 'desc' }).map(b => b.title),
+      ).toEqual(['delta', 'Charlie', 'Bravo', 'alpha'])
+    })
+
+    it('preserves original order on ties (stable sort)', () => {
+      const ties: Bookmark[] = [
+        { id: 'a', title: 'same', url: 'https://x.com/1' },
+        { id: 'b', title: 'same', url: 'https://x.com/2' },
+        { id: 'c', title: 'same', url: 'https://x.com/3' },
+      ]
+      expect(
+        selectVisibleSortedBookmarks(ties, null, { kind: 'title', dir: 'asc' }).map(b => b.id),
+      ).toEqual(['a', 'b', 'c'])
+    })
+  })
+
+  describe('by date', () => {
+    it('desc: newest first, undefined addedAt at the end', () => {
+      expect(
+        selectVisibleSortedBookmarks(list, null, { kind: 'date', dir: 'desc' }).map(b => b.id),
+      ).toEqual(['1', '3', '2', '4'])
+    })
+
+    it('asc: oldest first, undefined addedAt still at the end', () => {
+      expect(
+        selectVisibleSortedBookmarks(list, null, { kind: 'date', dir: 'asc' }).map(b => b.id),
+      ).toEqual(['2', '3', '1', '4'])
+    })
+
+    it('keeps original order among bookmarks with no addedAt', () => {
+      const undated: Bookmark[] = [
+        { id: 'x', title: 'X', url: 'https://x.com' },
+        { id: 'y', title: 'Y', url: 'https://y.com' },
+        { id: 'z', title: 'Z', url: 'https://z.com', addedAt: 50 },
+      ]
+      expect(
+        selectVisibleSortedBookmarks(undated, null, { kind: 'date', dir: 'desc' }).map(b => b.id),
+      ).toEqual(['z', 'x', 'y'])
+    })
+  })
+
+  describe('by domain', () => {
+    it('sorts A→Z by hostname (without www)', () => {
+      expect(
+        selectVisibleSortedBookmarks(list, null, { kind: 'domain' }).map(b => b.id),
+      ).toEqual(['2', '4', '1', '3'])
+    })
+
+    it('preserves original order within the same domain (stable sort)', () => {
+      const sameDomain: Bookmark[] = [
+        { id: 'p', title: 'P', url: 'https://a.com/p' },
+        { id: 'q', title: 'Q', url: 'https://a.com/q' },
+        { id: 'r', title: 'R', url: 'https://a.com/r' },
+      ]
+      expect(
+        selectVisibleSortedBookmarks(sameDomain, null, { kind: 'domain' }).map(b => b.id),
+      ).toEqual(['p', 'q', 'r'])
+    })
+  })
+
+  it('applies filter before sort (pipeline)', () => {
+    expect(
+      selectVisibleSortedBookmarks(
+        list,
+        { kind: 'domain', value: 'a.com' },
+        { kind: 'title', dir: 'asc' },
+      ).map(b => b.id),
+    ).toEqual(['2', '4'])
+  })
+
+  it('does not mutate the input array', () => {
+    const snapshot = list.map(b => b.id)
+    selectVisibleSortedBookmarks(list, null, { kind: 'title', dir: 'desc' })
+    expect(list.map(b => b.id)).toEqual(snapshot)
   })
 })

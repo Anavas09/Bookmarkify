@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { Bookmark } from '../core/types.ts'
 import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
-import { selectVisibleBookmarks, type Filter } from './selectors.ts'
+import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
 export const PERSIST_KEY = 'bookmarkify:v1'
 
@@ -17,6 +17,7 @@ export interface BookmarkStore {
   pendingDeletes: Set<string>
   focusedIndex: number
   activeFilter: Filter
+  activeSort: Sort
   anchor: MarkAnchor | null
   load(source: BookmarkSource): Promise<void>
   mark(id: string): void
@@ -28,18 +29,21 @@ export interface BookmarkStore {
   moveFocus(delta: number): void
   setFilter(f: Filter): void
   clearFilter(): void
+  setSort(s: Sort): void
+  clearSort(): void
   exportFiltered(source: BookmarkSource): Promise<void>
 }
 
 export function getInitialState(): Pick<
   BookmarkStore,
-  'bookmarks' | 'pendingDeletes' | 'focusedIndex' | 'activeFilter' | 'anchor'
+  'bookmarks' | 'pendingDeletes' | 'focusedIndex' | 'activeFilter' | 'activeSort' | 'anchor'
 > {
   return {
     bookmarks: [],
     pendingDeletes: new Set(),
     focusedIndex: 0,
     activeFilter: null,
+    activeSort: null,
     anchor: null,
   }
 }
@@ -56,6 +60,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           pendingDeletes: new Set(),
           focusedIndex: 0,
           activeFilter: null,
+          activeSort: null,
           anchor: null,
         })
       },
@@ -80,7 +85,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       toggleFocused() {
         set(state => {
-          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
           const b = visible[state.focusedIndex]
           if (!b) return state
           const isMarked = state.pendingDeletes.has(b.id)
@@ -96,7 +101,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       extendMarkFromAnchor() {
         set(state => {
-          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
           if (visible.length === 0) return state
           if (state.anchor === null) {
             const b = visible[state.focusedIndex]
@@ -134,7 +139,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       markAllVisible() {
         set(state => {
-          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
           if (visible.length === 0) return state
           const next = new Set(state.pendingDeletes)
           let changed = false
@@ -151,7 +156,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       unmarkAllVisible() {
         set(state => {
-          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
           if (visible.length === 0) return state
           const next = new Set(state.pendingDeletes)
           let changed = false
@@ -168,7 +173,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       moveFocus(delta) {
         set(state => {
-          const visible = selectVisibleBookmarks(state.bookmarks, state.activeFilter)
+          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
           if (visible.length === 0) return state
           const max = visible.length - 1
           const next = Math.max(0, Math.min(max, state.focusedIndex + delta))
@@ -191,6 +196,20 @@ export const useBookmarkStore = create<BookmarkStore>()(
         })
       },
 
+      setSort(s) {
+        set(state => {
+          if (sortsEqual(state.activeSort, s)) return state
+          return { activeSort: s, focusedIndex: 0, anchor: null }
+        })
+      },
+
+      clearSort() {
+        set(state => {
+          if (state.activeSort === null) return state
+          return { activeSort: null, focusedIndex: 0, anchor: null }
+        })
+      },
+
       async exportFiltered(source) {
         const { bookmarks, pendingDeletes } = get()
         const filtered = bookmarks.filter(b => !pendingDeletes.has(b.id))
@@ -209,6 +228,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
         bookmarks: state.bookmarks,
         pendingDeletes: state.pendingDeletes,
         activeFilter: state.activeFilter,
+        activeSort: state.activeSort,
       }),
     },
   ),
@@ -226,7 +246,11 @@ function isEncodedSet(value: unknown): value is { __set: string[] } {
 export function useVisibleBookmarks(): Bookmark[] {
   const bookmarks = useBookmarkStore(s => s.bookmarks)
   const activeFilter = useBookmarkStore(s => s.activeFilter)
-  return useMemo(() => selectVisibleBookmarks(bookmarks, activeFilter), [bookmarks, activeFilter])
+  const activeSort = useBookmarkStore(s => s.activeSort)
+  return useMemo(
+    () => selectVisibleSortedBookmarks(bookmarks, activeFilter, activeSort),
+    [bookmarks, activeFilter, activeSort],
+  )
 }
 
 function filtersEqual(a: Filter, b: Filter): boolean {
@@ -238,4 +262,12 @@ function filtersEqual(a: Filter, b: Filter): boolean {
     return a.path.every((s, i) => s === b.path[i])
   }
   return a.kind === 'duplicate' && b.kind === 'duplicate'
+}
+
+function sortsEqual(a: Sort, b: Sort): boolean {
+  if (a === null || b === null) return a === b
+  if (a.kind !== b.kind) return false
+  if (a.kind === 'title' && b.kind === 'title') return a.dir === b.dir
+  if (a.kind === 'date' && b.kind === 'date') return a.dir === b.dir
+  return a.kind === 'domain' && b.kind === 'domain'
 }
