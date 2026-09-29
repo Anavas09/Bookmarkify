@@ -1,0 +1,87 @@
+{
+  "language": {
+    "en": "English",
+    "es": "Español",
+    "switchTo": "switch to {{lang}}"
+  },
+  "theme": {
+    "toLight": "switch to light",
+    "toDark": "switch to dark",
+    "toLightAria": "switch to light theme",
+    "toDarkAria": "switch to dark theme"
+  },
+  "header": {
+    "shortcuts": {
+      "move": "move",
+      "toggleMark": "toggle mark",
+      "extendRange": "extend range"
+    },
+    "stats": {
+      "total": "{{count}} total",
+      "kept": "{{count}} kept",
+      "marked": "{{count}} marked"
+    },
+    "bulk": {
+      "markAll": "mark all {{count}}",
+      "unmarkAll": "unmark all {{count}}",
+      "markAllTitle": "mark every visible bookmark",
+      "unmarkAllTitle": "unmark every visible bookmark"
+    },
+    "export": {
+      "idle": "export",
+      "loading": "exporting…",
+      "titleDisabled": "mark at least one to export",
+      "titleEnabled": "download filtered HTML"
+    }
+  },
+  "fileUpload": {
+    "loadAnother": "load another file",
+    "parsing": "parsing…",
+    "title": "Drop your bookmark export",
+    "hint": "or click to select a Netscape <code>.html</code> file",
+    "browserChrome": "Chrome",
+    "browserFirefox": "Firefox",
+    "browserSafari": "Safari",
+    "instructionsChrome": "⋮ · Bookmarks · Bookmarks manager · ⋮ · Export bookmarks",
+    "instructionsFirefox": "Library · Bookmarks · Import and Backup · Export",
+    "instructionsSafari": "File · Export Bookmarks",
+    "errorGeneric": "Failed to read file"
+  },
+  "grid": {
+    "empty": "No bookmarks match the current filter."
+  },
+  "card": {
+    "markedAria": "marked for deletion"
+  },
+  "filterBar": {
+    "filter": "filter",
+    "sort": "sort",
+    "chipAll": "all · {{count}}",
+    "chipDuplicates": "duplicates · {{count}}",
+    "chipDomainPlaceholder": "domain",
+    "chipFolderPlaceholder": "folder",
+    "folderRoot": "(root)",
+    "sortOptions": {
+      "original": "original",
+      "titleAZ": "title A→Z",
+      "titleZA": "title Z→A",
+      "newestFirst": "newest first",
+      "oldestFirst": "oldest first",
+      "domainAZ": "domain A→Z"
+    },
+    "menuNoDomains": "no domains",
+    "menuNoFolders": "no folders"
+  },
+  "exportModal": {
+    "title": "Export ready",
+    "savedAs": "saved as ",
+    "counters": "{{kept}} kept · {{removed}} removed",
+    "headsUpLabel": "heads up",
+    "headsUpBody": "Browsers import bookmark HTML <strong>additively</strong>. Reimporting will not replace your current bookmarks — the file gets placed in a new <code>Imported YYYY-MM-DD</code> folder inside <em>Other bookmarks</em>. To actually apply the triage, delete the discarded ones manually in your browser.",
+    "reimportLabel": "reimport",
+    "reimportChrome": "⋮ · Bookmarks · Bookmarks manager · ⋮ · Import bookmarks",
+    "reimportFirefox": "Library · Bookmarks · Import and Backup · Import Bookmarks from HTML",
+    "reimportSafari": "File · Import From · Bookmarks HTML File",
+    "done": "done"
+  }
+}

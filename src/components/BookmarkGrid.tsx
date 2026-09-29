@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
 import { BookmarkCard } from './BookmarkCard.tsx'
 
 export function BookmarkGrid() {
+  const { t } = useTranslation()
   const visible = useVisibleBookmarks()
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const focusedIndex = useBookmarkStore(s => s.focusedIndex)
@@ -9,7 +11,7 @@ export function BookmarkGrid() {
   if (visible.length === 0) {
     return (
       <p className="font-mono text-[12px] text-ink-mute px-1 py-8">
-        No bookmarks match the current filter.
+        {t('grid.empty')}
       </p>
     )
   }

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
 import { NetscapeAdapter } from '../core/adapters/NetscapeAdapter.ts'
 import { buildExportFilename } from '../lib/exportFilename.ts'
@@ -6,6 +7,7 @@ import { cx } from '../lib/cx.ts'
 import { FileUpload } from './FileUpload.tsx'
 import { ExportModal } from './ExportModal.tsx'
 import { ThemeToggle } from './ThemeToggle.tsx'
+import { LanguageToggle } from './LanguageToggle.tsx'
 
 const BULK_BTN_CLASS =
   'font-mono text-[11px] text-ink-mute hover:text-ink underline underline-offset-2 ' +
@@ -26,6 +28,7 @@ interface ExportedInfo {
 }
 
 export function AppHeader() {
+  const { t } = useTranslation()
   const total = useBookmarkStore(s => s.bookmarks.length)
   const marked = useBookmarkStore(s => s.pendingDeletes.size)
   const exportFiltered = useBookmarkStore(s => s.exportFiltered)
@@ -71,31 +74,31 @@ export function AppHeader() {
             <span className="flex items-center gap-1">
               <Key>←</Key>
               <Key>→</Key>
-              <span>move</span>
+              <span>{t('header.shortcuts.move')}</span>
             </span>
             <span className="text-edge" aria-hidden="true">·</span>
             <span className="flex items-center gap-1">
               <Key>space</Key>
-              <span>toggle mark</span>
+              <span>{t('header.shortcuts.toggleMark')}</span>
             </span>
             <span className="text-edge" aria-hidden="true">·</span>
             <span className="flex items-center gap-1">
               <Key>shift</Key>
               <span aria-hidden="true">+</span>
               <Key>space</Key>
-              <span>extend range</span>
+              <span>{t('header.shortcuts.extendRange')}</span>
             </span>
           </p>
         </div>
 
         <div className="flex flex-col items-end gap-3 pt-2">
           <p className="font-mono text-[13px] tracking-wide text-ink-soft m-0 flex items-baseline gap-1.5 flex-wrap justify-end">
-            <span>{total} total</span>
+            <span>{t('header.stats.total', { count: total })}</span>
             <span className="text-ink-mute" aria-hidden="true">·</span>
-            <span>{kept} kept</span>
+            <span>{t('header.stats.kept', { count: kept })}</span>
             <span className="text-ink-mute" aria-hidden="true">·</span>
             <span className={marked > 0 ? 'text-accent' : undefined}>
-              {marked} marked
+              {t('header.stats.marked', { count: marked })}
             </span>
             {unmarkedInVisible > 0 && (
               <>
@@ -104,9 +107,9 @@ export function AppHeader() {
                   type="button"
                   onClick={markAllVisible}
                   className={BULK_BTN_CLASS}
-                  title="mark every visible bookmark"
+                  title={t('header.bulk.markAllTitle')}
                 >
-                  mark all {unmarkedInVisible}
+                  {t('header.bulk.markAll', { count: unmarkedInVisible })}
                 </button>
               </>
             )}
@@ -117,21 +120,22 @@ export function AppHeader() {
                   type="button"
                   onClick={unmarkAllVisible}
                   className={BULK_BTN_CLASS}
-                  title="unmark every visible bookmark"
+                  title={t('header.bulk.unmarkAllTitle')}
                 >
-                  unmark all {markedInVisible}
+                  {t('header.bulk.unmarkAll', { count: markedInVisible })}
                 </button>
               </>
             )}
           </p>
           <div className="flex items-center gap-4">
+            <LanguageToggle />
             <ThemeToggle />
             <FileUpload variant="button" />
             <button
               type="button"
               onClick={handleExport}
               disabled={exportDisabled}
-              title={marked === 0 ? 'mark at least one to export' : 'download filtered HTML'}
+              title={marked === 0 ? t('header.export.titleDisabled') : t('header.export.titleEnabled')}
               className={cx(
                 'font-mono text-[12px] tracking-wide px-3 py-1.5 rounded-sm border transition-colors',
                 exportDisabled
@@ -139,7 +143,7 @@ export function AppHeader() {
                   : 'border-ink bg-ink text-paper hover:bg-paper-card hover:text-ink',
               )}
             >
-              {exporting ? 'exporting…' : 'export'}
+              {exporting ? t('header.export.loading') : t('header.export.idle')}
             </button>
           </div>
         </div>

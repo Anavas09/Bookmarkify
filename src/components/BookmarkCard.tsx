@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Bookmark } from '../core/types.ts'
 import { domainOf } from '../lib/domain.ts'
 import { faviconUrl } from '../lib/faviconUrl.ts'
@@ -25,6 +26,7 @@ function catalogNumber(index: number): string {
 }
 
 export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
+  const { t } = useTranslation()
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
   const favicon = bookmark.icon ?? faviconUrl(bookmark.url)
@@ -58,7 +60,7 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
         {marked && (
           <span
             className="font-mono text-[0.95rem] leading-none text-accent"
-            aria-label="marked for deletion"
+            aria-label={t('card.markedAria')}
           >
             ⨯
           </span>
@@ -101,10 +103,10 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
           {date && <span className="whitespace-nowrap">{date}</span>}
           {bookmark.tags && bookmark.tags.length > 0 && (
             <span className="min-w-0 truncate text-right text-ink-mute">
-              {bookmark.tags.map((t, i) => (
-                <span key={t}>
+              {bookmark.tags.map((tag, i) => (
+                <span key={tag}>
                   {i > 0 && <span className="text-edge"> · </span>}
-                  {t}
+                  {tag}
                 </span>
               ))}
             </span>

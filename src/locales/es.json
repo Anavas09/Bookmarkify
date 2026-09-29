@@ -1,0 +1,87 @@
+{
+  "language": {
+    "en": "English",
+    "es": "Español",
+    "switchTo": "cambiar a {{lang}}"
+  },
+  "theme": {
+    "toLight": "cambiar a claro",
+    "toDark": "cambiar a oscuro",
+    "toLightAria": "cambiar al tema claro",
+    "toDarkAria": "cambiar al tema oscuro"
+  },
+  "header": {
+    "shortcuts": {
+      "move": "mover",
+      "toggleMark": "marcar / desmarcar",
+      "extendRange": "extender rango"
+    },
+    "stats": {
+      "total": "{{count}} en total",
+      "kept": "{{count}} conservados",
+      "marked": "{{count}} marcados"
+    },
+    "bulk": {
+      "markAll": "marcar los {{count}}",
+      "unmarkAll": "desmarcar los {{count}}",
+      "markAllTitle": "marcar todos los marcadores visibles",
+      "unmarkAllTitle": "desmarcar todos los marcadores visibles"
+    },
+    "export": {
+      "idle": "exportar",
+      "loading": "exportando…",
+      "titleDisabled": "marca al menos uno para exportar",
+      "titleEnabled": "descargar HTML filtrado"
+    }
+  },
+  "fileUpload": {
+    "loadAnother": "cargar otro archivo",
+    "parsing": "procesando…",
+    "title": "Suelta tu export de marcadores",
+    "hint": "o haz clic para elegir un archivo Netscape <code>.html</code>",
+    "browserChrome": "Chrome",
+    "browserFirefox": "Firefox",
+    "browserSafari": "Safari",
+    "instructionsChrome": "⋮ · Marcadores · Administrador de marcadores · ⋮ · Exportar marcadores",
+    "instructionsFirefox": "Biblioteca · Marcadores · Importar y respaldar · Exportar",
+    "instructionsSafari": "Archivo · Exportar marcadores",
+    "errorGeneric": "No se pudo leer el archivo"
+  },
+  "grid": {
+    "empty": "Ningún marcador coincide con el filtro."
+  },
+  "card": {
+    "markedAria": "marcado para eliminar"
+  },
+  "filterBar": {
+    "filter": "filtrar",
+    "sort": "ordenar",
+    "chipAll": "todos · {{count}}",
+    "chipDuplicates": "duplicados · {{count}}",
+    "chipDomainPlaceholder": "dominio",
+    "chipFolderPlaceholder": "carpeta",
+    "folderRoot": "(raíz)",
+    "sortOptions": {
+      "original": "original",
+      "titleAZ": "título A→Z",
+      "titleZA": "título Z→A",
+      "newestFirst": "más recientes primero",
+      "oldestFirst": "más antiguos primero",
+      "domainAZ": "dominio A→Z"
+    },
+    "menuNoDomains": "sin dominios",
+    "menuNoFolders": "sin carpetas"
+  },
+  "exportModal": {
+    "title": "Exportación lista",
+    "savedAs": "guardado como ",
+    "counters": "{{kept}} conservados · {{removed}} eliminados",
+    "headsUpLabel": "aviso",
+    "headsUpBody": "Los navegadores importan el HTML de marcadores <strong>de forma aditiva</strong>. Reimportar no reemplaza tus marcadores actuales — el archivo se coloca en una carpeta nueva <code>Imported YYYY-MM-DD</code> dentro de <em>Otros marcadores</em>. Para aplicar el triaje de verdad, borra manualmente los descartados en tu navegador.",
+    "reimportLabel": "reimportar",
+    "reimportChrome": "⋮ · Marcadores · Administrador de marcadores · ⋮ · Importar marcadores",
+    "reimportFirefox": "Biblioteca · Marcadores · Importar y respaldar · Importar marcadores desde HTML",
+    "reimportSafari": "Archivo · Importar desde · Archivo HTML de marcadores",
+    "done": "hecho"
+  }
+}

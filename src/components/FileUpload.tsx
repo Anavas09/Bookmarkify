@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import { NetscapeAdapter } from '../core/adapters/NetscapeAdapter.ts'
 import { cx } from '../lib/cx.ts'
@@ -10,6 +11,7 @@ interface Props {
 type Status = 'idle' | 'parsing' | 'error'
 
 export function FileUpload({ variant = 'dropzone' }: Props) {
+  const { t } = useTranslation()
   const load = useBookmarkStore(s => s.load)
   const inputRef = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<Status>('idle')
@@ -24,7 +26,7 @@ export function FileUpload({ variant = 'dropzone' }: Props) {
       await load(adapter)
       setStatus('idle')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to read file')
+      setError(e instanceof Error ? e.message : t('fileUpload.errorGeneric'))
       setStatus('error')
     }
   }
@@ -61,7 +63,7 @@ export function FileUpload({ variant = 'dropzone' }: Props) {
             'disabled:text-ink-mute disabled:border-ink-mute disabled:cursor-wait',
           )}
         >
-          {status === 'parsing' ? 'parsing…' : 'load another file'}
+          {status === 'parsing' ? t('fileUpload.parsing') : t('fileUpload.loadAnother')}
         </button>
         <input
           ref={inputRef}
@@ -122,28 +124,34 @@ export function FileUpload({ variant = 'dropzone' }: Props) {
           />
         </svg>
         <h2 className="font-display text-3xl leading-tight text-ink m-0">
-          Drop your bookmark export
+          {t('fileUpload.title')}
         </h2>
         <span className="my-1 h-px w-8 bg-ink-mute" aria-hidden="true" />
         <p className="text-[15px] text-ink-soft m-0">
-          or click to select a Netscape{' '}
-          <code className="font-mono text-[0.875em] bg-paper-soft rounded-sm px-1.5 py-[1px]">
-            .html
-          </code>{' '}
-          file
+          <Trans
+            i18nKey="fileUpload.hint"
+            components={{
+              code: (
+                <code className="font-mono text-[0.875em] bg-paper-soft rounded-sm px-1.5 py-[1px]" />
+              ),
+            }}
+          />
         </p>
         <ul className="mt-4 flex flex-col gap-1.5 font-mono text-xs text-ink-mute text-left leading-relaxed list-none p-0">
           <li>
             <span className="inline-block w-4 text-ink-mute">→</span>{' '}
-            <strong className="font-medium text-ink-soft">Chrome</strong>: ⋮ · Bookmarks · Bookmarks manager · ⋮ · Export bookmarks
+            <strong className="font-medium text-ink-soft">{t('fileUpload.browserChrome')}</strong>:{' '}
+            {t('fileUpload.instructionsChrome')}
           </li>
           <li>
             <span className="inline-block w-4 text-ink-mute">→</span>{' '}
-            <strong className="font-medium text-ink-soft">Firefox</strong>: Library · Bookmarks · Import and Backup · Export
+            <strong className="font-medium text-ink-soft">{t('fileUpload.browserFirefox')}</strong>:{' '}
+            {t('fileUpload.instructionsFirefox')}
           </li>
           <li>
             <span className="inline-block w-4 text-ink-mute">→</span>{' '}
-            <strong className="font-medium text-ink-soft">Safari</strong>: File · Export Bookmarks
+            <strong className="font-medium text-ink-soft">{t('fileUpload.browserSafari')}</strong>:{' '}
+            {t('fileUpload.instructionsSafari')}
           </li>
         </ul>
         {status === 'parsing' && (

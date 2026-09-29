@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Menu,
   MenuButton,
@@ -16,37 +17,46 @@ import {
 } from '../store/selectors.ts'
 import { cx } from '../lib/cx.ts'
 
-function formatFolder(path: string[]): string {
-  return path.length === 0 ? '(root)' : path.join(' / ')
+type SortKey =
+  | 'original'
+  | 'titleAZ'
+  | 'titleZA'
+  | 'newestFirst'
+  | 'oldestFirst'
+  | 'domainAZ'
+
+const SORT_OPTIONS: Array<{ key: SortKey; sort: Sort }> = [
+  { key: 'original',    sort: null },
+  { key: 'titleAZ',     sort: { kind: 'title', dir: 'asc' } },
+  { key: 'titleZA',     sort: { kind: 'title', dir: 'desc' } },
+  { key: 'newestFirst', sort: { kind: 'date', dir: 'desc' } },
+  { key: 'oldestFirst', sort: { kind: 'date', dir: 'asc' } },
+  { key: 'domainAZ',    sort: { kind: 'domain' } },
+]
+
+function sortToKey(s: Sort): SortKey {
+  if (s === null) return 'original'
+  switch (s.kind) {
+    case 'title':  return s.dir === 'asc' ? 'titleAZ' : 'titleZA'
+    case 'date':   return s.dir === 'desc' ? 'newestFirst' : 'oldestFirst'
+    case 'domain': return 'domainAZ'
+  }
+}
+
+function formatFolder(path: string[], rootLabel: string): string {
+  return path.length === 0 ? rootLabel : path.join(' / ')
 }
 
 function domainLabel(f: Filter): string | null {
   return f?.kind === 'domain' ? f.value : null
 }
 
-function folderLabel(f: Filter): string | null {
-  return f?.kind === 'folder' ? formatFolder(f.path) : null
-}
-
-const SORT_OPTIONS: Array<{ label: string; sort: Sort }> = [
-  { label: 'original', sort: null },
-  { label: 'title A→Z', sort: { kind: 'title', dir: 'asc' } },
-  { label: 'title Z→A', sort: { kind: 'title', dir: 'desc' } },
-  { label: 'newest first', sort: { kind: 'date', dir: 'desc' } },
-  { label: 'oldest first', sort: { kind: 'date', dir: 'asc' } },
-  { label: 'domain A→Z', sort: { kind: 'domain' } },
-]
-
-function sortLabel(s: Sort): string {
-  if (s === null) return 'original'
-  switch (s.kind) {
-    case 'title':  return s.dir === 'asc' ? 'title A→Z' : 'title Z→A'
-    case 'date':   return s.dir === 'desc' ? 'newest first' : 'oldest first'
-    case 'domain': return 'domain A→Z'
-  }
+function folderLabel(f: Filter, rootLabel: string): string | null {
+  return f?.kind === 'folder' ? formatFolder(f.path, rootLabel) : null
 }
 
 export function FilterBarTabs() {
+  const { t } = useTranslation()
   const bookmarks = useBookmarkStore(s => s.bookmarks)
   const activeFilter = useBookmarkStore(s => s.activeFilter)
   const activeSort = useBookmarkStore(s => s.activeSort)
@@ -55,28 +65,32 @@ export function FilterBarTabs() {
   const setSort = useBookmarkStore(s => s.setSort)
   const clearSort = useBookmarkStore(s => s.clearSort)
 
+  const rootLabel = t('filterBar.folderRoot')
   const domainCounts = useMemo(() => selectDomainCounts(bookmarks), [bookmarks])
   const folderCounts = useMemo(() => selectFolderCounts(bookmarks), [bookmarks])
   const duplicateCount = useMemo(() => selectDuplicateCount(bookmarks), [bookmarks])
-  const activeSortLabel = sortLabel(activeSort)
+  const activeSortKey = sortToKey(activeSort)
 
   const activeDomain = domainLabel(activeFilter)
-  const activeFolder = folderLabel(activeFilter)
+  const activeFolder = folderLabel(activeFilter, rootLabel)
   const duplicateActive = activeFilter?.kind === 'duplicate'
 
   return (
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 sm:px-8 lg:px-12 font-mono text-[12px] bg-paper/95 backdrop-blur-sm border-b border-edge">
-      <span className="text-ink-mute tracking-wide mr-1">filter</span>
+      <span className="text-ink-mute tracking-wide mr-1">{t('filterBar.filter')}</span>
 
       <Chip
-        label={`all · ${bookmarks.length}`}
+        label={t('filterBar.chipAll', { count: bookmarks.length })}
         active={activeFilter === null}
         onClick={clearFilter}
       />
 
-      <ChipDropdown label={activeDomain ?? 'domain'} active={activeDomain !== null}>
+      <ChipDropdown
+        label={activeDomain ?? t('filterBar.chipDomainPlaceholder')}
+        active={activeDomain !== null}
+      >
         {domainCounts.length === 0 ? (
-          <MenuEmpty>no domains</MenuEmpty>
+          <MenuEmpty>{t('filterBar.menuNoDomains')}</MenuEmpty>
         ) : (
           domainCounts.map(d => (
             <MenuItem
@@ -91,25 +105,28 @@ export function FilterBarTabs() {
         )}
       </ChipDropdown>
 
-      <ChipDropdown label={activeFolder ?? 'folder'} active={activeFolder !== null}>
+      <ChipDropdown
+        label={activeFolder ?? t('filterBar.chipFolderPlaceholder')}
+        active={activeFolder !== null}
+      >
         {folderCounts.length === 0 ? (
-          <MenuEmpty>no folders</MenuEmpty>
+          <MenuEmpty>{t('filterBar.menuNoFolders')}</MenuEmpty>
         ) : (
           folderCounts.map(f => (
             <MenuItem
               key={folderKey(f.path)}
-              selected={activeFolder === formatFolder(f.path)}
+              selected={activeFolder === formatFolder(f.path, rootLabel)}
               count={f.count}
               onClick={() => setFilter({ kind: 'folder', path: f.path })}
             >
-              {formatFolder(f.path)}
+              {formatFolder(f.path, rootLabel)}
             </MenuItem>
           ))
         )}
       </ChipDropdown>
 
       <Chip
-        label={`duplicates · ${duplicateCount}`}
+        label={t('filterBar.chipDuplicates', { count: duplicateCount })}
         active={duplicateActive}
         disabled={duplicateCount === 0}
         onClick={() => {
@@ -118,21 +135,21 @@ export function FilterBarTabs() {
         }}
       />
 
-      <span className="text-ink-mute tracking-wide ml-2 mr-1">sort</span>
+      <span className="text-ink-mute tracking-wide ml-2 mr-1">{t('filterBar.sort')}</span>
       <ChipDropdown
-        label={activeSort === null ? 'original' : activeSortLabel}
+        label={t(`filterBar.sortOptions.${activeSortKey}`)}
         active={activeSort !== null}
       >
         {SORT_OPTIONS.map(opt => (
           <MenuItem
-            key={opt.label}
-            selected={activeSortLabel === opt.label}
+            key={opt.key}
+            selected={activeSortKey === opt.key}
             onClick={() => {
               if (opt.sort === null) clearSort()
               else setSort(opt.sort)
             }}
           >
-            {opt.label}
+            {t(`filterBar.sortOptions.${opt.key}`)}
           </MenuItem>
         ))}
       </ChipDropdown>
