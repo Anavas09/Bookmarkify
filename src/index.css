@@ -22,12 +22,12 @@
 /* frost-nord dark palette — overrides the tokens declared in @theme */
 .dark {
   --color-paper: #0f1319;
-  --color-paper-soft: #161c25;
-  --color-paper-card: #1c2432;
+  --color-paper-soft: #171f2a;
+  --color-paper-card: #1f293a;
   --color-ink: #e5e9f0;
   --color-ink-soft: #b8c1d0;
-  --color-ink-mute: #6d798c;
-  --color-edge: #2a3242;
+  --color-ink-mute: #7c8898;
+  --color-edge: #2f3849;
   --color-accent: #88b8dc;
   --color-accent-soft: #5c8bb0;
 }
