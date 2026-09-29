@@ -42,6 +42,26 @@ describe('serializeNetscape', () => {
     expect(html).not.toContain('TAGS')
   })
 
+  it('emits ICON when present and omits it when absent', () => {
+    const withIcon = serializeNetscape([
+      { id: '0', title: 'X', url: 'https://x.com', icon: 'data:image/png;base64,ZZZ' },
+    ])
+    expect(withIcon).toContain('ICON="data:image/png;base64,ZZZ"')
+
+    const withoutIcon = serializeNetscape([
+      { id: '0', title: 'X', url: 'https://x.com' },
+    ])
+    expect(withoutIcon).not.toContain('ICON')
+  })
+
+  it('round-trips icon through parseNetscape', () => {
+    const input: Bookmark[] = [
+      { id: '0', title: 'A', url: 'https://a.com', icon: 'data:image/png;base64,AAA' },
+    ]
+    const [b] = parseNetscape(serializeNetscape(input))
+    expect(b.icon).toBe('data:image/png;base64,AAA')
+  })
+
   it('escapes special characters in the title', () => {
     const html = serializeNetscape([
       { id: '0', title: 'A & B <C>', url: 'https://a.com' },

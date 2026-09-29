@@ -69,6 +69,9 @@ function bookmarkToLine(b: Bookmark, indent: string): string {
   if (b.tags && b.tags.length > 0) {
     attrs.push(`TAGS="${escapeAttr(b.tags.join(','))}"`)
   }
+  if (b.icon) {
+    attrs.push(`ICON="${escapeAttr(b.icon)}"`)
+  }
   return `${indent}<DT><A ${attrs.join(' ')}>${escapeText(b.title)}</A>`
 }
 

@@ -31,6 +31,7 @@ function walk(dl: Element, folderPath: string[], out: Bookmark[], counter: Count
 
     const addDateRaw = anchor.getAttribute('add_date')
     const tagsRaw = anchor.getAttribute('tags')
+    const iconRaw = anchor.getAttribute('icon')
 
     out.push({
       id: String(counter.i++),
@@ -39,6 +40,7 @@ function walk(dl: Element, folderPath: string[], out: Bookmark[], counter: Count
       addedAt: addDateRaw ? Number(addDateRaw) * 1000 : undefined,
       tags: tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : undefined,
       folderPath: folderPath.length > 0 ? [...folderPath] : undefined,
+      icon: iconRaw?.trim() || undefined,
     })
   }
 }

@@ -58,6 +58,30 @@ describe('parseNetscape', () => {
     expect(b.tags).toBeUndefined()
   })
 
+  describe('ICON attribute', () => {
+    it('extracts inline ICON as-is (data URL)', () => {
+      const html = `<DL><DT><A HREF="https://a.com" ICON="data:image/png;base64,AAA">A</A></DL>`
+      const [b] = parseNetscape(html)
+      expect(b.icon).toBe('data:image/png;base64,AAA')
+    })
+
+    it('leaves icon undefined when the attribute is missing', () => {
+      const html = `<DL><DT><A HREF="https://a.com">A</A></DL>`
+      const [b] = parseNetscape(html)
+      expect(b.icon).toBeUndefined()
+    })
+
+    it('treats empty and whitespace ICON as undefined', () => {
+      const html = `<DL>
+        <DT><A HREF="https://a.com" ICON="">A</A>
+        <DT><A HREF="https://b.com" ICON="   ">B</A>
+      </DL>`
+      const [a, bb] = parseNetscape(html)
+      expect(a.icon).toBeUndefined()
+      expect(bb.icon).toBeUndefined()
+    })
+  })
+
   describe('folder hierarchy', () => {
     it('root-level bookmarks have no folderPath', () => {
       const [first] = parseNetscape(MINIMAL)

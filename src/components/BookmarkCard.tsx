@@ -27,7 +27,7 @@ function catalogNumber(index: number): string {
 export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
-  const favicon = faviconUrl(bookmark.url)
+  const favicon = bookmark.icon ?? faviconUrl(bookmark.url)
   const [faviconBroken, setFaviconBroken] = useState(false)
   const cardStyle = { '--i': Math.min(index, 24) } as CSSProperties
   const ref = useRef<HTMLElement>(null)
