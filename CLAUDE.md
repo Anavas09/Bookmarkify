@@ -85,10 +85,6 @@ interface BookmarkStore {
 
 Atajos de teclado: `j`/`k` mueven el foco, `x` marca el marcador enfocado para eliminarlo, `u` lo desmarca.
 
-## Backlog e ideas futuras
-
-Todo lo que no está en este archivo y aún se está considerando vive en [`BACKLOG.md`](./BACKLOG.md): ideas del usuario, propuestas de Claude, y auditoría de qué código propio podría reemplazarse por librerías establecidas. Consultar antes de proponer features nuevas para no duplicar.
-
 ## Orden de implementación
 
 1. ✅ Tipos base + parser de HTML Netscape + tests con Vitest (sin UI)
