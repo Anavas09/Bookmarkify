@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { serializeNetscape } from './serializer.ts'
 import { parseNetscape } from './parser.ts'
-import type { Bookmark } from './types.ts'
+import type { Bookmark, DocumentMeta } from './types.ts'
 
 describe('serializeNetscape', () => {
   it('emits a valid Netscape header and footer', () => {
@@ -173,6 +173,87 @@ describe('serializeNetscape', () => {
       ])
       expect(html).not.toContain('<H3>TrashMe</H3>')
       expect(html).toContain('<H3>Keep</H3>')
+    })
+  })
+
+  describe('meta.rootTitle', () => {
+    it('uses rootTitle in both TITLE and H1 when provided', () => {
+      const html = serializeNetscape([], { rootTitle: 'Menú Marcadores' })
+      expect(html).toContain('<TITLE>Menú Marcadores</TITLE>')
+      expect(html).toContain('<H1>Menú Marcadores</H1>')
+    })
+
+    it('falls back to "Bookmarks" when meta is empty', () => {
+      const html = serializeNetscape([])
+      expect(html).toContain('<TITLE>Bookmarks</TITLE>')
+      expect(html).toContain('<H1>Bookmarks</H1>')
+    })
+
+    it('escapes special characters in the rootTitle', () => {
+      const html = serializeNetscape([], { rootTitle: 'Marcas & <cosas>' })
+      expect(html).toContain('<TITLE>Marcas &amp; &lt;cosas&gt;</TITLE>')
+    })
+  })
+
+  describe('meta.specialFolders', () => {
+    it('emits preserved attributes on the matching H3', () => {
+      const html = serializeNetscape(
+        [{ id: '0', title: 'A', url: 'https://a.com', folderPath: ['Bookmarks bar'] }],
+        {
+          specialFolders: [
+            { path: ['Bookmarks bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
+          ],
+        },
+      )
+      expect(html).toContain('<H3 PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>')
+    })
+
+    it('does not touch folders whose path is not in specialFolders', () => {
+      const html = serializeNetscape(
+        [
+          { id: '0', title: 'A', url: 'https://a.com', folderPath: ['Bar'] },
+          { id: '1', title: 'B', url: 'https://b.com', folderPath: ['Other'] },
+        ],
+        {
+          specialFolders: [
+            { path: ['Bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
+          ],
+        },
+      )
+      expect(html).toContain('<H3 PERSONAL_TOOLBAR_FOLDER="true">Bar</H3>')
+      expect(html).toContain('<H3>Other</H3>')
+    })
+
+    it('omits attrs of a folder that was emptied by filtering', () => {
+      // specialFolder refers to "Bar" but no bookmark points there anymore
+      const html = serializeNetscape(
+        [{ id: '0', title: 'A', url: 'https://a.com', folderPath: ['Kept'] }],
+        {
+          specialFolders: [
+            { path: ['Bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
+          ],
+        },
+      )
+      expect(html).not.toContain('PERSONAL_TOOLBAR_FOLDER')
+      expect(html).toContain('<H3>Kept</H3>')
+    })
+
+    it('round-trips rootTitle + specialFolders (Firefox-like export)', () => {
+      const input: Bookmark[] = [
+        { id: 'a', title: 'A', url: 'https://a.com', folderPath: ['Barra de marcadores'] },
+        { id: 'b', title: 'B', url: 'https://b.com', folderPath: ['Otros marcadores'] },
+      ]
+      const meta: DocumentMeta = {
+        rootTitle: 'Menú Marcadores',
+        specialFolders: [
+          { path: ['Barra de marcadores'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
+          { path: ['Otros marcadores'], attributes: { UNFILED_BOOKMARKS_FOLDER: 'true' } },
+        ],
+      }
+      const out = parseNetscape(serializeNetscape(input, meta))
+      expect(out.meta.rootTitle).toBe('Menú Marcadores')
+      expect(out.meta.specialFolders).toEqual(meta.specialFolders)
+      expect(out.bookmarks).toHaveLength(2)
     })
   })
 })

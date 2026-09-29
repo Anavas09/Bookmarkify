@@ -16,7 +16,85 @@ describe('parseNetscape', () => {
   it('returns a BookmarkDocument with bookmarks and meta', () => {
     const doc = parseNetscape(MINIMAL)
     expect(doc.bookmarks).toHaveLength(2)
-    expect(doc.meta).toEqual({})
+    // MINIMAL has <H1>Bookmarks</H1>, which is captured as rootTitle
+    expect(doc.meta.rootTitle).toBe('Bookmarks')
+    expect(doc.meta.specialFolders).toBeUndefined()
+  })
+
+  describe('meta.rootTitle', () => {
+    it('captures the H1 text (Firefox-style localized title)', () => {
+      const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+        <H1>Menú Marcadores</H1>
+        <DL><DT><A HREF="https://a.com">A</A></DL>`
+      expect(parseNetscape(html).meta.rootTitle).toBe('Menú Marcadores')
+    })
+
+    it('leaves rootTitle undefined when H1 is missing or empty', () => {
+      expect(parseNetscape('<DL><DT><A HREF="https://a.com">A</A></DL>').meta.rootTitle).toBeUndefined()
+      expect(parseNetscape('<H1></H1><DL></DL>').meta.rootTitle).toBeUndefined()
+    })
+  })
+
+  describe('meta.specialFolders', () => {
+    it('captures PERSONAL_TOOLBAR_FOLDER on H3', () => {
+      const html = `<DL>
+        <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>
+        <DL><DT><A HREF="https://a.com">A</A></DL>
+      </DL>`
+      const doc = parseNetscape(html)
+      expect(doc.meta.specialFolders).toEqual([
+        { path: ['Bookmarks bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
+      ])
+    })
+
+    it('captures UNFILED_BOOKMARKS_FOLDER on H3', () => {
+      const html = `<DL>
+        <DT><H3 UNFILED_BOOKMARKS_FOLDER="true">Otros marcadores</H3>
+        <DL><DT><A HREF="https://a.com">A</A></DL>
+      </DL>`
+      const doc = parseNetscape(html)
+      expect(doc.meta.specialFolders).toEqual([
+        { path: ['Otros marcadores'], attributes: { UNFILED_BOOKMARKS_FOLDER: 'true' } },
+      ])
+    })
+
+    it('captures multiple special folders at root level (Firefox-style)', () => {
+      const html = `<DL>
+        <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">Barra de marcadores</H3>
+        <DL><DT><A HREF="https://a.com">A</A></DL>
+        <DT><H3 UNFILED_BOOKMARKS_FOLDER="true">Otros marcadores</H3>
+        <DL><DT><A HREF="https://b.com">B</A></DL>
+      </DL>`
+      const doc = parseNetscape(html)
+      expect(doc.meta.specialFolders).toHaveLength(2)
+      expect(doc.meta.specialFolders?.[0]).toEqual({
+        path: ['Barra de marcadores'],
+        attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' },
+      })
+      expect(doc.meta.specialFolders?.[1]).toEqual({
+        path: ['Otros marcadores'],
+        attributes: { UNFILED_BOOKMARKS_FOLDER: 'true' },
+      })
+    })
+
+    it('ignores unrelated H3 attributes (ADD_DATE, LAST_MODIFIED)', () => {
+      const html = `<DL>
+        <DT><H3 ADD_DATE="1740430074" LAST_MODIFIED="0" PERSONAL_TOOLBAR_FOLDER="true">Bar</H3>
+        <DL><DT><A HREF="https://a.com">A</A></DL>
+      </DL>`
+      const doc = parseNetscape(html)
+      expect(doc.meta.specialFolders).toEqual([
+        { path: ['Bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
+      ])
+    })
+
+    it('leaves specialFolders undefined when no folder has the preserved attrs', () => {
+      const html = `<DL>
+        <DT><H3>Regular</H3>
+        <DL><DT><A HREF="https://a.com">A</A></DL>
+      </DL>`
+      expect(parseNetscape(html).meta.specialFolders).toBeUndefined()
+    })
   })
 
   it('returns one bookmark per anchor', () => {

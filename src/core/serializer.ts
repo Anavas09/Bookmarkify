@@ -1,4 +1,4 @@
-import type { Bookmark, DocumentMeta } from './types.ts'
+import type { Bookmark, DocumentMeta, SpecialFolder } from './types.ts'
 
 interface FolderNode {
   subfolders: Map<string, FolderNode>
@@ -8,7 +8,7 @@ interface FolderNode {
 export function serializeNetscape(bookmarks: Bookmark[], meta: DocumentMeta = {}): string {
   const root = buildTree(bookmarks)
   const body: string[] = []
-  emit(root, '    ', body)
+  emit(root, '    ', body, meta.specialFolders, [])
 
   const title = meta.rootTitle ?? 'Bookmarks'
   const lines = [
@@ -50,16 +50,36 @@ function buildTree(bookmarks: Bookmark[]): FolderNode {
  * each level (Map preserves insertion order in JS, so subfolders come out
  * in the order the first bookmark referenced them).
  */
-function emit(node: FolderNode, indent: string, out: string[]): void {
+function emit(
+  node: FolderNode,
+  indent: string,
+  out: string[],
+  specialFolders: SpecialFolder[] | undefined,
+  path: string[],
+): void {
   for (const [name, sub] of node.subfolders) {
-    out.push(`${indent}<DT><H3>${escapeText(name)}</H3>`)
+    const currentPath = [...path, name]
+    const special = specialFolders?.find(sf => pathsEqual(sf.path, currentPath))
+    const attrPrefix = special ? ' ' + toAttrString(special.attributes) : ''
+    out.push(`${indent}<DT><H3${attrPrefix}>${escapeText(name)}</H3>`)
     out.push(`${indent}<DL><p>`)
-    emit(sub, indent + '    ', out)
+    emit(sub, indent + '    ', out, specialFolders, currentPath)
     out.push(`${indent}</DL><p>`)
   }
   for (const b of node.bookmarks) {
     out.push(bookmarkToLine(b, indent))
   }
+}
+
+function pathsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((s, i) => s === b[i])
+}
+
+function toAttrString(attrs: Record<string, string>): string {
+  return Object.entries(attrs)
+    .map(([k, v]) => `${k}="${escapeAttr(v)}"`)
+    .join(' ')
 }
 
 function bookmarkToLine(b: Bookmark, indent: string): string {

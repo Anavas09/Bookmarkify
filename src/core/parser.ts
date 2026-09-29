@@ -1,26 +1,45 @@
-import type { Bookmark, BookmarkDocument, DocumentMeta } from './types.ts'
+import type { Bookmark, BookmarkDocument, DocumentMeta, SpecialFolder } from './types.ts'
+
+const PRESERVED_H3_ATTRS = ['personal_toolbar_folder', 'unfiled_bookmarks_folder'] as const
 
 export function parseNetscape(html: string): BookmarkDocument {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   const rootDL = doc.querySelector('dl')
   const bookmarks: Bookmark[] = []
-  const meta: DocumentMeta = {}
+  const specialFolders: SpecialFolder[] = []
+
+  const rootTitle = doc.querySelector('h1')?.textContent?.trim()
+
   if (rootDL) {
-    walk(rootDL, [], bookmarks, { i: 0 })
+    walk(rootDL, [], bookmarks, specialFolders, { i: 0 })
   }
+
+  const meta: DocumentMeta = {}
+  if (rootTitle) meta.rootTitle = rootTitle
+  if (specialFolders.length > 0) meta.specialFolders = specialFolders
+
   return { bookmarks, meta }
 }
 
 interface Counter { i: number }
 
-function walk(dl: Element, folderPath: string[], out: Bookmark[], counter: Counter): void {
+function walk(
+  dl: Element,
+  folderPath: string[],
+  out: Bookmark[],
+  specialFolders: SpecialFolder[],
+  counter: Counter,
+): void {
   for (const dt of directChildren(dl, 'DT')) {
     const h3 = firstChildByTag(dt, 'H3')
     if (h3) {
       const name = (h3.textContent ?? '').trim()
       if (!name) continue
+      const path = [...folderPath, name]
+      const preserved = pickPreservedAttrs(h3)
+      if (preserved) specialFolders.push({ path, attributes: preserved })
       const contents = findFolderContentsDL(dt)
-      if (contents) walk(contents, [...folderPath, name], out, counter)
+      if (contents) walk(contents, path, out, specialFolders, counter)
       continue
     }
 
@@ -44,6 +63,15 @@ function walk(dl: Element, folderPath: string[], out: Bookmark[], counter: Count
       icon: iconRaw?.trim() || undefined,
     })
   }
+}
+
+function pickPreservedAttrs(h3: Element): Record<string, string> | null {
+  const out: Record<string, string> = {}
+  for (const key of PRESERVED_H3_ATTRS) {
+    const value = h3.getAttribute(key)
+    if (value !== null) out[key.toUpperCase()] = value
+  }
+  return Object.keys(out).length > 0 ? out : null
 }
 
 function directChildren(el: Element, tag: string): Element[] {
