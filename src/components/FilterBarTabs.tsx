@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Menu,
@@ -15,6 +15,7 @@ import {
   type Filter,
   type Sort,
 } from '../store/selectors.ts'
+import { isEditableTarget } from '../hooks/keyboardShortcuts.ts'
 import { cx } from '../lib/cx.ts'
 
 type SortKey =
@@ -77,6 +78,8 @@ export function FilterBarTabs() {
 
   return (
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 sm:px-8 lg:px-12 font-mono text-[12px] bg-paper/95 backdrop-blur-sm border-b border-edge">
+      <SearchInput />
+
       <span className="text-ink-mute tracking-wide mr-1">{t('filterBar.filter')}</span>
 
       <Chip
@@ -243,4 +246,48 @@ function MenuItem({ selected, count, onClick, children }: MenuItemProps) {
 
 function MenuEmpty({ children }: { children: ReactNode }) {
   return <div className="px-3 py-2 text-ink-mute font-mono text-[12px]">{children}</div>
+}
+
+function SearchInput() {
+  const { t } = useTranslation()
+  const activeFilter = useBookmarkStore(s => s.activeFilter)
+  const setFilter = useBookmarkStore(s => s.setFilter)
+  const clearFilter = useBookmarkStore(s => s.clearFilter)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const value = activeFilter?.kind === 'text' ? activeFilter.query : ''
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== '/') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (isEditableTarget(e.target)) return
+      e.preventDefault()
+      inputRef.current?.focus()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      placeholder={t('filterBar.searchPlaceholder')}
+      value={value}
+      onChange={e => {
+        const q = e.target.value
+        if (q === '') clearFilter()
+        else setFilter({ kind: 'text', query: q })
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          if (value !== '') clearFilter()
+          inputRef.current?.blur()
+        }
+      }}
+      className="w-56 sm:w-64 px-3 py-1 rounded-sm border border-edge bg-paper-card text-ink-soft placeholder:text-ink-mute focus:outline-none focus:border-ink-mute font-mono text-[12px]"
+    />
+  )
 }

@@ -88,6 +88,11 @@ export function AppHeader() {
               <Key>space</Key>
               <span>{t('header.shortcuts.extendRange')}</span>
             </span>
+            <span className="text-edge" aria-hidden="true">·</span>
+            <span className="flex items-center gap-1">
+              <Key>/</Key>
+              <span>{t('header.shortcuts.search')}</span>
+            </span>
           </p>
         </div>
 

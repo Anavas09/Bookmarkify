@@ -14,7 +14,8 @@
     "shortcuts": {
       "move": "mover",
       "toggleMark": "marcar / desmarcar",
-      "extendRange": "extender rango"
+      "extendRange": "extender rango",
+      "search": "buscar"
     },
     "stats": {
       "total": "{{count}} en total",
@@ -56,6 +57,7 @@
   "filterBar": {
     "filter": "filtrar",
     "sort": "ordenar",
+    "searchPlaceholder": "busca en título, url, carpeta…",
     "chipAll": "todos · {{count}}",
     "chipDuplicates": "duplicados · {{count}}",
     "chipDomainPlaceholder": "dominio",

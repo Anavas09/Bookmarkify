@@ -6,6 +6,7 @@ export type Filter =
   | { kind: 'domain'; value: string }
   | { kind: 'folder'; path: string[] }
   | { kind: 'duplicate' }
+  | { kind: 'text'; query: string }
   | null
 
 export type Sort =
@@ -101,6 +102,16 @@ export function selectVisibleBookmarks(
     case 'duplicate': {
       const dupIds = selectDuplicateIds(bookmarks)
       return bookmarks.filter(b => dupIds.has(b.id))
+    }
+    case 'text': {
+      const q = activeFilter.query.trim().toLowerCase()
+      if (q === '') return bookmarks
+      return bookmarks.filter(b => {
+        if (b.title.toLowerCase().includes(q)) return true
+        if (b.url.toLowerCase().includes(q)) return true
+        const folder = (b.folderPath ?? []).join(' / ').toLowerCase()
+        return folder.includes(q)
+      })
     }
   }
 }

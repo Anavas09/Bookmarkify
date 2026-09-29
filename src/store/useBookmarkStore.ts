@@ -265,6 +265,7 @@ function filtersEqual(a: Filter, b: Filter): boolean {
     if (a.path.length !== b.path.length) return false
     return a.path.every((s, i) => s === b.path[i])
   }
+  if (a.kind === 'text' && b.kind === 'text') return a.query === b.query
   return a.kind === 'duplicate' && b.kind === 'duplicate'
 }
 

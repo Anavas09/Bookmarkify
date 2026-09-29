@@ -125,6 +125,53 @@ describe('selectVisibleBookmarks', () => {
   it('filters by duplicate (only urls that appear more than once)', () => {
     expect(selectVisibleBookmarks(list, { kind: 'duplicate' }).map(b => b.id)).toEqual(['3', '4'])
   })
+
+  describe('by text', () => {
+    const textList: Bookmark[] = [
+      { id: '1', title: 'React docs',      url: 'https://react.dev',          folderPath: ['Dev'] },
+      { id: '2', title: 'Django overview', url: 'https://djangoproject.com',  folderPath: ['Dev', 'Python'] },
+      { id: '3', title: 'Cooking recipes', url: 'https://foodnetwork.com',    folderPath: ['Personal'] },
+    ]
+
+    it('matches on title', () => {
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: 'react' }).map(b => b.id),
+      ).toEqual(['1'])
+    })
+
+    it('matches on url', () => {
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: 'foodnetwork' }).map(b => b.id),
+      ).toEqual(['3'])
+    })
+
+    it('matches on any segment of folderPath (joined)', () => {
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: 'python' }).map(b => b.id),
+      ).toEqual(['2'])
+    })
+
+    it('is case-insensitive', () => {
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: 'REACT' }).map(b => b.id),
+      ).toEqual(['1'])
+    })
+
+    it('returns everything when the query is empty or whitespace only', () => {
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: '' }).map(b => b.id),
+      ).toEqual(['1', '2', '3'])
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: '   ' }).map(b => b.id),
+      ).toEqual(['1', '2', '3'])
+    })
+
+    it('returns nothing when no bookmark matches', () => {
+      expect(
+        selectVisibleBookmarks(textList, { kind: 'text', query: 'nothingmatches' }).map(b => b.id),
+      ).toEqual([])
+    })
+  })
 })
 
 describe('selectVisibleSortedBookmarks', () => {
