@@ -5,6 +5,7 @@ import { buildExportFilename } from '../lib/exportFilename.ts'
 import { cx } from '../lib/cx.ts'
 import { FileUpload } from './FileUpload.tsx'
 import { ExportModal } from './ExportModal.tsx'
+import { ThemeToggle } from './ThemeToggle.tsx'
 
 const BULK_BTN_CLASS =
   'font-mono text-[11px] text-ink-mute hover:text-ink underline underline-offset-2 ' +
@@ -124,6 +125,7 @@ export function AppHeader() {
             )}
           </p>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <FileUpload variant="button" />
             <button
               type="button"

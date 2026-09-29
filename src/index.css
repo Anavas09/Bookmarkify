@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-paper: #f7f8fa;
   --color-paper-soft: #eef0f4;
@@ -15,6 +17,19 @@
   --font-display: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+
+/* frost-nord dark palette — overrides the tokens declared in @theme */
+.dark {
+  --color-paper: #0f1319;
+  --color-paper-soft: #161c25;
+  --color-paper-card: #1c2432;
+  --color-ink: #e5e9f0;
+  --color-ink-soft: #b8c1d0;
+  --color-ink-mute: #6d798c;
+  --color-edge: #2a3242;
+  --color-accent: #88b8dc;
+  --color-accent-soft: #5c8bb0;
 }
 
 @layer base {
