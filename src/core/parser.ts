@@ -1,13 +1,14 @@
-import type { Bookmark } from './types.ts'
+import type { Bookmark, BookmarkDocument, DocumentMeta } from './types.ts'
 
-export function parseNetscape(html: string): Bookmark[] {
+export function parseNetscape(html: string): BookmarkDocument {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   const rootDL = doc.querySelector('dl')
   const bookmarks: Bookmark[] = []
+  const meta: DocumentMeta = {}
   if (rootDL) {
     walk(rootDL, [], bookmarks, { i: 0 })
   }
-  return bookmarks
+  return { bookmarks, meta }
 }
 
 interface Counter { i: number }

@@ -1,4 +1,4 @@
-import type { Bookmark } from '../types.ts'
+import type { BookmarkDocument } from '../types.ts'
 import type { BookmarkSource } from '../ports/BookmarkSource.ts'
 import { parseNetscape } from '../parser.ts'
 import { serializeNetscape } from '../serializer.ts'
@@ -14,7 +14,7 @@ export class NetscapeAdapter implements BookmarkSource {
     this.downloadName = downloadName
   }
 
-  async load(): Promise<Bookmark[]> {
+  async load(): Promise<BookmarkDocument> {
     if (this.file === null) {
       throw new Error('NetscapeAdapter was constructed without a file; cannot load')
     }
@@ -22,8 +22,8 @@ export class NetscapeAdapter implements BookmarkSource {
     return parseNetscape(html)
   }
 
-  async export(bookmarks: Bookmark[]): Promise<void> {
-    const html = serializeNetscape(bookmarks)
+  async export(doc: BookmarkDocument): Promise<void> {
+    const html = serializeNetscape(doc.bookmarks, doc.meta)
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     try {

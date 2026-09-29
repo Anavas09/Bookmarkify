@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
-import type { Bookmark } from '../core/types.ts'
+import type { Bookmark, DocumentMeta } from '../core/types.ts'
 import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
 import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
@@ -14,6 +14,7 @@ export interface MarkAnchor {
 
 export interface BookmarkStore {
   bookmarks: Bookmark[]
+  meta: DocumentMeta
   pendingDeletes: Set<string>
   focusedIndex: number
   activeFilter: Filter
@@ -36,10 +37,11 @@ export interface BookmarkStore {
 
 export function getInitialState(): Pick<
   BookmarkStore,
-  'bookmarks' | 'pendingDeletes' | 'focusedIndex' | 'activeFilter' | 'activeSort' | 'anchor'
+  'bookmarks' | 'meta' | 'pendingDeletes' | 'focusedIndex' | 'activeFilter' | 'activeSort' | 'anchor'
 > {
   return {
     bookmarks: [],
+    meta: {},
     pendingDeletes: new Set(),
     focusedIndex: 0,
     activeFilter: null,
@@ -54,9 +56,10 @@ export const useBookmarkStore = create<BookmarkStore>()(
       ...getInitialState(),
 
       async load(source) {
-        const bookmarks = await source.load()
+        const doc = await source.load()
         set({
-          bookmarks,
+          bookmarks: doc.bookmarks,
+          meta: doc.meta,
           pendingDeletes: new Set(),
           focusedIndex: 0,
           activeFilter: null,
@@ -211,9 +214,9 @@ export const useBookmarkStore = create<BookmarkStore>()(
       },
 
       async exportFiltered(source) {
-        const { bookmarks, pendingDeletes } = get()
+        const { bookmarks, meta, pendingDeletes } = get()
         const filtered = bookmarks.filter(b => !pendingDeletes.has(b.id))
-        await source.export(filtered)
+        await source.export({ bookmarks: filtered, meta })
       },
     }),
     {
@@ -226,6 +229,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
       }),
       partialize: state => ({
         bookmarks: state.bookmarks,
+        meta: state.meta,
         pendingDeletes: state.pendingDeletes,
         activeFilter: state.activeFilter,
         activeSort: state.activeSort,

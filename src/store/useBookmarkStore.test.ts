@@ -1,22 +1,24 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBookmarkStore, getInitialState, PERSIST_KEY } from './useBookmarkStore.ts'
-import type { Bookmark } from '../core/types.ts'
+import type { Bookmark, BookmarkDocument, DocumentMeta } from '../core/types.ts'
 import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
 
 class FakeSource implements BookmarkSource {
-  exportedWith: Bookmark[] | null = null
+  exportedWith: BookmarkDocument | null = null
   private readonly seed: Bookmark[]
+  private readonly seedMeta: DocumentMeta
 
-  constructor(seed: Bookmark[] = []) {
+  constructor(seed: Bookmark[] = [], meta: DocumentMeta = {}) {
     this.seed = seed
+    this.seedMeta = meta
   }
 
-  async load(): Promise<Bookmark[]> {
-    return this.seed
+  async load(): Promise<BookmarkDocument> {
+    return { bookmarks: this.seed, meta: this.seedMeta }
   }
 
-  async export(bookmarks: Bookmark[]): Promise<void> {
-    this.exportedWith = bookmarks
+  async export(doc: BookmarkDocument): Promise<void> {
+    this.exportedWith = doc
   }
 }
 
@@ -134,7 +136,7 @@ describe('useBookmarkStore', () => {
 
       await useBookmarkStore.getState().exportFiltered(source)
 
-      expect(source.exportedWith?.map(x => x.id)).toEqual(['a', 'c'])
+      expect(source.exportedWith?.bookmarks.map(x => x.id)).toEqual(['a', 'c'])
     })
 
     it('exports everything when nothing is marked', async () => {
@@ -143,7 +145,7 @@ describe('useBookmarkStore', () => {
 
       await useBookmarkStore.getState().exportFiltered(source)
 
-      expect(source.exportedWith?.map(x => x.id)).toEqual(['a', 'b'])
+      expect(source.exportedWith?.bookmarks.map(x => x.id)).toEqual(['a', 'b'])
     })
 
     it('does not clear pendingDeletes after export', async () => {

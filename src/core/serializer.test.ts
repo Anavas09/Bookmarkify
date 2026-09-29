@@ -58,7 +58,7 @@ describe('serializeNetscape', () => {
     const input: Bookmark[] = [
       { id: '0', title: 'A', url: 'https://a.com', icon: 'data:image/png;base64,AAA' },
     ]
-    const [b] = parseNetscape(serializeNetscape(input))
+    const [b] = parseNetscape(serializeNetscape(input)).bookmarks
     expect(b.icon).toBe('data:image/png;base64,AAA')
   })
 
@@ -82,7 +82,7 @@ describe('serializeNetscape', () => {
       { id: 'b', title: 'Tagged', url: 'https://tagged.com', tags: ['a', 'b'] },
       { id: 'c', title: 'Plain & Simple', url: 'https://plain.com' },
     ]
-    const output = parseNetscape(serializeNetscape(input))
+    const output = parseNetscape(serializeNetscape(input)).bookmarks
     expect(output).toHaveLength(input.length)
     expect(output[0]).toMatchObject({ title: 'Example', url: 'https://example.com', addedAt: 1700000000000 })
     expect(output[1]).toMatchObject({ title: 'Tagged', url: 'https://tagged.com', tags: ['a', 'b'] })
@@ -154,7 +154,7 @@ describe('serializeNetscape', () => {
         { id: 'd', title: 'Nested', url: 'https://nested.com', folderPath: ['Work', 'Frontend'] },
         { id: 'e', title: 'Personal1', url: 'https://p1.com', folderPath: ['Personal'] },
       ]
-      const output = parseNetscape(serializeNetscape(input))
+      const output = parseNetscape(serializeNetscape(input)).bookmarks
       expect(output).toHaveLength(input.length)
       const byUrl = Object.fromEntries(output.map(b => [b.url, b.folderPath]))
       expect(byUrl['https://root.com']).toBeUndefined()

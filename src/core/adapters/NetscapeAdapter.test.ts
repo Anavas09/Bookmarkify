@@ -8,14 +8,15 @@ const HTML = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
 </DL>`
 
 describe('NetscapeAdapter', () => {
-  it('load() reads the file and returns parsed bookmarks', async () => {
+  it('load() reads the file and returns a document with parsed bookmarks', async () => {
     const file = new File([HTML], 'bookmarks.html', { type: 'text/html' })
     const adapter = new NetscapeAdapter(file)
-    const bookmarks = await adapter.load()
+    const { bookmarks, meta } = await adapter.load()
 
     expect(bookmarks).toHaveLength(2)
     expect(bookmarks[0].url).toBe('https://example.com')
     expect(bookmarks[1].tags).toEqual(['ai'])
+    expect(meta).toEqual({})
   })
 
   it('load() throws when constructed without a file', async () => {
@@ -38,7 +39,7 @@ describe('NetscapeAdapter', () => {
       const adapter = new NetscapeAdapter(file, 'out.html')
       const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-      await adapter.export([{ id: '0', title: 'X', url: 'https://x.com' }])
+      await adapter.export({ bookmarks: [{ id: '0', title: 'X', url: 'https://x.com' }], meta: {} })
 
       expect(URL.createObjectURL).toHaveBeenCalledOnce()
       const blob = (URL.createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0] as Blob

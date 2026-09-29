@@ -1,20 +1,21 @@
-import type { Bookmark } from './types.ts'
+import type { Bookmark, DocumentMeta } from './types.ts'
 
 interface FolderNode {
   subfolders: Map<string, FolderNode>
   bookmarks: Bookmark[]
 }
 
-export function serializeNetscape(bookmarks: Bookmark[]): string {
+export function serializeNetscape(bookmarks: Bookmark[], meta: DocumentMeta = {}): string {
   const root = buildTree(bookmarks)
   const body: string[] = []
   emit(root, '    ', body)
 
+  const title = meta.rootTitle ?? 'Bookmarks'
   const lines = [
     '<!DOCTYPE NETSCAPE-Bookmark-file-1>',
     '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">',
-    '<TITLE>Bookmarks</TITLE>',
-    '<H1>Bookmarks</H1>',
+    `<TITLE>${escapeText(title)}</TITLE>`,
+    `<H1>${escapeText(title)}</H1>`,
     '<DL><p>',
     ...body,
     '</DL><p>',

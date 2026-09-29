@@ -10,30 +10,38 @@ const MINIMAL = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
   <DT><A HREF="https://openai.com" ADD_DATE="1700001000" TAGS="ai,research">OpenAI</A>
 </DL>`
 
+const parse = (html: string) => parseNetscape(html).bookmarks
+
 describe('parseNetscape', () => {
+  it('returns a BookmarkDocument with bookmarks and meta', () => {
+    const doc = parseNetscape(MINIMAL)
+    expect(doc.bookmarks).toHaveLength(2)
+    expect(doc.meta).toEqual({})
+  })
+
   it('returns one bookmark per anchor', () => {
-    const result = parseNetscape(MINIMAL)
+    const result = parse(MINIMAL)
     expect(result).toHaveLength(2)
   })
 
   it('extracts url and title', () => {
-    const [first] = parseNetscape(MINIMAL)
+    const [first] = parse(MINIMAL)
     expect(first.url).toBe('https://example.com')
     expect(first.title).toBe('Example')
   })
 
   it('converts ADD_DATE (seconds) to ms', () => {
-    const [first] = parseNetscape(MINIMAL)
+    const [first] = parse(MINIMAL)
     expect(first.addedAt).toBe(1700000000 * 1000)
   })
 
   it('parses comma-separated TAGS', () => {
-    const [, second] = parseNetscape(MINIMAL)
+    const [, second] = parse(MINIMAL)
     expect(second.tags).toEqual(['ai', 'research'])
   })
 
   it('assigns sequential numeric ids', () => {
-    const result = parseNetscape(MINIMAL)
+    const result = parse(MINIMAL)
     expect(result.map(b => b.id)).toEqual(['0', '1'])
   })
 
@@ -42,18 +50,18 @@ describe('parseNetscape', () => {
       <DT><A HREF="javascript:void(0)">Bad</A>
       <DT><A HREF="https://good.com">Good</A>
     </DL>`
-    const result = parseNetscape(html)
+    const result = parse(html)
     expect(result).toHaveLength(1)
     expect(result[0].url).toBe('https://good.com')
   })
 
   it('returns empty array for empty input', () => {
-    expect(parseNetscape('')).toHaveLength(0)
+    expect(parse('')).toHaveLength(0)
   })
 
   it('handles missing ADD_DATE and TAGS gracefully', () => {
     const html = `<DL><DT><A HREF="https://nodates.com">No dates</A></DL>`
-    const [b] = parseNetscape(html)
+    const [b] = parse(html)
     expect(b.addedAt).toBeUndefined()
     expect(b.tags).toBeUndefined()
   })
@@ -61,13 +69,13 @@ describe('parseNetscape', () => {
   describe('ICON attribute', () => {
     it('extracts inline ICON as-is (data URL)', () => {
       const html = `<DL><DT><A HREF="https://a.com" ICON="data:image/png;base64,AAA">A</A></DL>`
-      const [b] = parseNetscape(html)
+      const [b] = parse(html)
       expect(b.icon).toBe('data:image/png;base64,AAA')
     })
 
     it('leaves icon undefined when the attribute is missing', () => {
       const html = `<DL><DT><A HREF="https://a.com">A</A></DL>`
-      const [b] = parseNetscape(html)
+      const [b] = parse(html)
       expect(b.icon).toBeUndefined()
     })
 
@@ -76,7 +84,7 @@ describe('parseNetscape', () => {
         <DT><A HREF="https://a.com" ICON="">A</A>
         <DT><A HREF="https://b.com" ICON="   ">B</A>
       </DL>`
-      const [a, bb] = parseNetscape(html)
+      const [a, bb] = parse(html)
       expect(a.icon).toBeUndefined()
       expect(bb.icon).toBeUndefined()
     })
@@ -84,7 +92,7 @@ describe('parseNetscape', () => {
 
   describe('folder hierarchy', () => {
     it('root-level bookmarks have no folderPath', () => {
-      const [first] = parseNetscape(MINIMAL)
+      const [first] = parse(MINIMAL)
       expect(first.folderPath).toBeUndefined()
     })
 
@@ -95,7 +103,7 @@ describe('parseNetscape', () => {
           <DT><A HREF="https://a.com">A</A>
         </DL>
       </DL>`
-      const [b] = parseNetscape(html)
+      const [b] = parse(html)
       expect(b.folderPath).toEqual(['Personal'])
     })
 
@@ -109,7 +117,7 @@ describe('parseNetscape', () => {
           </DL>
         </DL>
       </DL>`
-      const [b] = parseNetscape(html)
+      const [b] = parse(html)
       expect(b.folderPath).toEqual(['Work', 'Frontend'])
     })
 
@@ -124,7 +132,7 @@ describe('parseNetscape', () => {
           <DT><A HREF="https://personal.com">P</A>
         </DL>
       </DL>`
-      const bs = parseNetscape(html)
+      const bs = parse(html)
       expect(bs).toHaveLength(2)
       expect(bs[0].folderPath).toEqual(['Work'])
       expect(bs[1].folderPath).toEqual(['Personal'])
@@ -139,7 +147,7 @@ describe('parseNetscape', () => {
         </DL>
         <DT><A HREF="https://root2.com">Root2</A>
       </DL>`
-      const bs = parseNetscape(html)
+      const bs = parse(html)
       expect(bs).toHaveLength(3)
       const map = Object.fromEntries(bs.map(b => [b.url, b.folderPath]))
       expect(map['https://root.com']).toBeUndefined()
@@ -153,7 +161,7 @@ describe('parseNetscape', () => {
         <DL></DL>
         <DT><A HREF="https://a.com">A</A>
       </DL>`
-      const bs = parseNetscape(html)
+      const bs = parse(html)
       expect(bs).toHaveLength(1)
       expect(bs[0].folderPath).toBeUndefined()
     })
@@ -165,7 +173,7 @@ describe('parseNetscape', () => {
           <DT><A HREF="https://ghost.com">Ghost</A>
         </DL>
       </DL>`
-      const bs = parseNetscape(html)
+      const bs = parse(html)
       expect(bs).toHaveLength(0)
     })
 
@@ -177,7 +185,7 @@ describe('parseNetscape', () => {
           </DL>
         </DT>
       </DL>`
-      const bs = parseNetscape(html)
+      const bs = parse(html)
       expect(bs).toHaveLength(1)
       expect(bs[0].folderPath).toEqual(['Wrap'])
     })
