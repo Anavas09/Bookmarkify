@@ -24,21 +24,24 @@
       "deleted_one": "{{count}} eliminado",
       "deleted_other": "{{count}} eliminados"
     },
-    "selection": {
-      "count_one": "{{count}} seleccionado",
-      "count_other": "{{count}} seleccionados",
-      "delete": "eliminar {{count}}",
-      "orPress": "o pulsa",
-      "deleteKey": "Supr",
-      "restore": "restaurar {{count}}",
-      "clear": "limpiar"
-    },
     "export": {
       "idle": "exportar",
       "loading": "exportando…",
       "titleDisabled": "elimina al menos uno para exportar",
       "titleEnabled": "descargar HTML filtrado"
     }
+  },
+  "selectionBar": {
+    "count_one": "{{count}} seleccionado",
+    "count_other": "{{count}} seleccionados",
+    "delete": "eliminar {{count}}",
+    "orPress": "o pulsa",
+    "deleteKey": "Supr",
+    "restore": "restaurar {{count}}",
+    "clear": "limpiar",
+    "deleted_one": "{{count}} eliminado",
+    "deleted_other": "{{count}} eliminados",
+    "undo": "deshacer"
   },
   "fileUpload": {
     "loadAnother": "cargar otro archivo",

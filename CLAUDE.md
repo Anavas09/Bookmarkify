@@ -68,7 +68,7 @@ interface Bookmark {
 
 ## Modelo de estado
 
-Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `Set<string>` dentro del store de Zustand. La exportación real los filtra en el momento del commit. Nada se elimina de forma permanente hasta que el usuario dispara una acción explícita de exportación.
+Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `Set<string>` dentro del store de Zustand. La exportación real los filtra en el momento del commit. Nada se elimina de forma permanente hasta que el usuario dispara una acción explícita de exportación. Mientras tanto, los eliminados se ocultan del grid y de los contadores; solo aparecen en la vista «eliminados» (paso 15), desde donde se restauran.
 
 ```ts
 interface BookmarkStore {
@@ -76,6 +76,7 @@ interface BookmarkStore {
   pendingDeletes: Set<string>;
   selected: Set<string>;          // selección visual efímera (no se persiste)
   selectionAnchor: string | null; // id del último clic simple, para Shift+clic
+  lastDeleted: string[] | null;   // último lote eliminado, para deshacer (efímero)
   load(source: BookmarkSource): Promise<void>;
   mark(id: string): void;
   unmark(id: string): void;
@@ -83,15 +84,17 @@ interface BookmarkStore {
   selectRangeTo(id: string): void;
   selectAllVisible(): void;
   clearSelection(): void;
-  deleteSelected(): void;   // selected → pendingDeletes
+  deleteSelected(): void;   // selected → pendingDeletes; el lote queda en lastDeleted
   restoreSelected(): void;  // saca los seleccionados de pendingDeletes
+  undoDelete(): void;       // devuelve el último lote
+  dismissUndo(): void;      // olvida el último lote (se cierra el aviso)
   exportFiltered(source: BookmarkSource): Promise<void>;
 }
 ```
 
-Selección estilo Explorador de Windows (paso 14): seleccionar **no** marca. Primero se selecciona y después se elimina o restaura la selección desde el header.
+Selección estilo Explorador de Windows (paso 14): seleccionar **no** marca. Primero se selecciona y después se elimina o restaura la selección desde la barra flotante inferior (paso 15).
 
-Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic selecciona el rango desde el ancla, arrastrar dibuja un lazo, doble clic en la card (o clic en el título) abre el enlace. Atajos: `Supr`/`⌫` eliminan la selección, `Esc` la limpia, `Ctrl`/`Cmd`+`A` selecciona los visibles y `/` enfoca la búsqueda.
+Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic selecciona el rango desde el ancla, arrastrar dibuja un lazo, doble clic en la card (o clic en el título) abre el enlace. Atajos: `Supr`/`⌫` eliminan la selección, `Esc` la limpia, `Ctrl`/`Cmd`+`A` selecciona los visibles, `Ctrl`/`Cmd`+`Z` deshace el último borrado mientras se ve el aviso y `/` enfoca la búsqueda.
 
 ## Orden de implementación
 
@@ -115,7 +118,11 @@ Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic sel
 14. ✅ Selección estilo Explorador con **react-selecto**, que reemplaza el teclado de triaje de los pasos 5 y 11 (`j`/`k`/flechas/`Space`/`Shift+Space`, `focusedIndex`, `anchor`). Se eligió frente a DragSelect porque este es GPL-3.0 desde la v3 y trae drag and drop activado por defecto; react-selecto es MIT y solo selecciona.
     - El store tiene una selección efímera (`selected` + `selectionAnchor`) separada de `pendingDeletes`. `deleteSelected` y `restoreSelected` pasan la selección al `Set` no destructivo y la vacían. `setFilter`/`clearFilter`/`load` limpian la selección; el sort la conserva porque los mismos elementos siguen visibles.
     - `BookmarkGrid` sincroniza en ambos sentidos: `onSelectEnd` escribe en el store (Shift+clic lo resuelve `selectRangeTo`, porque Selecto no hace rangos) y un efecto llama a `setSelectedTargets` cuando el store cambia la selección (Esc, Ctrl+A, borrar, filtrar). `dragContainer="main"` evita que los clics en el header limpien la selección. `dragCondition` excluye los `<a>` para que el título abra el enlace. El auto-scroll usa `document.body`, que dragscroll trata como viewport.
-    - Header: fila contextual "N seleccionados · eliminar N · o pulsa [Supr] · restaurar M · [esc] limpiar", con `⌫`/`⌘` en Mac (`lib/platform.ts`). El lazo usa los tokens del tema (`.selection-lasso` en `index.css`).
+    - Header: fila contextual "N seleccionados · eliminar N · o pulsa [Supr] · restaurar M · [esc] limpiar", con `⌫`/`⌘` en Mac (`lib/platform.ts`). El lazo usa los tokens del tema (`.selection-lasso` en `index.css`). En el paso 15 esta fila pasa a una barra flotante.
+15. 🚧 Eliminar visualmente (rama `feat/visual-delete`): ocultar + deshacer + animar.
+    - ✅ **Ocultar** — los selectores reciben `pendingDeletes` y excluyen los eliminados de todas las vistas salvo `{ kind: 'deleted' }`, que muestra solo esos para restaurarlos (chip «eliminados · N»). Los contadores de todos, dominio, carpeta y duplicados cuentan solo los conservados; al eliminar una copia, su gemela deja de ser duplicado. Un chip activo sigue pulsable a 0 para poder salir de su vista. Se quitaron `markAllVisible`/`unmarkAllVisible` y sus botones: `Ctrl`/`Cmd`+`A` y luego Supr o restaurar cubren lo mismo.
+    - ✅ **Barra flotante + deshacer** — la fila de selección pasa del header a `SelectionBar`, fija abajo y renderizada fuera de `<main>`: dentro, Selecto (`dragContainer="main"`) tomaría los clics en sus botones como clics en vacío y limpiaría la selección. Tras eliminar muestra «N eliminados · deshacer» durante 6 s, y `Ctrl`/`Cmd`+`Z` deshace mientras dura el aviso. Solo se deshace el último lote (`lastDeleted`, efímero), sin historial ni rehacer. Si hay selección, esta tiene prioridad sobre el aviso.
+    - ⏳ **Animar** con la View Transitions API nativa, sin dependencias: salida de la card y recolocación del resto. Además, `scrollbar-gutter: stable` para que el layout no salte cuando desaparece la barra de scroll.
 
 ## Limitación del ciclo web-app pura
 

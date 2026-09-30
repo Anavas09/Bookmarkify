@@ -105,6 +105,15 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  .bar-in {
+    animation: barIn 200ms ease-out both;
+  }
+
+  @keyframes barIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   .sr-input {
     position: absolute;
     width: 1px;

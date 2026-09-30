@@ -5,22 +5,29 @@ export interface ShortcutActions {
   deleteSelected: () => void
   clearSelection: () => void
   selectAll: () => void
+  undo: () => void
 }
 
 export interface ShortcutModifiers {
   mod: boolean
   alt: boolean
+  shift: boolean
 }
 
 export function handleShortcut(
   key: string,
-  { mod, alt }: ShortcutModifiers,
+  { mod, alt, shift }: ShortcutModifiers,
   actions: ShortcutActions,
 ): boolean {
   if (alt) return false
   if (mod) {
     if (key === 'a' || key === 'A') {
       actions.selectAll()
+      return true
+    }
+    // Ctrl/Cmd+Shift+Z is redo elsewhere; there is no redo here.
+    if ((key === 'z' || key === 'Z') && !shift) {
+      actions.undo()
       return true
     }
     return false
@@ -59,10 +66,12 @@ export function useKeyboardShortcuts(): void {
 
       const store = useBookmarkStore.getState()
 
-      const handled = handleShortcut(e.key, { mod: e.metaKey || e.ctrlKey, alt: e.altKey }, {
+      const modifiers = { mod: e.metaKey || e.ctrlKey, alt: e.altKey, shift: e.shiftKey }
+      const handled = handleShortcut(e.key, modifiers, {
         deleteSelected: () => store.deleteSelected(),
         clearSelection: () => store.clearSelection(),
         selectAll: () => store.selectAllVisible(),
+        undo: () => store.undoDelete(),
       })
 
       if (handled) e.preventDefault()

@@ -24,21 +24,24 @@
       "deleted_one": "{{count}} deleted",
       "deleted_other": "{{count}} deleted"
     },
-    "selection": {
-      "count_one": "{{count}} selected",
-      "count_other": "{{count}} selected",
-      "delete": "delete {{count}}",
-      "orPress": "or press",
-      "deleteKey": "Del",
-      "restore": "restore {{count}}",
-      "clear": "clear"
-    },
     "export": {
       "idle": "export",
       "loading": "exporting…",
       "titleDisabled": "delete at least one to export",
       "titleEnabled": "download filtered HTML"
     }
+  },
+  "selectionBar": {
+    "count_one": "{{count}} selected",
+    "count_other": "{{count}} selected",
+    "delete": "delete {{count}}",
+    "orPress": "or press",
+    "deleteKey": "Del",
+    "restore": "restore {{count}}",
+    "clear": "clear",
+    "deleted_one": "{{count}} deleted",
+    "deleted_other": "{{count}} deleted",
+    "undo": "undo"
   },
   "fileUpload": {
     "loadAnother": "load another file",

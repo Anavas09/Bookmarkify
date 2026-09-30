@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import { NetscapeAdapter } from '../core/adapters/NetscapeAdapter.ts'
@@ -9,18 +9,7 @@ import { FileUpload } from './FileUpload.tsx'
 import { ExportModal } from './ExportModal.tsx'
 import { ThemeToggle } from './ThemeToggle.tsx'
 import { LanguageToggle } from './LanguageToggle.tsx'
-
-const BULK_BTN_CLASS =
-  'font-mono text-[11px] text-ink-mute hover:text-ink underline underline-offset-2 ' +
-  'decoration-transparent hover:decoration-current transition-colors cursor-pointer'
-
-function Key({ children }: { children: string }) {
-  return (
-    <kbd className="font-mono text-[10.5px] leading-none px-1.5 py-[3px] rounded-sm border border-edge bg-paper-card text-ink-soft">
-      {children}
-    </kbd>
-  )
-}
+import { Key } from './Key.tsx'
 
 interface ExportedInfo {
   filename: string
@@ -31,39 +20,28 @@ interface ExportedInfo {
 export function AppHeader() {
   const { t } = useTranslation()
   const total = useBookmarkStore(s => s.bookmarks.length)
-  const marked = useBookmarkStore(s => s.pendingDeletes.size)
+  const deleted = useBookmarkStore(s => s.pendingDeletes.size)
   const exportFiltered = useBookmarkStore(s => s.exportFiltered)
-  const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
-  const selected = useBookmarkStore(s => s.selected)
-  const deleteSelected = useBookmarkStore(s => s.deleteSelected)
-  const restoreSelected = useBookmarkStore(s => s.restoreSelected)
-  const clearSelection = useBookmarkStore(s => s.clearSelection)
-  const kept = total - marked
+  const kept = total - deleted
   const mac = isMac()
-
-  const { markedInSelection, unmarkedInSelection } = useMemo(() => {
-    let m = 0
-    for (const id of selected) if (pendingDeletes.has(id)) m++
-    return { markedInSelection: m, unmarkedInSelection: selected.size - m }
-  }, [selected, pendingDeletes])
 
   const [exporting, setExporting] = useState(false)
   const [lastExport, setLastExport] = useState<ExportedInfo | null>(null)
 
   async function handleExport() {
-    if (marked === 0 || exporting) return
+    if (deleted === 0 || exporting) return
     const filename = buildExportFilename(new Date())
     const adapter = new NetscapeAdapter(null, filename)
     setExporting(true)
     try {
       await exportFiltered(adapter)
-      setLastExport({ filename, kept, removed: marked })
+      setLastExport({ filename, kept, removed: deleted })
     } finally {
       setExporting(false)
     }
   }
 
-  const exportDisabled = marked === 0 || exporting
+  const exportDisabled = deleted === 0 || exporting
 
   return (
     <>
@@ -105,43 +83,10 @@ export function AppHeader() {
             <span className="text-ink-mute" aria-hidden="true">·</span>
             <span>{t('header.stats.kept', { count: kept })}</span>
             <span className="text-ink-mute" aria-hidden="true">·</span>
-            <span className={marked > 0 ? 'text-accent' : undefined}>
-              {t('header.stats.deleted', { count: marked })}
+            <span className={deleted > 0 ? 'text-accent' : undefined}>
+              {t('header.stats.deleted', { count: deleted })}
             </span>
           </p>
-          {selected.size > 0 && (
-            <div className="font-mono text-[12px] text-ink-soft flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
-              <span>{t('header.selection.count', { count: selected.size })}</span>
-              {unmarkedInSelection > 0 && (
-                <span className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={deleteSelected}
-                    className="font-mono text-[12px] tracking-wide px-3 py-1.5 rounded-sm border border-accent text-accent hover:bg-accent hover:text-paper transition-colors cursor-pointer"
-                  >
-                    {t('header.selection.delete', { count: unmarkedInSelection })}
-                  </button>
-                  <span className="flex items-center gap-1 text-[11px] text-ink-mute">
-                    <span>{t('header.selection.orPress')}</span>
-                    <Key>{mac ? '⌫' : t('header.selection.deleteKey')}</Key>
-                  </span>
-                </span>
-              )}
-              {markedInSelection > 0 && (
-                <button type="button" onClick={restoreSelected} className={BULK_BTN_CLASS}>
-                  {t('header.selection.restore', { count: markedInSelection })}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={clearSelection}
-                className={cx(BULK_BTN_CLASS, 'flex items-center gap-1')}
-              >
-                <Key>esc</Key>
-                <span>{t('header.selection.clear')}</span>
-              </button>
-            </div>
-          )}
           <div className="flex items-center gap-4">
             <LanguageToggle />
             <ThemeToggle />
@@ -150,7 +95,7 @@ export function AppHeader() {
               type="button"
               onClick={handleExport}
               disabled={exportDisabled}
-              title={marked === 0 ? t('header.export.titleDisabled') : t('header.export.titleEnabled')}
+              title={deleted === 0 ? t('header.export.titleDisabled') : t('header.export.titleEnabled')}
               className={cx(
                 'font-mono text-[12px] tracking-wide px-3 py-1.5 rounded-sm border transition-colors',
                 exportDisabled

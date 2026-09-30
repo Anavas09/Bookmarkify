@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { handleShortcut, isEditableTarget, type ShortcutActions } from './keyboardShortcuts.ts'
 
-const NONE = { mod: false, alt: false }
-const MOD = { mod: true, alt: false }
+const NONE = { mod: false, alt: false, shift: false }
+const MOD = { mod: true, alt: false, shift: false }
+const MOD_SHIFT = { mod: true, alt: false, shift: true }
 
 function makeActions() {
   const deleteSelected = vi.fn<() => void>()
   const clearSelection = vi.fn<() => void>()
   const selectAll = vi.fn<() => void>()
-  const actions: ShortcutActions = { deleteSelected, clearSelection, selectAll }
-  return { actions, deleteSelected, clearSelection, selectAll }
+  const undo = vi.fn<() => void>()
+  const actions: ShortcutActions = { deleteSelected, clearSelection, selectAll, undo }
+  return { actions, deleteSelected, clearSelection, selectAll, undo }
 }
 
 describe('handleShortcut', () => {
@@ -17,9 +19,10 @@ describe('handleShortcut', () => {
   let deleteSelected: ReturnType<typeof vi.fn>
   let clearSelection: ReturnType<typeof vi.fn>
   let selectAll: ReturnType<typeof vi.fn>
+  let undo: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    ;({ actions, deleteSelected, clearSelection, selectAll } = makeActions())
+    ;({ actions, deleteSelected, clearSelection, selectAll, undo } = makeActions())
   })
 
   it('Delete deletes the selection', () => {
@@ -48,11 +51,25 @@ describe('handleShortcut', () => {
     expect(selectAll).not.toHaveBeenCalled()
   })
 
+  it('Ctrl/Cmd+Z undoes the last delete (also with Caps Lock on)', () => {
+    expect(handleShortcut('z', MOD, actions)).toBe(true)
+    expect(handleShortcut('Z', MOD, actions)).toBe(true)
+    expect(undo).toHaveBeenCalledTimes(2)
+  })
+
+  it('Ctrl/Cmd+Shift+Z (redo elsewhere) and plain "z" do nothing', () => {
+    expect(handleShortcut('Z', MOD_SHIFT, actions)).toBe(false)
+    expect(handleShortcut('z', NONE, actions)).toBe(false)
+    expect(undo).not.toHaveBeenCalled()
+  })
+
   it('ignores other modifier combos and Alt', () => {
     expect(handleShortcut('Delete', MOD, actions)).toBe(false)
     expect(handleShortcut('c', MOD, actions)).toBe(false)
-    expect(handleShortcut('Delete', { mod: false, alt: true }, actions)).toBe(false)
+    expect(handleShortcut('Delete', { ...NONE, alt: true }, actions)).toBe(false)
+    expect(handleShortcut('z', { ...MOD, alt: true }, actions)).toBe(false)
     expect(deleteSelected).not.toHaveBeenCalled()
+    expect(undo).not.toHaveBeenCalled()
   })
 
   it('the old triage keys are gone', () => {
@@ -62,6 +79,7 @@ describe('handleShortcut', () => {
     expect(deleteSelected).not.toHaveBeenCalled()
     expect(clearSelection).not.toHaveBeenCalled()
     expect(selectAll).not.toHaveBeenCalled()
+    expect(undo).not.toHaveBeenCalled()
   })
 })
 
