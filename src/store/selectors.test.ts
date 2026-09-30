@@ -6,6 +6,7 @@ import {
   selectDuplicateGroups,
   selectDuplicateIds,
   selectDuplicateCount,
+  selectKeptBookmarks,
   selectVisibleBookmarks,
   selectVisibleSortedBookmarks,
 } from './selectors.ts'
@@ -16,6 +17,8 @@ const B = (id: string, url: string, folderPath?: string[]): Bookmark => ({
   url,
   ...(folderPath !== undefined && { folderPath }),
 })
+
+const NO_DELETES = new Set<string>()
 
 describe('selectDomainCounts', () => {
   it('counts occurrences by hostname (without www)', () => {
@@ -95,6 +98,18 @@ describe('selectDuplicateIds / selectDuplicateCount', () => {
   })
 })
 
+describe('selectKeptBookmarks', () => {
+  const list = [B('1', 'https://a.com'), B('2', 'https://b.com'), B('3', 'https://c.com')]
+
+  it('leaves out the pending deletes, keeping the original order', () => {
+    expect(selectKeptBookmarks(list, new Set(['2'])).map(b => b.id)).toEqual(['1', '3'])
+  })
+
+  it('returns the same array when nothing is deleted', () => {
+    expect(selectKeptBookmarks(list, NO_DELETES)).toBe(list)
+  })
+})
+
 describe('selectVisibleBookmarks', () => {
   const list: Bookmark[] = [
     B('1', 'https://a.com', ['Work']),
@@ -104,26 +119,63 @@ describe('selectVisibleBookmarks', () => {
   ]
 
   it('returns everything when no filter is active', () => {
-    expect(selectVisibleBookmarks(list, null).map(b => b.id)).toEqual(['1', '2', '3', '4'])
+    expect(selectVisibleBookmarks(list, NO_DELETES, null).map(b => b.id)).toEqual(['1', '2', '3', '4'])
+  })
+
+  describe('with pending deletes', () => {
+    const deleted = new Set(['1', '3'])
+
+    it('hides them when no filter is active', () => {
+      expect(selectVisibleBookmarks(list, deleted, null).map(b => b.id)).toEqual(['2', '4'])
+    })
+
+    it('hides them under any other filter', () => {
+      expect(
+        selectVisibleBookmarks(list, deleted, { kind: 'domain', value: 'a.com' }).map(b => b.id),
+      ).toEqual(['4'])
+      expect(
+        selectVisibleBookmarks(list, deleted, { kind: 'folder', path: ['Work'] }).map(b => b.id),
+      ).toEqual(['2'])
+      expect(
+        selectVisibleBookmarks(list, deleted, { kind: 'text', query: 'a.com' }).map(b => b.id),
+      ).toEqual(['4'])
+    })
+
+    it('the deleted filter shows only them, in original order', () => {
+      expect(selectVisibleBookmarks(list, deleted, { kind: 'deleted' }).map(b => b.id)).toEqual([
+        '1',
+        '3',
+      ])
+    })
+
+    it('the deleted filter shows nothing when nothing is deleted', () => {
+      expect(selectVisibleBookmarks(list, NO_DELETES, { kind: 'deleted' })).toEqual([])
+    })
+
+    it('a copy stops being a duplicate once its twin is deleted', () => {
+      expect(
+        selectVisibleBookmarks(list, new Set(['3']), { kind: 'duplicate' }).map(b => b.id),
+      ).toEqual([])
+    })
   })
 
   it('filters by domain', () => {
     expect(
-      selectVisibleBookmarks(list, { kind: 'domain', value: 'a.com' }).map(b => b.id),
+      selectVisibleBookmarks(list, NO_DELETES, { kind: 'domain', value: 'a.com' }).map(b => b.id),
     ).toEqual(['1', '3', '4'])
   })
 
   it('filters by exact folder path (root [] included)', () => {
     expect(
-      selectVisibleBookmarks(list, { kind: 'folder', path: ['Work'] }).map(b => b.id),
+      selectVisibleBookmarks(list, NO_DELETES, { kind: 'folder', path: ['Work'] }).map(b => b.id),
     ).toEqual(['1', '2'])
     expect(
-      selectVisibleBookmarks(list, { kind: 'folder', path: [] }).map(b => b.id),
+      selectVisibleBookmarks(list, NO_DELETES, { kind: 'folder', path: [] }).map(b => b.id),
     ).toEqual(['4'])
   })
 
   it('filters by duplicate (only urls that appear more than once)', () => {
-    expect(selectVisibleBookmarks(list, { kind: 'duplicate' }).map(b => b.id)).toEqual(['3', '4'])
+    expect(selectVisibleBookmarks(list, NO_DELETES, { kind: 'duplicate' }).map(b => b.id)).toEqual(['3', '4'])
   })
 
   describe('by text', () => {
@@ -135,40 +187,40 @@ describe('selectVisibleBookmarks', () => {
 
     it('matches on title', () => {
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: 'react' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: 'react' }).map(b => b.id),
       ).toEqual(['1'])
     })
 
     it('matches on url', () => {
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: 'foodnetwork' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: 'foodnetwork' }).map(b => b.id),
       ).toEqual(['3'])
     })
 
     it('matches on any segment of folderPath (joined)', () => {
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: 'python' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: 'python' }).map(b => b.id),
       ).toEqual(['2'])
     })
 
     it('is case-insensitive', () => {
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: 'REACT' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: 'REACT' }).map(b => b.id),
       ).toEqual(['1'])
     })
 
     it('returns everything when the query is empty or whitespace only', () => {
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: '' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: '' }).map(b => b.id),
       ).toEqual(['1', '2', '3'])
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: '   ' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: '   ' }).map(b => b.id),
       ).toEqual(['1', '2', '3'])
     })
 
     it('returns nothing when no bookmark matches', () => {
       expect(
-        selectVisibleBookmarks(textList, { kind: 'text', query: 'nothingmatches' }).map(b => b.id),
+        selectVisibleBookmarks(textList, NO_DELETES, { kind: 'text', query: 'nothingmatches' }).map(b => b.id),
       ).toEqual([])
     })
   })
@@ -183,7 +235,7 @@ describe('selectVisibleSortedBookmarks', () => {
   ]
 
   it('returns filtered list untouched when sort is null (Original)', () => {
-    expect(selectVisibleSortedBookmarks(list, null, null).map(b => b.id)).toEqual([
+    expect(selectVisibleSortedBookmarks(list, NO_DELETES, null, null).map(b => b.id)).toEqual([
       '1', '2', '3', '4',
     ])
   })
@@ -191,13 +243,13 @@ describe('selectVisibleSortedBookmarks', () => {
   describe('by title', () => {
     it('asc: A→Z, case-insensitive', () => {
       expect(
-        selectVisibleSortedBookmarks(list, null, { kind: 'title', dir: 'asc' }).map(b => b.title),
+        selectVisibleSortedBookmarks(list, NO_DELETES, null, { kind: 'title', dir: 'asc' }).map(b => b.title),
       ).toEqual(['alpha', 'Bravo', 'Charlie', 'delta'])
     })
 
     it('desc: Z→A', () => {
       expect(
-        selectVisibleSortedBookmarks(list, null, { kind: 'title', dir: 'desc' }).map(b => b.title),
+        selectVisibleSortedBookmarks(list, NO_DELETES, null, { kind: 'title', dir: 'desc' }).map(b => b.title),
       ).toEqual(['delta', 'Charlie', 'Bravo', 'alpha'])
     })
 
@@ -208,7 +260,7 @@ describe('selectVisibleSortedBookmarks', () => {
         { id: 'c', title: 'same', url: 'https://x.com/3' },
       ]
       expect(
-        selectVisibleSortedBookmarks(ties, null, { kind: 'title', dir: 'asc' }).map(b => b.id),
+        selectVisibleSortedBookmarks(ties, NO_DELETES, null, { kind: 'title', dir: 'asc' }).map(b => b.id),
       ).toEqual(['a', 'b', 'c'])
     })
   })
@@ -216,13 +268,13 @@ describe('selectVisibleSortedBookmarks', () => {
   describe('by date', () => {
     it('desc: newest first, undefined addedAt at the end', () => {
       expect(
-        selectVisibleSortedBookmarks(list, null, { kind: 'date', dir: 'desc' }).map(b => b.id),
+        selectVisibleSortedBookmarks(list, NO_DELETES, null, { kind: 'date', dir: 'desc' }).map(b => b.id),
       ).toEqual(['1', '3', '2', '4'])
     })
 
     it('asc: oldest first, undefined addedAt still at the end', () => {
       expect(
-        selectVisibleSortedBookmarks(list, null, { kind: 'date', dir: 'asc' }).map(b => b.id),
+        selectVisibleSortedBookmarks(list, NO_DELETES, null, { kind: 'date', dir: 'asc' }).map(b => b.id),
       ).toEqual(['2', '3', '1', '4'])
     })
 
@@ -233,7 +285,7 @@ describe('selectVisibleSortedBookmarks', () => {
         { id: 'z', title: 'Z', url: 'https://z.com', addedAt: 50 },
       ]
       expect(
-        selectVisibleSortedBookmarks(undated, null, { kind: 'date', dir: 'desc' }).map(b => b.id),
+        selectVisibleSortedBookmarks(undated, NO_DELETES, null, { kind: 'date', dir: 'desc' }).map(b => b.id),
       ).toEqual(['z', 'x', 'y'])
     })
   })
@@ -241,7 +293,7 @@ describe('selectVisibleSortedBookmarks', () => {
   describe('by domain', () => {
     it('sorts A→Z by hostname (without www)', () => {
       expect(
-        selectVisibleSortedBookmarks(list, null, { kind: 'domain' }).map(b => b.id),
+        selectVisibleSortedBookmarks(list, NO_DELETES, null, { kind: 'domain' }).map(b => b.id),
       ).toEqual(['2', '4', '1', '3'])
     })
 
@@ -252,7 +304,7 @@ describe('selectVisibleSortedBookmarks', () => {
         { id: 'r', title: 'R', url: 'https://a.com/r' },
       ]
       expect(
-        selectVisibleSortedBookmarks(sameDomain, null, { kind: 'domain' }).map(b => b.id),
+        selectVisibleSortedBookmarks(sameDomain, NO_DELETES, null, { kind: 'domain' }).map(b => b.id),
       ).toEqual(['p', 'q', 'r'])
     })
   })
@@ -261,15 +313,27 @@ describe('selectVisibleSortedBookmarks', () => {
     expect(
       selectVisibleSortedBookmarks(
         list,
+        NO_DELETES,
         { kind: 'domain', value: 'a.com' },
         { kind: 'title', dir: 'asc' },
       ).map(b => b.id),
     ).toEqual(['2', '4'])
   })
 
+  it('sorts the deleted view too', () => {
+    expect(
+      selectVisibleSortedBookmarks(
+        list,
+        new Set(['1', '2']),
+        { kind: 'deleted' },
+        { kind: 'title', dir: 'asc' },
+      ).map(b => b.id),
+    ).toEqual(['2', '1'])
+  })
+
   it('does not mutate the input array', () => {
     const snapshot = list.map(b => b.id)
-    selectVisibleSortedBookmarks(list, null, { kind: 'title', dir: 'desc' })
+    selectVisibleSortedBookmarks(list, NO_DELETES, null, { kind: 'title', dir: 'desc' })
     expect(list.map(b => b.id)).toEqual(snapshot)
   })
 })

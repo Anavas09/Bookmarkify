@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
+import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import { NetscapeAdapter } from '../core/adapters/NetscapeAdapter.ts'
 import { buildExportFilename } from '../lib/exportFilename.ts'
 import { cx } from '../lib/cx.ts'
@@ -33,14 +33,11 @@ export function AppHeader() {
   const total = useBookmarkStore(s => s.bookmarks.length)
   const marked = useBookmarkStore(s => s.pendingDeletes.size)
   const exportFiltered = useBookmarkStore(s => s.exportFiltered)
-  const markAllVisible = useBookmarkStore(s => s.markAllVisible)
-  const unmarkAllVisible = useBookmarkStore(s => s.unmarkAllVisible)
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const selected = useBookmarkStore(s => s.selected)
   const deleteSelected = useBookmarkStore(s => s.deleteSelected)
   const restoreSelected = useBookmarkStore(s => s.restoreSelected)
   const clearSelection = useBookmarkStore(s => s.clearSelection)
-  const visible = useVisibleBookmarks()
   const kept = total - marked
   const mac = isMac()
 
@@ -49,12 +46,6 @@ export function AppHeader() {
     for (const id of selected) if (pendingDeletes.has(id)) m++
     return { markedInSelection: m, unmarkedInSelection: selected.size - m }
   }, [selected, pendingDeletes])
-
-  const { markedInVisible, unmarkedInVisible } = useMemo(() => {
-    let m = 0
-    for (const b of visible) if (pendingDeletes.has(b.id)) m++
-    return { markedInVisible: m, unmarkedInVisible: visible.length - m }
-  }, [visible, pendingDeletes])
 
   const [exporting, setExporting] = useState(false)
   const [lastExport, setLastExport] = useState<ExportedInfo | null>(null)
@@ -115,34 +106,8 @@ export function AppHeader() {
             <span>{t('header.stats.kept', { count: kept })}</span>
             <span className="text-ink-mute" aria-hidden="true">·</span>
             <span className={marked > 0 ? 'text-accent' : undefined}>
-              {t('header.stats.marked', { count: marked })}
+              {t('header.stats.deleted', { count: marked })}
             </span>
-            {unmarkedInVisible > 0 && (
-              <>
-                <span className="text-ink-mute" aria-hidden="true">·</span>
-                <button
-                  type="button"
-                  onClick={markAllVisible}
-                  className={BULK_BTN_CLASS}
-                  title={t('header.bulk.markAllTitle')}
-                >
-                  {t('header.bulk.markAll', { count: unmarkedInVisible })}
-                </button>
-              </>
-            )}
-            {markedInVisible > 0 && (
-              <>
-                <span className="text-ink-mute" aria-hidden="true">·</span>
-                <button
-                  type="button"
-                  onClick={unmarkAllVisible}
-                  className={BULK_BTN_CLASS}
-                  title={t('header.bulk.unmarkAllTitle')}
-                >
-                  {t('header.bulk.unmarkAll', { count: markedInVisible })}
-                </button>
-              </>
-            )}
           </p>
           {selected.size > 0 && (
             <div className="font-mono text-[12px] text-ink-soft flex flex-wrap items-center justify-end gap-x-3 gap-y-2">

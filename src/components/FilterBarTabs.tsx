@@ -12,6 +12,7 @@ import {
   selectDomainCounts,
   selectDuplicateCount,
   selectFolderCounts,
+  selectKeptBookmarks,
   type Filter,
   type Sort,
 } from '../store/selectors.ts'
@@ -59,6 +60,7 @@ function folderLabel(f: Filter, rootLabel: string): string | null {
 export function FilterBarTabs() {
   const { t } = useTranslation()
   const bookmarks = useBookmarkStore(s => s.bookmarks)
+  const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const activeFilter = useBookmarkStore(s => s.activeFilter)
   const activeSort = useBookmarkStore(s => s.activeSort)
   const setFilter = useBookmarkStore(s => s.setFilter)
@@ -67,14 +69,21 @@ export function FilterBarTabs() {
   const clearSort = useBookmarkStore(s => s.clearSort)
 
   const rootLabel = t('filterBar.folderRoot')
-  const domainCounts = useMemo(() => selectDomainCounts(bookmarks), [bookmarks])
-  const folderCounts = useMemo(() => selectFolderCounts(bookmarks), [bookmarks])
-  const duplicateCount = useMemo(() => selectDuplicateCount(bookmarks), [bookmarks])
+  // Counts describe what each filter would show, so deleted bookmarks are left out.
+  const kept = useMemo(
+    () => selectKeptBookmarks(bookmarks, pendingDeletes),
+    [bookmarks, pendingDeletes],
+  )
+  const domainCounts = useMemo(() => selectDomainCounts(kept), [kept])
+  const folderCounts = useMemo(() => selectFolderCounts(kept), [kept])
+  const duplicateCount = useMemo(() => selectDuplicateCount(kept), [kept])
+  const deletedCount = pendingDeletes.size
   const activeSortKey = sortToKey(activeSort)
 
   const activeDomain = domainLabel(activeFilter)
   const activeFolder = folderLabel(activeFilter, rootLabel)
   const duplicateActive = activeFilter?.kind === 'duplicate'
+  const deletedActive = activeFilter?.kind === 'deleted'
 
   return (
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 sm:px-8 lg:px-12 font-mono text-[12px] bg-paper/95 backdrop-blur-sm border-b border-edge">
@@ -83,7 +92,7 @@ export function FilterBarTabs() {
       <span className="text-ink-mute tracking-wide mr-1">{t('filterBar.filter')}</span>
 
       <Chip
-        label={t('filterBar.chipAll', { count: bookmarks.length })}
+        label={t('filterBar.chipAll', { count: kept.length })}
         active={activeFilter === null}
         onClick={clearFilter}
       />
@@ -128,13 +137,24 @@ export function FilterBarTabs() {
         )}
       </ChipDropdown>
 
+      {/* An active chip stays clickable even at 0, so its view can be left once emptied. */}
       <Chip
         label={t('filterBar.chipDuplicates', { count: duplicateCount })}
         active={duplicateActive}
-        disabled={duplicateCount === 0}
+        disabled={duplicateCount === 0 && !duplicateActive}
         onClick={() => {
           if (duplicateActive) clearFilter()
           else setFilter({ kind: 'duplicate' })
+        }}
+      />
+
+      <Chip
+        label={t('filterBar.chipDeleted', { count: deletedCount })}
+        active={deletedActive}
+        disabled={deletedCount === 0 && !deletedActive}
+        onClick={() => {
+          if (deletedActive) clearFilter()
+          else setFilter({ kind: 'deleted' })
         }}
       />
 

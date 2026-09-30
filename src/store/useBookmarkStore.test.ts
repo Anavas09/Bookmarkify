@@ -376,45 +376,43 @@ describe('useBookmarkStore', () => {
       })
     })
 
-    describe('markAllVisible / unmarkAllVisible', () => {
-      it('markAllVisible marks every visible bookmark', async () => {
-        const source = new FakeSource([B('a'), B('b'), B('c')])
-        await useBookmarkStore.getState().load(source)
-
-        useBookmarkStore.getState().markAllVisible()
-
-        expect([...useBookmarkStore.getState().pendingDeletes].sort()).toEqual(['a', 'b', 'c'])
-      })
-
-      it('markAllVisible only operates within the active filter', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://b.com'),
-          B('c', 'https://a.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
-
-        useBookmarkStore.getState().markAllVisible()
-
-        expect([...useBookmarkStore.getState().pendingDeletes].sort()).toEqual(['a', 'c'])
-      })
-
-      it('unmarkAllVisible clears only visible marks', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://b.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().mark('a')
+    describe('deleted bookmarks', () => {
+      beforeEach(async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([B('a'), B('b'), B('c'), B('d')]),
+        )
         useBookmarkStore.getState().mark('b')
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+      })
 
-        useBookmarkStore.getState().unmarkAllVisible()
+      it('selectAllVisible leaves out the deleted ones', () => {
+        useBookmarkStore.getState().selectAllVisible()
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a', 'c', 'd'])
+      })
 
-        const s = useBookmarkStore.getState()
-        expect(s.pendingDeletes.has('a')).toBe(false)
-        expect(s.pendingDeletes.has('b')).toBe(true)
+      it('selectRangeTo skips the deleted ones', () => {
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        useBookmarkStore.getState().selectRangeTo('c')
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a', 'c'])
+      })
+
+      it('the deleted filter selects only the deleted ones', () => {
+        useBookmarkStore.getState().setFilter({ kind: 'deleted' })
+        useBookmarkStore.getState().selectAllVisible()
+        expect([...useBookmarkStore.getState().selected]).toEqual(['b'])
+      })
+
+      it('setFilter treats two deleted filters as equal', () => {
+        useBookmarkStore.getState().setFilter({ kind: 'deleted' })
+        const before = useBookmarkStore.getState().activeFilter
+        useBookmarkStore.getState().setFilter({ kind: 'deleted' })
+        expect(useBookmarkStore.getState().activeFilter).toBe(before)
+      })
+
+      it('deleteSelected is a no-op when everything selected is already deleted', () => {
+        useBookmarkStore.getState().setSelection(['b'], 'b')
+        const before = useBookmarkStore.getState()
+        useBookmarkStore.getState().deleteSelected()
+        expect(useBookmarkStore.getState()).toBe(before)
       })
     })
 

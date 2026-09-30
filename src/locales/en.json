@@ -21,7 +21,8 @@
     "stats": {
       "total": "{{count}} total",
       "kept": "{{count}} kept",
-      "marked": "{{count}} marked"
+      "deleted_one": "{{count}} deleted",
+      "deleted_other": "{{count}} deleted"
     },
     "selection": {
       "count_one": "{{count}} selected",
@@ -32,16 +33,10 @@
       "restore": "restore {{count}}",
       "clear": "clear"
     },
-    "bulk": {
-      "markAll": "mark all {{count}}",
-      "unmarkAll": "unmark all {{count}}",
-      "markAllTitle": "mark every visible bookmark",
-      "unmarkAllTitle": "unmark every visible bookmark"
-    },
     "export": {
       "idle": "export",
       "loading": "exporting…",
-      "titleDisabled": "mark at least one to export",
+      "titleDisabled": "delete at least one to export",
       "titleEnabled": "download filtered HTML"
     }
   },
@@ -59,7 +54,9 @@
     "errorGeneric": "Failed to read file"
   },
   "grid": {
-    "empty": "No bookmarks match the current filter."
+    "empty": "No bookmarks match the current filter.",
+    "emptyAll": "No bookmarks left — all of them are deleted.",
+    "emptyDeleted": "No deleted bookmarks."
   },
   "card": {
     "markedAria": "marked for deletion"
@@ -70,6 +67,7 @@
     "searchPlaceholder": "search title, url, folder…",
     "chipAll": "all · {{count}}",
     "chipDuplicates": "duplicates · {{count}}",
+    "chipDeleted": "deleted · {{count}}",
     "chipDomainPlaceholder": "domain",
     "chipFolderPlaceholder": "folder",
     "folderRoot": "(root)",
