@@ -36,18 +36,20 @@ beforeEach(() => {
 
 describe('useBookmarkStore', () => {
   describe('initial state', () => {
-    it('starts empty with focus at 0', () => {
+    it('starts empty with nothing selected', () => {
       const s = useBookmarkStore.getState()
       expect(s.bookmarks).toEqual([])
       expect(s.pendingDeletes.size).toBe(0)
-      expect(s.focusedIndex).toBe(0)
+      expect(s.selected.size).toBe(0)
+      expect(s.selectionAnchor).toBeNull()
     })
   })
 
   describe('load', () => {
-    it('populates bookmarks and resets focus + pending deletes', async () => {
+    it('populates bookmarks and resets selection + pending deletes', async () => {
       useBookmarkStore.setState({
-        focusedIndex: 5,
+        selected: new Set(['stale']),
+        selectionAnchor: 'stale',
         pendingDeletes: new Set(['stale']),
       })
 
@@ -56,7 +58,8 @@ describe('useBookmarkStore', () => {
 
       const s = useBookmarkStore.getState()
       expect(s.bookmarks).toHaveLength(2)
-      expect(s.focusedIndex).toBe(0)
+      expect(s.selected.size).toBe(0)
+      expect(s.selectionAnchor).toBeNull()
       expect(s.pendingDeletes.size).toBe(0)
     })
   })
@@ -97,37 +100,6 @@ describe('useBookmarkStore', () => {
     })
   })
 
-  describe('moveFocus', () => {
-    beforeEach(async () => {
-      const source = new FakeSource([B('a'), B('b'), B('c')])
-      await useBookmarkStore.getState().load(source)
-    })
-
-    it('moves forward and backward', () => {
-      const store = useBookmarkStore.getState()
-      store.moveFocus(1)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(1)
-      store.moveFocus(-1)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
-    })
-
-    it('clamps at 0', () => {
-      useBookmarkStore.getState().moveFocus(-10)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
-    })
-
-    it('clamps at length - 1', () => {
-      useBookmarkStore.getState().moveFocus(99)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(2)
-    })
-
-    it('is a no-op on an empty list', () => {
-      useBookmarkStore.setState({ bookmarks: [], focusedIndex: 0 })
-      useBookmarkStore.getState().moveFocus(1)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
-    })
-  })
-
   describe('exportFiltered', () => {
     it('exports only bookmarks not in pendingDeletes', async () => {
       const source = new FakeSource([B('a'), B('b'), B('c')])
@@ -164,20 +136,21 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().activeFilter).toBeNull()
     })
 
-    it('setFilter stores the filter and resets focus to 0', async () => {
+    it('setFilter stores the filter and clears the selection', async () => {
       const source = new FakeSource([
         B('a', 'https://a.com'),
         B('b', 'https://b.com'),
         B('c', 'https://c.com'),
       ])
       await useBookmarkStore.getState().load(source)
-      useBookmarkStore.getState().moveFocus(2)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(2)
+      useBookmarkStore.getState().setSelection(['b', 'c'], 'b')
 
       useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
 
-      expect(useBookmarkStore.getState().activeFilter).toEqual({ kind: 'domain', value: 'a.com' })
-      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
+      const s = useBookmarkStore.getState()
+      expect(s.activeFilter).toEqual({ kind: 'domain', value: 'a.com' })
+      expect(s.selected.size).toBe(0)
+      expect(s.selectionAnchor).toBeNull()
     })
 
     it('setFilter is a no-op if the filter is equal', () => {
@@ -189,29 +162,16 @@ describe('useBookmarkStore', () => {
       expect(after.activeFilter).toBe(before.activeFilter)
     })
 
-    it('clearFilter goes back to null and resets focus', async () => {
+    it('clearFilter goes back to null and clears the selection', async () => {
       const source = new FakeSource([B('a'), B('b'), B('c')])
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().setFilter({ kind: 'duplicate' })
-      useBookmarkStore.getState().moveFocus(2)
+      useBookmarkStore.getState().setSelection(['a'], 'a')
 
       useBookmarkStore.getState().clearFilter()
 
       expect(useBookmarkStore.getState().activeFilter).toBeNull()
-      expect(useBookmarkStore.getState().focusedIndex).toBe(0)
-    })
-
-    it('moveFocus clamps to the visible list length when a filter is active', async () => {
-      const source = new FakeSource([
-        B('a', 'https://a.com'),
-        B('b', 'https://b.com'),
-        B('c', 'https://a.com'),
-      ])
-      await useBookmarkStore.getState().load(source)
-      useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
-
-      useBookmarkStore.getState().moveFocus(99)
-      expect(useBookmarkStore.getState().focusedIndex).toBe(1)
+      expect(useBookmarkStore.getState().selected.size).toBe(0)
     })
 
     it('load resets activeFilter to null', async () => {
@@ -227,16 +187,16 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().activeSort).toBeNull()
     })
 
-    it('setSort stores the sort and resets focus to 0', async () => {
+    it('setSort stores the sort and keeps the selection (same items stay visible)', async () => {
       const source = new FakeSource([B('a'), B('b'), B('c')])
       await useBookmarkStore.getState().load(source)
-      useBookmarkStore.getState().moveFocus(2)
+      useBookmarkStore.getState().setSelection(['b'], 'b')
 
       useBookmarkStore.getState().setSort({ kind: 'title', dir: 'desc' })
 
       const s = useBookmarkStore.getState()
       expect(s.activeSort).toEqual({ kind: 'title', dir: 'desc' })
-      expect(s.focusedIndex).toBe(0)
+      expect([...s.selected]).toEqual(['b'])
     })
 
     it('setSort is a no-op if the sort is equal', () => {
@@ -248,30 +208,14 @@ describe('useBookmarkStore', () => {
       expect(after.activeSort).toBe(before.activeSort)
     })
 
-    it('setSort resets the anchor', async () => {
-      const source = new FakeSource([B('a'), B('b')])
-      await useBookmarkStore.getState().load(source)
-      useBookmarkStore.getState().toggleFocused()
-      expect(useBookmarkStore.getState().anchor).not.toBeNull()
-
-      useBookmarkStore.getState().setSort({ kind: 'domain' })
-
-      expect(useBookmarkStore.getState().anchor).toBeNull()
-    })
-
-    it('clearSort goes back to null and resets focus + anchor', async () => {
+    it('clearSort goes back to null', async () => {
       const source = new FakeSource([B('a'), B('b')])
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().setSort({ kind: 'title', dir: 'asc' })
-      useBookmarkStore.getState().toggleFocused()
-      useBookmarkStore.getState().moveFocus(1)
 
       useBookmarkStore.getState().clearSort()
 
-      const s = useBookmarkStore.getState()
-      expect(s.activeSort).toBeNull()
-      expect(s.focusedIndex).toBe(0)
-      expect(s.anchor).toBeNull()
+      expect(useBookmarkStore.getState().activeSort).toBeNull()
     })
 
     it('load resets activeSort to null', async () => {
@@ -280,7 +224,7 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().activeSort).toBeNull()
     })
 
-    it('moveFocus operates on the sorted order (bulk ops follow the sort)', async () => {
+    it('selectRangeTo follows the sorted order', async () => {
       const source = new FakeSource([
         { id: '1', title: 'Charlie', url: 'https://c.com' },
         { id: '2', title: 'alpha',   url: 'https://a.com' },
@@ -289,110 +233,146 @@ describe('useBookmarkStore', () => {
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().setSort({ kind: 'title', dir: 'asc' })
 
-      useBookmarkStore.getState().toggleFocused()
+      // sorted: alpha(2), Bravo(3), Charlie(1)
+      useBookmarkStore.getState().setSelection(['2'], '2')
+      useBookmarkStore.getState().selectRangeTo('3')
 
-      expect(useBookmarkStore.getState().pendingDeletes.has('2')).toBe(true)
+      expect([...useBookmarkStore.getState().selected].sort()).toEqual(['2', '3'])
     })
   })
 
   describe('bulk selection', () => {
-    describe('toggleFocused', () => {
-      it('marks the focused bookmark and sets the anchor to mark', async () => {
-        const source = new FakeSource([B('a'), B('b'), B('c')])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().moveFocus(1)
-
-        useBookmarkStore.getState().toggleFocused()
-
+    describe('setSelection', () => {
+      it('replaces the selection and sets the anchor when given', () => {
+        useBookmarkStore.getState().setSelection(['a', 'b'], 'b')
         const s = useBookmarkStore.getState()
-        expect(s.pendingDeletes.has('b')).toBe(true)
-        expect(s.anchor).toEqual({ index: 1, action: 'mark' })
+        expect([...s.selected].sort()).toEqual(['a', 'b'])
+        expect(s.selectionAnchor).toBe('b')
       })
 
-      it('unmarks the focused bookmark and sets the anchor to unmark', async () => {
-        const source = new FakeSource([B('a'), B('b')])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().mark('a')
+      it('keeps the current anchor when none is given (drag selection)', () => {
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        useBookmarkStore.getState().setSelection(['a', 'b', 'c'])
+        expect(useBookmarkStore.getState().selectionAnchor).toBe('a')
+      })
 
-        useBookmarkStore.getState().toggleFocused()
-
-        const s = useBookmarkStore.getState()
-        expect(s.pendingDeletes.has('a')).toBe(false)
-        expect(s.anchor).toEqual({ index: 0, action: 'unmark' })
+      it('does not touch pendingDeletes', () => {
+        const before = useBookmarkStore.getState().pendingDeletes
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        expect(useBookmarkStore.getState().pendingDeletes).toBe(before)
       })
     })
 
-    describe('extendMarkFromAnchor', () => {
-      it('falls back to a toggle when the anchor is null', async () => {
-        const source = new FakeSource([B('a'), B('b')])
-        await useBookmarkStore.getState().load(source)
-
-        useBookmarkStore.getState().extendMarkFromAnchor()
-
-        const s = useBookmarkStore.getState()
-        expect(s.pendingDeletes.has('a')).toBe(true)
-        expect(s.anchor).toEqual({ index: 0, action: 'mark' })
+    describe('selectRangeTo', () => {
+      beforeEach(async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([B('a'), B('b'), B('c'), B('d'), B('e')]),
+        )
       })
 
-      it('marks the inclusive range from anchor forward to focus', async () => {
-        const source = new FakeSource([B('a'), B('b'), B('c'), B('d'), B('e')])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().toggleFocused()
-        useBookmarkStore.getState().moveFocus(3)
-
-        useBookmarkStore.getState().extendMarkFromAnchor()
-
-        const s = useBookmarkStore.getState()
-        expect([...s.pendingDeletes].sort()).toEqual(['a', 'b', 'c', 'd'])
-        expect(s.anchor).toEqual({ index: 0, action: 'mark' })
+      it('selects the inclusive range from the anchor forwards', () => {
+        useBookmarkStore.getState().setSelection(['b'], 'b')
+        useBookmarkStore.getState().selectRangeTo('d')
+        expect([...useBookmarkStore.getState().selected]).toEqual(['b', 'c', 'd'])
       })
 
-      it('marks the inclusive range from focus backward to anchor', async () => {
-        const source = new FakeSource([B('a'), B('b'), B('c'), B('d')])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().moveFocus(3)
-        useBookmarkStore.getState().toggleFocused()
-        useBookmarkStore.getState().moveFocus(-2)
-
-        useBookmarkStore.getState().extendMarkFromAnchor()
-
-        const s = useBookmarkStore.getState()
-        expect([...s.pendingDeletes].sort()).toEqual(['b', 'c', 'd'])
+      it('selects the inclusive range from the anchor backwards', () => {
+        useBookmarkStore.getState().setSelection(['d'], 'd')
+        useBookmarkStore.getState().selectRangeTo('a')
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a', 'b', 'c', 'd'])
       })
 
-      it('unmarks the range when the anchor action is unmark', async () => {
-        const source = new FakeSource([B('a'), B('b'), B('c'), B('d')])
-        await useBookmarkStore.getState().load(source)
+      it('keeps the anchor so the range can be re-extended (Explorer behaviour)', () => {
+        useBookmarkStore.getState().setSelection(['c'], 'c')
+        useBookmarkStore.getState().selectRangeTo('e')
+        useBookmarkStore.getState().selectRangeTo('a')
+        const s = useBookmarkStore.getState()
+        expect([...s.selected]).toEqual(['a', 'b', 'c'])
+        expect(s.selectionAnchor).toBe('c')
+      })
+
+      it('without an anchor selects just the target and anchors on it', () => {
+        useBookmarkStore.getState().selectRangeTo('c')
+        const s = useBookmarkStore.getState()
+        expect([...s.selected]).toEqual(['c'])
+        expect(s.selectionAnchor).toBe('c')
+      })
+
+      it('only covers visible bookmarks when a filter is active', async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([
+            B('a', 'https://a.com'),
+            B('b', 'https://b.com'),
+            B('c', 'https://a.com'),
+          ]),
+        )
+        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        useBookmarkStore.getState().selectRangeTo('c')
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a', 'c'])
+      })
+    })
+
+    describe('selectAllVisible / clearSelection', () => {
+      it('selectAllVisible selects only what the filter shows', async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([
+            B('a', 'https://a.com'),
+            B('b', 'https://b.com'),
+            B('c', 'https://a.com'),
+          ]),
+        )
+        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+        useBookmarkStore.getState().selectAllVisible()
+        expect([...useBookmarkStore.getState().selected].sort()).toEqual(['a', 'c'])
+      })
+
+      it('clearSelection empties the selection and the anchor', () => {
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        useBookmarkStore.getState().clearSelection()
+        const s = useBookmarkStore.getState()
+        expect(s.selected.size).toBe(0)
+        expect(s.selectionAnchor).toBeNull()
+      })
+
+      it('clearSelection is a no-op when nothing is selected', () => {
+        const before = useBookmarkStore.getState()
+        useBookmarkStore.getState().clearSelection()
+        expect(useBookmarkStore.getState()).toBe(before)
+      })
+    })
+
+    describe('deleteSelected / restoreSelected', () => {
+      it('deleteSelected marks the selection and clears it', () => {
+        useBookmarkStore.getState().setSelection(['a', 'b'], 'a')
+        useBookmarkStore.getState().deleteSelected()
+        const s = useBookmarkStore.getState()
+        expect([...s.pendingDeletes].sort()).toEqual(['a', 'b'])
+        expect(s.selected.size).toBe(0)
+        expect(s.selectionAnchor).toBeNull()
+      })
+
+      it('deleteSelected keeps previous marks', () => {
+        useBookmarkStore.getState().mark('z')
+        useBookmarkStore.getState().setSelection(['a'])
+        useBookmarkStore.getState().deleteSelected()
+        expect([...useBookmarkStore.getState().pendingDeletes].sort()).toEqual(['a', 'z'])
+      })
+
+      it('deleteSelected is a no-op with an empty selection', () => {
+        const before = useBookmarkStore.getState().pendingDeletes
+        useBookmarkStore.getState().deleteSelected()
+        expect(useBookmarkStore.getState().pendingDeletes).toBe(before)
+      })
+
+      it('restoreSelected unmarks only the selected ids and clears the selection', () => {
         useBookmarkStore.getState().mark('a')
         useBookmarkStore.getState().mark('b')
-        useBookmarkStore.getState().mark('c')
-        useBookmarkStore.getState().mark('d')
-        useBookmarkStore.getState().toggleFocused()
-        useBookmarkStore.getState().moveFocus(2)
-
-        useBookmarkStore.getState().extendMarkFromAnchor()
-
+        useBookmarkStore.getState().setSelection(['a', 'c'])
+        useBookmarkStore.getState().restoreSelected()
         const s = useBookmarkStore.getState()
-        expect([...s.pendingDeletes].sort()).toEqual(['d'])
-      })
-
-      it('respects the active filter (only operates on visible)', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://b.com'),
-          B('c', 'https://a.com'),
-          B('d', 'https://a.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
-        useBookmarkStore.getState().toggleFocused()
-        useBookmarkStore.getState().moveFocus(2)
-
-        useBookmarkStore.getState().extendMarkFromAnchor()
-
-        const s = useBookmarkStore.getState()
-        expect([...s.pendingDeletes].sort()).toEqual(['a', 'c', 'd'])
-        expect(s.pendingDeletes.has('b')).toBe(false)
+        expect([...s.pendingDeletes]).toEqual(['b'])
+        expect(s.selected.size).toBe(0)
       })
     })
 
@@ -438,46 +418,14 @@ describe('useBookmarkStore', () => {
       })
     })
 
-    describe('anchor lifecycle', () => {
-      it('load resets the anchor', async () => {
-        const source = new FakeSource([B('a')])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().toggleFocused()
-        expect(useBookmarkStore.getState().anchor).not.toBeNull()
+    it('load clears the selection', async () => {
+      await useBookmarkStore.getState().load(new FakeSource([B('a')]))
+      useBookmarkStore.getState().setSelection(['a'], 'a')
 
-        await useBookmarkStore.getState().load(new FakeSource([B('x')]))
+      await useBookmarkStore.getState().load(new FakeSource([B('x')]))
 
-        expect(useBookmarkStore.getState().anchor).toBeNull()
-      })
-
-      it('setFilter resets the anchor', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://b.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().toggleFocused()
-        expect(useBookmarkStore.getState().anchor).not.toBeNull()
-
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
-
-        expect(useBookmarkStore.getState().anchor).toBeNull()
-      })
-
-      it('clearFilter resets the anchor', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://a.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
-        useBookmarkStore.getState().toggleFocused()
-        expect(useBookmarkStore.getState().anchor).not.toBeNull()
-
-        useBookmarkStore.getState().clearFilter()
-
-        expect(useBookmarkStore.getState().anchor).toBeNull()
-      })
+      expect(useBookmarkStore.getState().selected.size).toBe(0)
+      expect(useBookmarkStore.getState().selectionAnchor).toBeNull()
     })
   })
 
@@ -487,7 +435,6 @@ describe('useBookmarkStore', () => {
         bookmarks: Array<{ id: string }>
         pendingDeletes: { __set: string[] }
         activeFilter: unknown
-        focusedIndex?: number
       }
     }
 
@@ -534,25 +481,15 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().activeSort).toEqual({ kind: 'date', dir: 'asc' })
     })
 
-    it('does not persist focusedIndex', async () => {
-      const source = new FakeSource([B('a'), B('b'), B('c')])
-      await useBookmarkStore.getState().load(source)
-      useBookmarkStore.getState().moveFocus(2)
-
-      const raw = localStorage.getItem(PERSIST_KEY)
-      const parsed = JSON.parse(raw as string) as PersistedShape
-      expect(parsed.state.focusedIndex).toBeUndefined()
-    })
-
-    it('does not persist the anchor (ephemeral UI state)', async () => {
-      const source = new FakeSource([B('a'), B('b')])
-      await useBookmarkStore.getState().load(source)
-      useBookmarkStore.getState().toggleFocused()
-      expect(useBookmarkStore.getState().anchor).not.toBeNull()
+    it('does not persist the selection (ephemeral UI state)', async () => {
+      await useBookmarkStore.getState().load(new FakeSource([B('a'), B('b')]))
+      useBookmarkStore.getState().setSelection(['a'], 'a')
+      useBookmarkStore.getState().mark('b')
 
       const raw = localStorage.getItem(PERSIST_KEY)
       const parsed = JSON.parse(raw as string) as { state: Record<string, unknown> }
-      expect(parsed.state.anchor).toBeUndefined()
+      expect(parsed.state.selected).toBeUndefined()
+      expect(parsed.state.selectionAnchor).toBeUndefined()
     })
 
     it('rehydrates from localStorage and revives pendingDeletes as a Set', async () => {

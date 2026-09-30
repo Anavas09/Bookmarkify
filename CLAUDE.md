@@ -74,16 +74,24 @@ Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `S
 interface BookmarkStore {
   bookmarks: Bookmark[];
   pendingDeletes: Set<string>;
-  focusedIndex: number;
+  selected: Set<string>;          // selección visual efímera (no se persiste)
+  selectionAnchor: string | null; // id del último clic simple, para Shift+clic
   load(source: BookmarkSource): Promise<void>;
   mark(id: string): void;
   unmark(id: string): void;
-  moveFocus(delta: number): void;
+  setSelection(ids: Iterable<string>, anchor?: string | null): void;
+  selectRangeTo(id: string): void;
+  selectAllVisible(): void;
+  clearSelection(): void;
+  deleteSelected(): void;   // selected → pendingDeletes
+  restoreSelected(): void;  // saca los seleccionados de pendingDeletes
   exportFiltered(source: BookmarkSource): Promise<void>;
 }
 ```
 
-Atajos de teclado: `j`/`k` mueven el foco, `x` marca el marcador enfocado para eliminarlo, `u` lo desmarca.
+Selección estilo Explorador de Windows (paso 14): seleccionar **no** marca. Primero se selecciona y después se elimina o restaura la selección desde el header.
+
+Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic selecciona el rango desde el ancla, arrastrar dibuja un lazo, doble clic en la card (o clic en el título) abre el enlace. Atajos: `Supr`/`⌫` eliminan la selección, `Esc` la limpia, `Ctrl`/`Cmd`+`A` selecciona los visibles y `/` enfoca la búsqueda.
 
 ## Orden de implementación
 
@@ -104,6 +112,10 @@ Atajos de teclado: `j`/`k` mueven el foco, `x` marca el marcador enfocado para e
     - **`BookmarkDocument`** — refactor del puerto: `BookmarkSource.load(): Promise<BookmarkDocument>` donde `BookmarkDocument = { bookmarks: Bookmark[]; meta: DocumentMeta }`. La UI ve `bookmarks` como antes; los metadatos del HTML viajan junto sin ensuciar `Bookmark`. El store guarda `meta` en el estado, lo persiste y lo pasa en `exportFiltered`.
     - **H1 localizado + atributos de carpeta raíz** — `parser` captura el texto de `<H1>` en `meta.rootTitle` (Chrome: "Bookmarks", Firefox: localizado, ej. "Menú Marcadores") y los atributos `PERSONAL_TOOLBAR_FOLDER` / `UNFILED_BOOKMARKS_FOLDER` en `meta.specialFolders` (por `path`). `serializer` usa `meta.rootTitle` en `<TITLE>` + `<H1>` (fallback "Bookmarks") y aplica los atributos preservados al emitir el `<H3>` correspondiente. Los `specialFolders` cuyo path haya quedado vacío tras el filtrado se descartan (no se emiten en vacío).
     - **Dark mode toggle** — sol/luna en el header, `hooks/useTheme.ts` con estado `'light' | 'dark'`, aplicado poniendo/quitando la clase `.dark` en `<html>`. Persist en `localStorage['bookmarkify:theme']`; sin preferencia guardada respeta `prefers-color-scheme` en el primer load. Script inline en `index.html` corre antes de que React monte para evitar FOUC. Paleta dark **frost-nord** derivada de minimal-nordic (fondo azul-gris profundo cool, texto nácar, accent celeste `#88b8dc` brillante para contraste); los tokens se declaran overrideando las variables del `@theme` dentro de un bloque `.dark` en `index.css`, con `@custom-variant dark (&:where(.dark, .dark *))` para el variant `dark:` de Tailwind v4.
+14. ✅ Selección estilo Explorador con **react-selecto**, que reemplaza el teclado de triaje de los pasos 5 y 11 (`j`/`k`/flechas/`Space`/`Shift+Space`, `focusedIndex`, `anchor`). Se eligió frente a DragSelect porque este es GPL-3.0 desde la v3 y trae drag and drop activado por defecto; react-selecto es MIT y solo selecciona.
+    - El store tiene una selección efímera (`selected` + `selectionAnchor`) separada de `pendingDeletes`. `deleteSelected` y `restoreSelected` pasan la selección al `Set` no destructivo y la vacían. `setFilter`/`clearFilter`/`load` limpian la selección; el sort la conserva porque los mismos elementos siguen visibles.
+    - `BookmarkGrid` sincroniza en ambos sentidos: `onSelectEnd` escribe en el store (Shift+clic lo resuelve `selectRangeTo`, porque Selecto no hace rangos) y un efecto llama a `setSelectedTargets` cuando el store cambia la selección (Esc, Ctrl+A, borrar, filtrar). `dragContainer="main"` evita que los clics en el header limpien la selección. `dragCondition` excluye los `<a>` para que el título abra el enlace. El auto-scroll usa `document.body`, que dragscroll trata como viewport.
+    - Header: fila contextual "N seleccionados · eliminar N · o pulsa [Supr] · restaurar M · [esc] limpiar", con `⌫`/`⌘` en Mac (`lib/platform.ts`). El lazo usa los tokens del tema (`.selection-lasso` en `index.css`).
 
 ## Limitación del ciclo web-app pura
 

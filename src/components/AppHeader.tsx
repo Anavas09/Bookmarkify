@@ -4,6 +4,7 @@ import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore
 import { NetscapeAdapter } from '../core/adapters/NetscapeAdapter.ts'
 import { buildExportFilename } from '../lib/exportFilename.ts'
 import { cx } from '../lib/cx.ts'
+import { isMac } from '../lib/platform.ts'
 import { FileUpload } from './FileUpload.tsx'
 import { ExportModal } from './ExportModal.tsx'
 import { ThemeToggle } from './ThemeToggle.tsx'
@@ -35,8 +36,19 @@ export function AppHeader() {
   const markAllVisible = useBookmarkStore(s => s.markAllVisible)
   const unmarkAllVisible = useBookmarkStore(s => s.unmarkAllVisible)
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
+  const selected = useBookmarkStore(s => s.selected)
+  const deleteSelected = useBookmarkStore(s => s.deleteSelected)
+  const restoreSelected = useBookmarkStore(s => s.restoreSelected)
+  const clearSelection = useBookmarkStore(s => s.clearSelection)
   const visible = useVisibleBookmarks()
   const kept = total - marked
+  const mac = isMac()
+
+  const { markedInSelection, unmarkedInSelection } = useMemo(() => {
+    let m = 0
+    for (const id of selected) if (pendingDeletes.has(id)) m++
+    return { markedInSelection: m, unmarkedInSelection: selected.size - m }
+  }, [selected, pendingDeletes])
 
   const { markedInVisible, unmarkedInVisible } = useMemo(() => {
     let m = 0
@@ -72,22 +84,22 @@ export function AppHeader() {
           <span className="h-px w-12 bg-ink" aria-hidden="true" />
           <p className="mt-1 font-mono text-[11px] text-ink-mute m-0 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="flex items-center gap-1">
-              <Key>←</Key>
-              <Key>→</Key>
-              <span>{t('header.shortcuts.move')}</span>
+              <span>{t('header.shortcuts.drag')}</span>
             </span>
             <span className="text-edge" aria-hidden="true">·</span>
             <span className="flex items-center gap-1">
-              <Key>space</Key>
-              <span>{t('header.shortcuts.toggleMark')}</span>
+              <Key>{mac ? '⌘' : 'ctrl'}</Key>
+              <span aria-hidden="true">+</span>
+              <span>{t('header.shortcuts.clickAdd')}</span>
             </span>
             <span className="text-edge" aria-hidden="true">·</span>
             <span className="flex items-center gap-1">
               <Key>shift</Key>
               <span aria-hidden="true">+</span>
-              <Key>space</Key>
-              <span>{t('header.shortcuts.extendRange')}</span>
+              <span>{t('header.shortcuts.clickRange')}</span>
             </span>
+            <span className="text-edge" aria-hidden="true">·</span>
+            <span>{t('header.shortcuts.doubleClickOpen')}</span>
             <span className="text-edge" aria-hidden="true">·</span>
             <span className="flex items-center gap-1">
               <Key>/</Key>
@@ -132,6 +144,39 @@ export function AppHeader() {
               </>
             )}
           </p>
+          {selected.size > 0 && (
+            <div className="font-mono text-[12px] text-ink-soft flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+              <span>{t('header.selection.count', { count: selected.size })}</span>
+              {unmarkedInSelection > 0 && (
+                <span className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={deleteSelected}
+                    className="font-mono text-[12px] tracking-wide px-3 py-1.5 rounded-sm border border-accent text-accent hover:bg-accent hover:text-paper transition-colors cursor-pointer"
+                  >
+                    {t('header.selection.delete', { count: unmarkedInSelection })}
+                  </button>
+                  <span className="flex items-center gap-1 text-[11px] text-ink-mute">
+                    <span>{t('header.selection.orPress')}</span>
+                    <Key>{mac ? '⌫' : t('header.selection.deleteKey')}</Key>
+                  </span>
+                </span>
+              )}
+              {markedInSelection > 0 && (
+                <button type="button" onClick={restoreSelected} className={BULK_BTN_CLASS}>
+                  {t('header.selection.restore', { count: markedInSelection })}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={clearSelection}
+                className={cx(BULK_BTN_CLASS, 'flex items-center gap-1')}
+              >
+                <Key>esc</Key>
+                <span>{t('header.selection.clear')}</span>
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <LanguageToggle />
             <ThemeToggle />

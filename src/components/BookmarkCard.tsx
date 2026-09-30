@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Bookmark } from '../core/types.ts'
 import { domainOf } from '../lib/domain.ts'
@@ -9,7 +9,7 @@ interface Props {
   bookmark: Bookmark
   index: number
   marked: boolean
-  focused: boolean
+  selected: boolean
 }
 
 function formatDate(ms: number | undefined): string | null {
@@ -25,32 +25,31 @@ function catalogNumber(index: number): string {
   return '№' + String(index + 1).padStart(3, '0')
 }
 
-export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
+export function BookmarkCard({ bookmark, index, marked, selected }: Props) {
   const { t } = useTranslation()
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
   const favicon = bookmark.icon ?? faviconUrl(bookmark.url)
   const [faviconBroken, setFaviconBroken] = useState(false)
   const cardStyle = { '--i': Math.min(index, 24) } as CSSProperties
-  const ref = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    if (focused) {
-      ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    }
-  }, [focused])
+  function open() {
+    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
+  }
 
   return (
     <article
-      ref={ref}
+      data-bookmark-id={bookmark.id}
+      aria-selected={selected}
+      onDoubleClick={open}
       style={cardStyle}
       className={cx(
-        'card-in relative flex min-h-[170px] flex-col rounded-md border p-4',
+        'card-in relative flex min-h-[170px] flex-col rounded-md border p-4 select-none cursor-default',
         'transition-[border-color,transform,opacity,background-color] duration-150 ease-out',
         marked
           ? 'border-edge bg-paper-soft opacity-55 hover:opacity-75'
           : 'border-edge bg-paper-card hover:-translate-y-px hover:border-ink-mute',
-        focused && 'outline outline-2 outline-offset-4 outline-accent',
+        selected && 'outline outline-2 outline-offset-4 outline-accent',
       )}
     >
       <header className="mb-2 flex items-start justify-between">
@@ -67,12 +66,7 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
         )}
       </header>
 
-      <a
-        href={bookmark.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex-1 block text-inherit no-underline"
-      >
+      <div className="flex-1">
         <h3
           className={cx(
             'font-display text-[1.0625rem] leading-tight text-ink m-0 mb-2',
@@ -80,7 +74,16 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
             marked && 'strike-mark',
           )}
         >
-          {bookmark.title || domain}
+          <a
+            href={bookmark.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            draggable={false}
+            onDoubleClick={e => e.stopPropagation()}
+            className="text-inherit no-underline hover:underline underline-offset-2 decoration-edge cursor-pointer"
+          >
+            {bookmark.title || domain}
+          </a>
         </h3>
         <p className="font-mono text-[0.72rem] text-ink-soft m-0 flex items-center gap-1.5 min-w-0">
           {favicon && !faviconBroken && (
@@ -95,7 +98,7 @@ export function BookmarkCard({ bookmark, index, marked, focused }: Props) {
           )}
           <span className="truncate">{domain}</span>
         </p>
-      </a>
+      </div>
 
       <footer className="mt-3 flex flex-col gap-2">
         <span className="block h-px bg-edge" aria-hidden="true" />

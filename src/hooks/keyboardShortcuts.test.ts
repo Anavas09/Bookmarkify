@@ -1,67 +1,67 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { handleShortcut, isEditableTarget, type ShortcutActions } from './keyboardShortcuts.ts'
 
+const NONE = { mod: false, alt: false }
+const MOD = { mod: true, alt: false }
+
 function makeActions() {
-  const moveFocus = vi.fn<(d: number) => void>()
-  const toggleMark = vi.fn<() => void>()
-  const extendMark = vi.fn<() => void>()
-  const actions: ShortcutActions = { moveFocus, toggleMark, extendMark }
-  return { actions, moveFocus, toggleMark, extendMark }
+  const deleteSelected = vi.fn<() => void>()
+  const clearSelection = vi.fn<() => void>()
+  const selectAll = vi.fn<() => void>()
+  const actions: ShortcutActions = { deleteSelected, clearSelection, selectAll }
+  return { actions, deleteSelected, clearSelection, selectAll }
 }
 
 describe('handleShortcut', () => {
   let actions: ShortcutActions
-  let moveFocus: ReturnType<typeof vi.fn>
-  let toggleMark: ReturnType<typeof vi.fn>
-  let extendMark: ReturnType<typeof vi.fn>
+  let deleteSelected: ReturnType<typeof vi.fn>
+  let clearSelection: ReturnType<typeof vi.fn>
+  let selectAll: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    ;({ actions, moveFocus, toggleMark, extendMark } = makeActions())
+    ;({ actions, deleteSelected, clearSelection, selectAll } = makeActions())
   })
 
-  it('j moves focus forward', () => {
-    expect(handleShortcut('j', false, actions)).toBe(true)
-    expect(moveFocus).toHaveBeenCalledWith(1)
+  it('Delete deletes the selection', () => {
+    expect(handleShortcut('Delete', NONE, actions)).toBe(true)
+    expect(deleteSelected).toHaveBeenCalledOnce()
   })
 
-  it('ArrowRight moves focus forward', () => {
-    expect(handleShortcut('ArrowRight', false, actions)).toBe(true)
-    expect(moveFocus).toHaveBeenCalledWith(1)
+  it('Backspace deletes the selection (Mac "delete" key)', () => {
+    expect(handleShortcut('Backspace', NONE, actions)).toBe(true)
+    expect(deleteSelected).toHaveBeenCalledOnce()
   })
 
-  it('k moves focus backward', () => {
-    expect(handleShortcut('k', false, actions)).toBe(true)
-    expect(moveFocus).toHaveBeenCalledWith(-1)
+  it('Escape clears the selection', () => {
+    expect(handleShortcut('Escape', NONE, actions)).toBe(true)
+    expect(clearSelection).toHaveBeenCalledOnce()
   })
 
-  it('ArrowLeft moves focus backward', () => {
-    expect(handleShortcut('ArrowLeft', false, actions)).toBe(true)
-    expect(moveFocus).toHaveBeenCalledWith(-1)
+  it('Ctrl/Cmd+A selects every visible bookmark', () => {
+    expect(handleShortcut('a', MOD, actions)).toBe(true)
+    expect(handleShortcut('A', MOD, actions)).toBe(true)
+    expect(selectAll).toHaveBeenCalledTimes(2)
   })
 
-  it('space toggles the mark', () => {
-    expect(handleShortcut(' ', false, actions)).toBe(true)
-    expect(toggleMark).toHaveBeenCalledOnce()
-    expect(extendMark).not.toHaveBeenCalled()
-    expect(moveFocus).not.toHaveBeenCalled()
+  it('plain "a" does nothing', () => {
+    expect(handleShortcut('a', NONE, actions)).toBe(false)
+    expect(selectAll).not.toHaveBeenCalled()
   })
 
-  it('shift+space extends the mark from the anchor', () => {
-    expect(handleShortcut(' ', true, actions)).toBe(true)
-    expect(extendMark).toHaveBeenCalledOnce()
-    expect(toggleMark).not.toHaveBeenCalled()
+  it('ignores other modifier combos and Alt', () => {
+    expect(handleShortcut('Delete', MOD, actions)).toBe(false)
+    expect(handleShortcut('c', MOD, actions)).toBe(false)
+    expect(handleShortcut('Delete', { mod: false, alt: true }, actions)).toBe(false)
+    expect(deleteSelected).not.toHaveBeenCalled()
   })
 
-  it('unhandled keys return false and trigger nothing', () => {
-    expect(handleShortcut('Enter', false, actions)).toBe(false)
-    expect(handleShortcut('a', false, actions)).toBe(false)
-    expect(handleShortcut('x', false, actions)).toBe(false)
-    expect(handleShortcut('u', false, actions)).toBe(false)
-    expect(handleShortcut('ArrowUp', false, actions)).toBe(false)
-    expect(handleShortcut('ArrowDown', false, actions)).toBe(false)
-    expect(moveFocus).not.toHaveBeenCalled()
-    expect(toggleMark).not.toHaveBeenCalled()
-    expect(extendMark).not.toHaveBeenCalled()
+  it('the old triage keys are gone', () => {
+    for (const key of ['j', 'k', 'x', 'u', ' ', 'ArrowLeft', 'ArrowRight']) {
+      expect(handleShortcut(key, NONE, actions)).toBe(false)
+    }
+    expect(deleteSelected).not.toHaveBeenCalled()
+    expect(clearSelection).not.toHaveBeenCalled()
+    expect(selectAll).not.toHaveBeenCalled()
   })
 })
 

@@ -12,15 +12,25 @@
   },
   "header": {
     "shortcuts": {
-      "move": "move",
-      "toggleMark": "toggle mark",
-      "extendRange": "extend range",
+      "drag": "drag to select",
+      "clickAdd": "click adds",
+      "clickRange": "click range",
+      "doubleClickOpen": "double-click opens",
       "search": "search"
     },
     "stats": {
       "total": "{{count}} total",
       "kept": "{{count}} kept",
       "marked": "{{count}} marked"
+    },
+    "selection": {
+      "count_one": "{{count}} selected",
+      "count_other": "{{count}} selected",
+      "delete": "delete {{count}}",
+      "orPress": "or press",
+      "deleteKey": "Del",
+      "restore": "restore {{count}}",
+      "clear": "clear"
     },
     "bulk": {
       "markAll": "mark all {{count}}",

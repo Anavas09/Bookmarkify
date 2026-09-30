@@ -1,29 +1,38 @@
 import { useEffect } from 'react'
-import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
+import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 
 export interface ShortcutActions {
-  moveFocus: (delta: number) => void
-  toggleMark: () => void
-  extendMark: () => void
+  deleteSelected: () => void
+  clearSelection: () => void
+  selectAll: () => void
+}
+
+export interface ShortcutModifiers {
+  mod: boolean
+  alt: boolean
 }
 
 export function handleShortcut(
   key: string,
-  shift: boolean,
+  { mod, alt }: ShortcutModifiers,
   actions: ShortcutActions,
 ): boolean {
+  if (alt) return false
+  if (mod) {
+    if (key === 'a' || key === 'A') {
+      actions.selectAll()
+      return true
+    }
+    return false
+  }
   switch (key) {
-    case 'j':
-    case 'ArrowRight':
-      actions.moveFocus(1)
+    // Mac keyboards label Backspace as "delete"
+    case 'Delete':
+    case 'Backspace':
+      actions.deleteSelected()
       return true
-    case 'k':
-    case 'ArrowLeft':
-      actions.moveFocus(-1)
-      return true
-    case ' ':
-      if (shift) actions.extendMark()
-      else actions.toggleMark()
+    case 'Escape':
+      actions.clearSelection()
       return true
     default:
       return false
@@ -40,21 +49,20 @@ export function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function useKeyboardShortcuts(): void {
-  const hasVisible = useVisibleBookmarks().length > 0
+  const hasBookmarks = useBookmarkStore(s => s.bookmarks.length > 0)
 
   useEffect(() => {
-    if (!hasVisible) return
+    if (!hasBookmarks) return
 
     function onKey(e: KeyboardEvent) {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
       if (isEditableTarget(e.target)) return
 
       const store = useBookmarkStore.getState()
 
-      const handled = handleShortcut(e.key, e.shiftKey, {
-        moveFocus: (d) => store.moveFocus(d),
-        toggleMark: () => store.toggleFocused(),
-        extendMark: () => store.extendMarkFromAnchor(),
+      const handled = handleShortcut(e.key, { mod: e.metaKey || e.ctrlKey, alt: e.altKey }, {
+        deleteSelected: () => store.deleteSelected(),
+        clearSelection: () => store.clearSelection(),
+        selectAll: () => store.selectAllVisible(),
       })
 
       if (handled) e.preventDefault()
@@ -62,5 +70,5 @@ export function useKeyboardShortcuts(): void {
 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [hasVisible])
+  }, [hasBookmarks])
 }
