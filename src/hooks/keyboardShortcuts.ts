@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
+import { deleteSelectedAnimated, undoDeleteAnimated } from '../store/animatedActions.ts'
 
 export interface ShortcutActions {
   deleteSelected: () => void
@@ -68,10 +69,10 @@ export function useKeyboardShortcuts(): void {
 
       const modifiers = { mod: e.metaKey || e.ctrlKey, alt: e.altKey, shift: e.shiftKey }
       const handled = handleShortcut(e.key, modifiers, {
-        deleteSelected: () => store.deleteSelected(),
+        deleteSelected: deleteSelectedAnimated,
         clearSelection: () => store.clearSelection(),
         selectAll: () => store.selectAllVisible(),
-        undo: () => store.undoDelete(),
+        undo: undoDeleteAnimated,
       })
 
       if (handled) e.preventDefault()
