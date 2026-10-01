@@ -21,29 +21,27 @@
     "stats": {
       "total": "{{count}} en total",
       "kept": "{{count}} conservados",
-      "marked": "{{count}} marcados"
-    },
-    "selection": {
-      "count_one": "{{count}} seleccionado",
-      "count_other": "{{count}} seleccionados",
-      "delete": "eliminar {{count}}",
-      "orPress": "o pulsa",
-      "deleteKey": "Supr",
-      "restore": "restaurar {{count}}",
-      "clear": "limpiar"
-    },
-    "bulk": {
-      "markAll": "marcar los {{count}}",
-      "unmarkAll": "desmarcar los {{count}}",
-      "markAllTitle": "marcar todos los marcadores visibles",
-      "unmarkAllTitle": "desmarcar todos los marcadores visibles"
+      "deleted_one": "{{count}} eliminado",
+      "deleted_other": "{{count}} eliminados"
     },
     "export": {
       "idle": "exportar",
       "loading": "exportando…",
-      "titleDisabled": "marca al menos uno para exportar",
+      "titleDisabled": "elimina al menos uno para exportar",
       "titleEnabled": "descargar HTML filtrado"
     }
+  },
+  "selectionBar": {
+    "count_one": "{{count}} seleccionado",
+    "count_other": "{{count}} seleccionados",
+    "delete": "eliminar {{count}}",
+    "orPress": "o pulsa",
+    "deleteKey": "Supr",
+    "restore": "restaurar {{count}}",
+    "clear": "limpiar",
+    "deleted_one": "{{count}} eliminado",
+    "deleted_other": "{{count}} eliminados",
+    "undo": "deshacer"
   },
   "fileUpload": {
     "loadAnother": "cargar otro archivo",
@@ -59,7 +57,9 @@
     "errorGeneric": "No se pudo leer el archivo"
   },
   "grid": {
-    "empty": "Ningún marcador coincide con el filtro."
+    "empty": "Ningún marcador coincide con el filtro.",
+    "emptyAll": "No quedan marcadores: todos están eliminados.",
+    "emptyDeleted": "No hay marcadores eliminados."
   },
   "card": {
     "markedAria": "marcado para eliminar"
@@ -70,6 +70,7 @@
     "searchPlaceholder": "busca en título, url, carpeta…",
     "chipAll": "todos · {{count}}",
     "chipDuplicates": "duplicados · {{count}}",
+    "chipDeleted": "eliminados · {{count}}",
     "chipDomainPlaceholder": "dominio",
     "chipFolderPlaceholder": "carpeta",
     "folderRoot": "(raíz)",

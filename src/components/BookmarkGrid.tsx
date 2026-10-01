@@ -20,6 +20,7 @@ export function BookmarkGrid() {
   const visible = useVisibleBookmarks()
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const selected = useBookmarkStore(s => s.selected)
+  const filterKind = useBookmarkStore(s => s.activeFilter?.kind ?? null)
   const gridRef = useRef<HTMLDivElement>(null)
   const selectoRef = useRef<Selecto>(null)
 
@@ -51,9 +52,13 @@ export function BookmarkGrid() {
   }
 
   if (visible.length === 0) {
+    const emptyKey =
+      filterKind === 'deleted' ? 'grid.emptyDeleted'
+      : filterKind === null ? 'grid.emptyAll'
+      : 'grid.empty'
     return (
       <p className="font-mono text-[12px] text-ink-mute px-1 py-8">
-        {t('grid.empty')}
+        {t(emptyKey)}
       </p>
     )
   }

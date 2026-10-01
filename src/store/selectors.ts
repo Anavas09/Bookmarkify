@@ -7,6 +7,7 @@ export type Filter =
   | { kind: 'folder'; path: string[] }
   | { kind: 'duplicate' }
   | { kind: 'text'; query: string }
+  | { kind: 'deleted' }
   | null
 
 export type Sort =
@@ -89,24 +90,39 @@ export function selectDuplicateCount(bookmarks: Bookmark[]): number {
   return selectDuplicateIds(bookmarks).size
 }
 
+export function selectKeptBookmarks(
+  bookmarks: Bookmark[],
+  pendingDeletes: Set<string>,
+): Bookmark[] {
+  if (pendingDeletes.size === 0) return bookmarks
+  return bookmarks.filter(b => !pendingDeletes.has(b.id))
+}
+
+// Deleted bookmarks are hidden from every view except the 'deleted' one,
+// which shows only them so they can be restored.
 export function selectVisibleBookmarks(
   bookmarks: Bookmark[],
+  pendingDeletes: Set<string>,
   activeFilter: Filter,
 ): Bookmark[] {
-  if (!activeFilter) return bookmarks
+  if (activeFilter?.kind === 'deleted') {
+    return bookmarks.filter(b => pendingDeletes.has(b.id))
+  }
+  const kept = selectKeptBookmarks(bookmarks, pendingDeletes)
+  if (!activeFilter) return kept
   switch (activeFilter.kind) {
     case 'domain':
-      return bookmarks.filter(b => domainOf(b.url) === activeFilter.value)
+      return kept.filter(b => domainOf(b.url) === activeFilter.value)
     case 'folder':
-      return bookmarks.filter(b => samePath(b.folderPath, activeFilter.path))
+      return kept.filter(b => samePath(b.folderPath, activeFilter.path))
     case 'duplicate': {
-      const dupIds = selectDuplicateIds(bookmarks)
-      return bookmarks.filter(b => dupIds.has(b.id))
+      const dupIds = selectDuplicateIds(kept)
+      return kept.filter(b => dupIds.has(b.id))
     }
     case 'text': {
       const q = activeFilter.query.trim().toLowerCase()
-      if (q === '') return bookmarks
-      return bookmarks.filter(b => {
+      if (q === '') return kept
+      return kept.filter(b => {
         if (b.title.toLowerCase().includes(q)) return true
         if (b.url.toLowerCase().includes(q)) return true
         const folder = (b.folderPath ?? []).join(' / ').toLowerCase()
@@ -118,10 +134,11 @@ export function selectVisibleBookmarks(
 
 export function selectVisibleSortedBookmarks(
   bookmarks: Bookmark[],
+  pendingDeletes: Set<string>,
   activeFilter: Filter,
   activeSort: Sort,
 ): Bookmark[] {
-  const filtered = selectVisibleBookmarks(bookmarks, activeFilter)
+  const filtered = selectVisibleBookmarks(bookmarks, pendingDeletes, activeFilter)
   if (activeSort === null) return filtered
   const sorted = [...filtered]
   switch (activeSort.kind) {

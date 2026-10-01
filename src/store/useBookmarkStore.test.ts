@@ -376,45 +376,118 @@ describe('useBookmarkStore', () => {
       })
     })
 
-    describe('markAllVisible / unmarkAllVisible', () => {
-      it('markAllVisible marks every visible bookmark', async () => {
-        const source = new FakeSource([B('a'), B('b'), B('c')])
-        await useBookmarkStore.getState().load(source)
-
-        useBookmarkStore.getState().markAllVisible()
-
-        expect([...useBookmarkStore.getState().pendingDeletes].sort()).toEqual(['a', 'b', 'c'])
-      })
-
-      it('markAllVisible only operates within the active filter', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://b.com'),
-          B('c', 'https://a.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
-
-        useBookmarkStore.getState().markAllVisible()
-
-        expect([...useBookmarkStore.getState().pendingDeletes].sort()).toEqual(['a', 'c'])
-      })
-
-      it('unmarkAllVisible clears only visible marks', async () => {
-        const source = new FakeSource([
-          B('a', 'https://a.com'),
-          B('b', 'https://b.com'),
-        ])
-        await useBookmarkStore.getState().load(source)
-        useBookmarkStore.getState().mark('a')
+    describe('deleted bookmarks', () => {
+      beforeEach(async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([B('a'), B('b'), B('c'), B('d')]),
+        )
         useBookmarkStore.getState().mark('b')
-        useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
+      })
 
-        useBookmarkStore.getState().unmarkAllVisible()
+      it('selectAllVisible leaves out the deleted ones', () => {
+        useBookmarkStore.getState().selectAllVisible()
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a', 'c', 'd'])
+      })
 
+      it('selectRangeTo skips the deleted ones', () => {
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        useBookmarkStore.getState().selectRangeTo('c')
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a', 'c'])
+      })
+
+      it('the deleted filter selects only the deleted ones', () => {
+        useBookmarkStore.getState().setFilter({ kind: 'deleted' })
+        useBookmarkStore.getState().selectAllVisible()
+        expect([...useBookmarkStore.getState().selected]).toEqual(['b'])
+      })
+
+      it('setFilter treats two deleted filters as equal', () => {
+        useBookmarkStore.getState().setFilter({ kind: 'deleted' })
+        const before = useBookmarkStore.getState().activeFilter
+        useBookmarkStore.getState().setFilter({ kind: 'deleted' })
+        expect(useBookmarkStore.getState().activeFilter).toBe(before)
+      })
+
+      it('deleteSelected is a no-op when everything selected is already deleted', () => {
+        useBookmarkStore.getState().setSelection(['b'], 'b')
+        const before = useBookmarkStore.getState()
+        useBookmarkStore.getState().deleteSelected()
+        expect(useBookmarkStore.getState()).toBe(before)
+      })
+    })
+
+    describe('undo', () => {
+      beforeEach(async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([B('a'), B('b'), B('c'), B('d')]),
+        )
+      })
+
+      function deleteIds(...ids: string[]) {
+        useBookmarkStore.getState().setSelection(ids)
+        useBookmarkStore.getState().deleteSelected()
+      }
+
+      it('deleteSelected remembers only what it just deleted', () => {
+        deleteIds('a')
+        deleteIds('a', 'b')
+        expect(useBookmarkStore.getState().lastDeleted).toEqual(['b'])
+      })
+
+      it('undoDelete restores the last batch and forgets it', () => {
+        deleteIds('a', 'b')
+        useBookmarkStore.getState().undoDelete()
         const s = useBookmarkStore.getState()
-        expect(s.pendingDeletes.has('a')).toBe(false)
-        expect(s.pendingDeletes.has('b')).toBe(true)
+        expect(s.pendingDeletes.size).toBe(0)
+        expect(s.lastDeleted).toBeNull()
+      })
+
+      it('only the last batch can be undone (no history)', () => {
+        deleteIds('a')
+        deleteIds('b', 'c')
+        useBookmarkStore.getState().undoDelete()
+        useBookmarkStore.getState().undoDelete()
+        expect([...useBookmarkStore.getState().pendingDeletes]).toEqual(['a'])
+      })
+
+      it('undoDelete is a no-op with nothing to undo', () => {
+        const before = useBookmarkStore.getState()
+        useBookmarkStore.getState().undoDelete()
+        expect(useBookmarkStore.getState()).toBe(before)
+      })
+
+      it('restoreSelected drops what it restores from the batch to undo', () => {
+        deleteIds('a', 'b')
+        useBookmarkStore.getState().setSelection(['a'])
+        useBookmarkStore.getState().restoreSelected()
+        expect(useBookmarkStore.getState().lastDeleted).toEqual(['b'])
+
+        useBookmarkStore.getState().setSelection(['b'])
+        useBookmarkStore.getState().restoreSelected()
+        expect(useBookmarkStore.getState().lastDeleted).toBeNull()
+      })
+
+      it('restoring something outside the batch keeps it as is (same reference)', () => {
+        useBookmarkStore.getState().mark('d')
+        deleteIds('a')
+        const batch = useBookmarkStore.getState().lastDeleted
+        useBookmarkStore.getState().setSelection(['d'])
+        useBookmarkStore.getState().restoreSelected()
+        expect(useBookmarkStore.getState().lastDeleted).toBe(batch)
+      })
+
+      it('dismissUndo forgets the batch but keeps it deleted', () => {
+        deleteIds('a')
+        useBookmarkStore.getState().dismissUndo()
+        const s = useBookmarkStore.getState()
+        expect(s.lastDeleted).toBeNull()
+        expect(s.pendingDeletes.has('a')).toBe(true)
+      })
+
+      it('load forgets the batch', async () => {
+        deleteIds('a')
+        await useBookmarkStore.getState().load(new FakeSource([B('x')]))
+        expect(useBookmarkStore.getState().lastDeleted).toBeNull()
       })
     })
 
@@ -481,8 +554,10 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().activeSort).toEqual({ kind: 'date', dir: 'asc' })
     })
 
-    it('does not persist the selection (ephemeral UI state)', async () => {
-      await useBookmarkStore.getState().load(new FakeSource([B('a'), B('b')]))
+    it('does not persist the selection nor the batch to undo (ephemeral UI state)', async () => {
+      await useBookmarkStore.getState().load(new FakeSource([B('a'), B('b'), B('c')]))
+      useBookmarkStore.getState().setSelection(['c'])
+      useBookmarkStore.getState().deleteSelected()
       useBookmarkStore.getState().setSelection(['a'], 'a')
       useBookmarkStore.getState().mark('b')
 
@@ -490,6 +565,7 @@ describe('useBookmarkStore', () => {
       const parsed = JSON.parse(raw as string) as { state: Record<string, unknown> }
       expect(parsed.state.selected).toBeUndefined()
       expect(parsed.state.selectionAnchor).toBeUndefined()
+      expect(parsed.state.lastDeleted).toBeUndefined()
     })
 
     it('rehydrates from localStorage and revives pendingDeletes as a Set', async () => {

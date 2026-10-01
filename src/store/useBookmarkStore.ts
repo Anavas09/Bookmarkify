@@ -13,19 +13,20 @@ export interface BookmarkStore {
   pendingDeletes: Set<string>
   selected: Set<string>
   selectionAnchor: string | null
+  lastDeleted: string[] | null // last deleted batch, for undo (ephemeral, not persisted)
   activeFilter: Filter
   activeSort: Sort
   load(source: BookmarkSource): Promise<void>
   mark(id: string): void
   unmark(id: string): void
-  markAllVisible(): void
-  unmarkAllVisible(): void
   setSelection(ids: Iterable<string>, anchor?: string | null): void
   selectRangeTo(id: string): void
   selectAllVisible(): void
   clearSelection(): void
   deleteSelected(): void
   restoreSelected(): void
+  undoDelete(): void
+  dismissUndo(): void
   setFilter(f: Filter): void
   clearFilter(): void
   setSort(s: Sort): void
@@ -35,7 +36,14 @@ export interface BookmarkStore {
 
 export function getInitialState(): Pick<
   BookmarkStore,
-  'bookmarks' | 'meta' | 'pendingDeletes' | 'selected' | 'selectionAnchor' | 'activeFilter' | 'activeSort'
+  | 'bookmarks'
+  | 'meta'
+  | 'pendingDeletes'
+  | 'selected'
+  | 'selectionAnchor'
+  | 'lastDeleted'
+  | 'activeFilter'
+  | 'activeSort'
 > {
   return {
     bookmarks: [],
@@ -43,6 +51,7 @@ export function getInitialState(): Pick<
     pendingDeletes: new Set(),
     selected: new Set(),
     selectionAnchor: null,
+    lastDeleted: null,
     activeFilter: null,
     activeSort: null,
   }
@@ -61,6 +70,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           pendingDeletes: new Set(),
           selected: new Set(),
           selectionAnchor: null,
+          lastDeleted: null,
           activeFilter: null,
           activeSort: null,
         })
@@ -84,40 +94,6 @@ export const useBookmarkStore = create<BookmarkStore>()(
         })
       },
 
-      markAllVisible() {
-        set(state => {
-          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
-          if (visible.length === 0) return state
-          const next = new Set(state.pendingDeletes)
-          let changed = false
-          for (const b of visible) {
-            if (!next.has(b.id)) {
-              next.add(b.id)
-              changed = true
-            }
-          }
-          if (!changed) return state
-          return { pendingDeletes: next }
-        })
-      },
-
-      unmarkAllVisible() {
-        set(state => {
-          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
-          if (visible.length === 0) return state
-          const next = new Set(state.pendingDeletes)
-          let changed = false
-          for (const b of visible) {
-            if (next.has(b.id)) {
-              next.delete(b.id)
-              changed = true
-            }
-          }
-          if (!changed) return state
-          return { pendingDeletes: next }
-        })
-      },
-
       setSelection(ids, anchor) {
         set(state => ({
           selected: new Set(ids),
@@ -127,7 +103,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       selectRangeTo(id) {
         set(state => {
-          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
+          const visible = selectVisible(state)
           const to = visible.findIndex(b => b.id === id)
           if (to === -1) return state
           const found = state.selectionAnchor === null
@@ -141,10 +117,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
       },
 
       selectAllVisible() {
-        set(state => {
-          const visible = selectVisibleSortedBookmarks(state.bookmarks, state.activeFilter, state.activeSort)
-          return { selected: new Set(visible.map(b => b.id)) }
-        })
+        set(state => ({ selected: new Set(selectVisible(state).map(b => b.id)) }))
       },
 
       clearSelection() {
@@ -156,10 +129,16 @@ export const useBookmarkStore = create<BookmarkStore>()(
 
       deleteSelected() {
         set(state => {
-          if (state.selected.size === 0) return state
+          const fresh = [...state.selected].filter(id => !state.pendingDeletes.has(id))
+          if (fresh.length === 0) return state
           const next = new Set(state.pendingDeletes)
-          for (const id of state.selected) next.add(id)
-          return { pendingDeletes: next, selected: new Set(), selectionAnchor: null }
+          for (const id of fresh) next.add(id)
+          return {
+            pendingDeletes: next,
+            selected: new Set(),
+            selectionAnchor: null,
+            lastDeleted: fresh,
+          }
         })
       },
 
@@ -168,8 +147,26 @@ export const useBookmarkStore = create<BookmarkStore>()(
           if (state.selected.size === 0) return state
           const next = new Set(state.pendingDeletes)
           for (const id of state.selected) next.delete(id)
-          return { pendingDeletes: next, selected: new Set(), selectionAnchor: null }
+          return {
+            pendingDeletes: next,
+            selected: new Set(),
+            selectionAnchor: null,
+            lastDeleted: withoutRestored(state.lastDeleted, next),
+          }
         })
+      },
+
+      undoDelete() {
+        set(state => {
+          if (state.lastDeleted === null) return state
+          const next = new Set(state.pendingDeletes)
+          for (const id of state.lastDeleted) next.delete(id)
+          return { pendingDeletes: next, lastDeleted: null }
+        })
+      },
+
+      dismissUndo() {
+        set(state => (state.lastDeleted === null ? state : { lastDeleted: null }))
       },
 
       setFilter(f) {
@@ -225,6 +222,26 @@ export const useBookmarkStore = create<BookmarkStore>()(
   ),
 )
 
+function selectVisible(
+  state: Pick<BookmarkStore, 'bookmarks' | 'pendingDeletes' | 'activeFilter' | 'activeSort'>,
+): Bookmark[] {
+  return selectVisibleSortedBookmarks(
+    state.bookmarks,
+    state.pendingDeletes,
+    state.activeFilter,
+    state.activeSort,
+  )
+}
+
+// Whatever was restored by hand no longer needs undoing. Keeps the same
+// reference when nothing changed, so the undo notice timer is not restarted.
+function withoutRestored(batch: string[] | null, pendingDeletes: Set<string>): string[] | null {
+  if (batch === null) return null
+  const still = batch.filter(id => pendingDeletes.has(id))
+  if (still.length === batch.length) return batch
+  return still.length > 0 ? still : null
+}
+
 function isEncodedSet(value: unknown): value is { __set: string[] } {
   return (
     value !== null &&
@@ -236,11 +253,12 @@ function isEncodedSet(value: unknown): value is { __set: string[] } {
 
 export function useVisibleBookmarks(): Bookmark[] {
   const bookmarks = useBookmarkStore(s => s.bookmarks)
+  const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const activeFilter = useBookmarkStore(s => s.activeFilter)
   const activeSort = useBookmarkStore(s => s.activeSort)
   return useMemo(
-    () => selectVisibleSortedBookmarks(bookmarks, activeFilter, activeSort),
-    [bookmarks, activeFilter, activeSort],
+    () => selectVisibleSortedBookmarks(bookmarks, pendingDeletes, activeFilter, activeSort),
+    [bookmarks, pendingDeletes, activeFilter, activeSort],
   )
 }
 
@@ -253,7 +271,7 @@ function filtersEqual(a: Filter, b: Filter): boolean {
     return a.path.every((s, i) => s === b.path[i])
   }
   if (a.kind === 'text' && b.kind === 'text') return a.query === b.query
-  return a.kind === 'duplicate' && b.kind === 'duplicate'
+  return true // 'duplicate' and 'deleted' carry no payload
 }
 
 function sortsEqual(a: Sort, b: Sort): boolean {

@@ -21,29 +21,27 @@
     "stats": {
       "total": "{{count}} total",
       "kept": "{{count}} kept",
-      "marked": "{{count}} marked"
-    },
-    "selection": {
-      "count_one": "{{count}} selected",
-      "count_other": "{{count}} selected",
-      "delete": "delete {{count}}",
-      "orPress": "or press",
-      "deleteKey": "Del",
-      "restore": "restore {{count}}",
-      "clear": "clear"
-    },
-    "bulk": {
-      "markAll": "mark all {{count}}",
-      "unmarkAll": "unmark all {{count}}",
-      "markAllTitle": "mark every visible bookmark",
-      "unmarkAllTitle": "unmark every visible bookmark"
+      "deleted_one": "{{count}} deleted",
+      "deleted_other": "{{count}} deleted"
     },
     "export": {
       "idle": "export",
       "loading": "exporting…",
-      "titleDisabled": "mark at least one to export",
+      "titleDisabled": "delete at least one to export",
       "titleEnabled": "download filtered HTML"
     }
+  },
+  "selectionBar": {
+    "count_one": "{{count}} selected",
+    "count_other": "{{count}} selected",
+    "delete": "delete {{count}}",
+    "orPress": "or press",
+    "deleteKey": "Del",
+    "restore": "restore {{count}}",
+    "clear": "clear",
+    "deleted_one": "{{count}} deleted",
+    "deleted_other": "{{count}} deleted",
+    "undo": "undo"
   },
   "fileUpload": {
     "loadAnother": "load another file",
@@ -59,7 +57,9 @@
     "errorGeneric": "Failed to read file"
   },
   "grid": {
-    "empty": "No bookmarks match the current filter."
+    "empty": "No bookmarks match the current filter.",
+    "emptyAll": "No bookmarks left — all of them are deleted.",
+    "emptyDeleted": "No deleted bookmarks."
   },
   "card": {
     "markedAria": "marked for deletion"
@@ -70,6 +70,7 @@
     "searchPlaceholder": "search title, url, folder…",
     "chipAll": "all · {{count}}",
     "chipDuplicates": "duplicates · {{count}}",
+    "chipDeleted": "deleted · {{count}}",
     "chipDomainPlaceholder": "domain",
     "chipFolderPlaceholder": "folder",
     "folderRoot": "(root)",
