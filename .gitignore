@@ -23,6 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
+# Claude Code / Playwright local artifacts
+.claude/settings.local.json
+.playwright-mcp/
+/*.png
+
 # design-sync (regenerated)
 .ds-sync/
 ds-bundle/
