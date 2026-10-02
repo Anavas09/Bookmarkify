@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import Selecto, { type OnSelectEnd } from 'react-selecto'
-import { LazyMotion, domMax, m, type Transition } from 'motion/react'
+import { m, type Transition } from 'motion/react'
 import type { Bookmark } from '../core/types.ts'
 import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
 import { useGridMotion } from '../lib/gridMotion.ts'
@@ -94,26 +94,22 @@ export function BookmarkGrid() {
         onScroll={({ direction }) => window.scrollBy(direction[0] * 10, direction[1] * 10)}
         onSelectEnd={handleSelectEnd}
       />
-      {/* `m` components load only the features in domMax (layout animations
-          included); `strict` throws if a full `motion` component sneaks in. */}
-      <LazyMotion features={domMax} strict>
-        <div
-          ref={gridRef}
-          className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]"
-        >
-          {visible.map((b, i) => (
-            <GridItem
-              key={b.id}
-              bookmark={b}
-              index={i}
-              stagger={entering.has(b.id) ? 0 : i}
-              marked={pendingDeletes.has(b.id)}
-              selected={selected.has(b.id)}
-              layoutDependency={near.has(b.id) ? epoch : 0}
-            />
-          ))}
-        </div>
-      </LazyMotion>
+      <div
+        ref={gridRef}
+        className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]"
+      >
+        {visible.map((b, i) => (
+          <GridItem
+            key={b.id}
+            bookmark={b}
+            index={i}
+            stagger={entering.has(b.id) ? 0 : i}
+            marked={pendingDeletes.has(b.id)}
+            selected={selected.has(b.id)}
+            layoutDependency={near.has(b.id) ? epoch : 0}
+          />
+        ))}
+      </div>
     </>
   )
 }

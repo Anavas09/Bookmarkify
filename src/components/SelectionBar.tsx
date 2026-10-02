@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, type AnimationEvent } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AnimatePresence, m, useIsPresent, type Transition } from 'motion/react'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import {
   deleteSelectedAnimated,
@@ -12,21 +13,15 @@ import { Key } from './Key.tsx'
 
 const UNDO_TIMEOUT_MS = 6000
 
+// Fast out of the gate when it appears, quick to clear once it starts leaving.
+const ENTER: Transition = { duration: 0.2, ease: 'easeOut' }
+const EXIT: Transition = { duration: 0.16, ease: 'easeIn' }
+
 interface BarContent {
   selectedCount: number
   keptInSelection: number
   deletedInSelection: number
   undoCount: number
-}
-
-function sameContent(a: BarContent, b: BarContent | null): boolean {
-  return (
-    b !== null &&
-    a.selectedCount === b.selectedCount &&
-    a.keptInSelection === b.keptInSelection &&
-    a.deletedInSelection === b.deletedInSelection &&
-    a.undoCount === b.undoCount
-  )
 }
 
 const ACTION_BTN_CLASS =
@@ -41,13 +36,10 @@ const LINK_BTN_CLASS =
 // render outside <main>: Selecto listens there (dragContainer="main") and would
 // take a click on these buttons as a click on empty space, clearing the selection.
 export function SelectionBar() {
-  const { t } = useTranslation()
   const selected = useBookmarkStore(s => s.selected)
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const lastDeleted = useBookmarkStore(s => s.lastDeleted)
-  const clearSelection = useBookmarkStore(s => s.clearSelection)
   const dismissUndo = useBookmarkStore(s => s.dismissUndo)
-  const mac = isMac()
 
   // Every new deleted batch restarts the countdown; after it, undo is gone
   // (Ctrl/Cmd+Z included), so what can be undone is always what is shown.
@@ -63,85 +55,92 @@ export function SelectionBar() {
     return n
   }, [selected, pendingDeletes])
   const undoCount = lastDeleted?.length ?? 0
-  const live: BarContent | null =
-    selected.size > 0 || undoCount > 0
-      ? {
-          selectedCount: selected.size,
-          keptInSelection: selected.size - deletedInSelection,
-          deletedInSelection,
-          undoCount,
-        }
-      : null
+  const visible = selected.size > 0 || undoCount > 0
 
-  // The last content shown stays rendered while the bar animates out, so it
-  // does not flash to empty counts before disappearing.
-  const [content, setContent] = useState(live)
-  if (live !== null && !sameContent(live, content)) setContent(live)
-
-  if (content === null) return null
-  const leaving = live === null
-
-  function handleAnimationEnd(e: AnimationEvent<HTMLDivElement>) {
-    if (leaving && e.target === e.currentTarget) setContent(null)
-  }
-
+  // While the bar leaves, AnimatePresence keeps rendering its last element,
+  // so it fades out with the counts it had instead of flashing to empty.
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
-      <div
-        onAnimationEnd={handleAnimationEnd}
-        className={cx(
-          'theme-invert',
-          // While leaving, its buttons act on a state that no longer exists.
-          leaving ? 'bar-out' : 'bar-in pointer-events-auto',
-          'flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-md border border-edge bg-paper-card px-4 py-2.5 shadow-lg font-mono text-[12px] text-ink-soft',
+      <AnimatePresence>
+        {visible && (
+          <Bar
+            key="bar"
+            content={{
+              selectedCount: selected.size,
+              keptInSelection: selected.size - deletedInSelection,
+              deletedInSelection,
+              undoCount,
+            }}
+          />
         )}
-      >
-        {/* The selection wins: once a new one starts, the undo notice steps aside. */}
-        {content.selectedCount > 0 ? (
-          <>
-            <span>{t('selectionBar.count', { count: content.selectedCount })}</span>
-            {content.keptInSelection > 0 && (
-              <span className="flex items-center gap-2">
-                <button type="button" onClick={deleteSelectedAnimated} className={ACTION_BTN_CLASS}>
-                  {t('selectionBar.delete', { count: content.keptInSelection })}
-                </button>
-                <span className="flex items-center gap-1 text-[11px] text-ink-mute">
-                  <span>{t('selectionBar.orPress')}</span>
-                  <Key>{mac ? '⌫' : t('selectionBar.deleteKey')}</Key>
-                </span>
-              </span>
-            )}
-            {content.deletedInSelection > 0 && (
-              <button type="button" onClick={restoreSelectedAnimated} className={ACTION_BTN_CLASS}>
-                {t('selectionBar.restore', { count: content.deletedInSelection })}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={clearSelection}
-              className={cx(LINK_BTN_CLASS, 'flex items-center gap-1')}
-            >
-              <Key>esc</Key>
-              <span>{t('selectionBar.clear')}</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <span>{t('selectionBar.deleted', { count: content.undoCount })}</span>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function Bar({ content }: { content: BarContent }) {
+  const { t } = useTranslation()
+  const clearSelection = useBookmarkStore(s => s.clearSelection)
+  const isPresent = useIsPresent()
+  const mac = isMac()
+
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0, transition: ENTER }}
+      exit={{ opacity: 0, y: 8, transition: EXIT }}
+      className={cx(
+        'theme-invert',
+        // While leaving, its buttons act on a state that no longer exists.
+        isPresent && 'pointer-events-auto',
+        'flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-md border border-edge bg-paper-card px-4 py-2.5 shadow-lg font-mono text-[12px] text-ink-soft',
+      )}
+    >
+      {/* The selection wins: once a new one starts, the undo notice steps aside. */}
+      {content.selectedCount > 0 ? (
+        <>
+          <span>{t('selectionBar.count', { count: content.selectedCount })}</span>
+          {content.keptInSelection > 0 && (
             <span className="flex items-center gap-2">
-              <button type="button" onClick={undoDeleteAnimated} className={ACTION_BTN_CLASS}>
-                {t('selectionBar.undo')}
+              <button type="button" onClick={deleteSelectedAnimated} className={ACTION_BTN_CLASS}>
+                {t('selectionBar.delete', { count: content.keptInSelection })}
               </button>
               <span className="flex items-center gap-1 text-[11px] text-ink-mute">
                 <span>{t('selectionBar.orPress')}</span>
-                <Key>{mac ? '⌘' : 'ctrl'}</Key>
-                <span aria-hidden="true">+</span>
-                <Key>z</Key>
+                <Key>{mac ? '⌫' : t('selectionBar.deleteKey')}</Key>
               </span>
             </span>
-          </>
-        )}
-      </div>
-    </div>
+          )}
+          {content.deletedInSelection > 0 && (
+            <button type="button" onClick={restoreSelectedAnimated} className={ACTION_BTN_CLASS}>
+              {t('selectionBar.restore', { count: content.deletedInSelection })}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={clearSelection}
+            className={cx(LINK_BTN_CLASS, 'flex items-center gap-1')}
+          >
+            <Key>esc</Key>
+            <span>{t('selectionBar.clear')}</span>
+          </button>
+        </>
+      ) : (
+        <>
+          <span>{t('selectionBar.deleted', { count: content.undoCount })}</span>
+          <span className="flex items-center gap-2">
+            <button type="button" onClick={undoDeleteAnimated} className={ACTION_BTN_CLASS}>
+              {t('selectionBar.undo')}
+            </button>
+            <span className="flex items-center gap-1 text-[11px] text-ink-mute">
+              <span>{t('selectionBar.orPress')}</span>
+              <Key>{mac ? '⌘' : 'ctrl'}</Key>
+              <span aria-hidden="true">+</span>
+              <Key>z</Key>
+            </span>
+          </span>
+        </>
+      )}
+    </m.div>
   )
 }

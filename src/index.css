@@ -126,25 +126,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .bar-in {
-    animation: barIn 200ms ease-out both;
-  }
-
-  @keyframes barIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* barIn played back, with its own name so switching classes restarts it. */
-  .bar-out {
-    animation: barOut 160ms ease-in both;
-  }
-
-  @keyframes barOut {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(8px); }
-  }
-
   .sr-input {
     position: absolute;
     width: 1px;
