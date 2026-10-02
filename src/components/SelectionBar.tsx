@@ -90,7 +90,7 @@ export function SelectionBar() {
       <div
         onAnimationEnd={handleAnimationEnd}
         className={cx(
-          'selection-bar theme-invert',
+          'theme-invert',
           // While leaving, its buttons act on a state that no longer exists.
           leaving ? 'bar-out' : 'bar-in pointer-events-auto',
           'flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-md border border-edge bg-paper-card px-4 py-2.5 shadow-lg font-mono text-[12px] text-ink-soft',

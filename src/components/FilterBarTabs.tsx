@@ -86,7 +86,7 @@ export function FilterBarTabs() {
   const deletedActive = activeFilter?.kind === 'deleted'
 
   return (
-    <div className="filter-bar sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 sm:px-8 lg:px-12 font-mono text-[12px] bg-paper/95 backdrop-blur-sm border-b border-edge">
+    <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 sm:px-8 lg:px-12 font-mono text-[12px] bg-paper/95 backdrop-blur-sm border-b border-edge">
       <SearchInput />
 
       <span className="text-ink-mute tracking-wide mr-1">{t('filterBar.filter')}</span>
