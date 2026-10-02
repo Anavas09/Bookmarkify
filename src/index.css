@@ -126,25 +126,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .bar-in {
-    animation: barIn 200ms ease-out both;
-  }
-
-  @keyframes barIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* barIn played back, with its own name so switching classes restarts it. */
-  .bar-out {
-    animation: barOut 160ms ease-in both;
-  }
-
-  @keyframes barOut {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(8px); }
-  }
-
   .sr-input {
     position: absolute;
     width: 1px;
@@ -155,43 +136,6 @@
     clip: rect(0, 0, 0, 0);
     border: 0;
   }
-}
-
-/* View transitions when deleting, restoring or undoing (lib/viewTransition.ts).
-   Cards get a per-id name only while animating; the class groups them here. */
-[data-bookmark-id] {
-  view-transition-class: card;
-}
-
-/* Named so moving cards slide under the bars instead of over them. */
-.filter-bar {
-  view-transition-name: filter-bar;
-}
-.selection-bar {
-  view-transition-name: selection-bar;
-}
-::view-transition-group(filter-bar),
-::view-transition-group(selection-bar) {
-  z-index: 1;
-}
-
-::view-transition-group(.card) {
-  animation-duration: 300ms;
-  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Only in the old snapshot: the card is leaving. */
-::view-transition-old(.card):only-child {
-  animation: cardOut 180ms ease-in both;
-}
-
-/* Only in the new snapshot: the card is coming back. */
-::view-transition-new(.card):only-child {
-  animation: cardIn 300ms ease-out both;
-}
-
-@keyframes cardOut {
-  to { opacity: 0; transform: scale(0.94); }
 }
 
 /* react-selecto lasso — overrides the library's injected blue defaults */

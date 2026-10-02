@@ -8,6 +8,7 @@ import { cx } from '../lib/cx.ts'
 interface Props {
   bookmark: Bookmark
   index: number
+  stagger: number // place in the entrance stagger; 0 fades in without delay
   marked: boolean
   selected: boolean
 }
@@ -25,13 +26,15 @@ function catalogNumber(index: number): string {
   return '№' + String(index + 1).padStart(3, '0')
 }
 
-export function BookmarkCard({ bookmark, index, marked, selected }: Props) {
+export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Props) {
   const { t } = useTranslation()
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
   const favicon = bookmark.icon ?? faviconUrl(bookmark.url)
   const [faviconBroken, setFaviconBroken] = useState(false)
-  const cardStyle = { '--i': Math.min(index, 24) } as CSSProperties
+  // Read once: changing the delay of a card-in already under way replays it.
+  const [entranceStep] = useState(Math.min(stagger, 24))
+  const cardStyle = { '--i': entranceStep } as CSSProperties
 
   function open() {
     window.open(bookmark.url, '_blank', 'noopener,noreferrer')
@@ -39,12 +42,11 @@ export function BookmarkCard({ bookmark, index, marked, selected }: Props) {
 
   return (
     <article
-      data-bookmark-id={bookmark.id}
       aria-selected={selected}
       onDoubleClick={open}
       style={cardStyle}
       className={cx(
-        'card-in relative flex min-h-[170px] flex-col rounded-md border p-4 select-none cursor-default',
+        'card-in relative flex h-full min-h-[170px] flex-col rounded-md border p-4 select-none cursor-default',
         'transition-[border-color,transform,opacity,background-color] duration-150 ease-out',
         marked
           ? 'border-edge bg-paper-soft opacity-55 hover:opacity-75'

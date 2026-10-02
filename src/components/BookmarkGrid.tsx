@@ -1,10 +1,16 @@
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import Selecto, { type OnSelectEnd } from 'react-selecto'
+import { m, type Transition } from 'motion/react'
+import type { Bookmark } from '../core/types.ts'
 import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
+import { useGridMotion } from '../lib/gridMotion.ts'
 import { BookmarkCard } from './BookmarkCard.tsx'
 
 const CARD_SELECTOR = '[data-bookmark-id]'
+
+// A spring keeps its speed when a new delete interrupts the slide.
+const LAYOUT_SPRING: Transition = { type: 'spring', visualDuration: 0.3, bounce: 0 }
 
 function idOf(el: Element): string | null {
   return el instanceof HTMLElement ? el.dataset.bookmarkId ?? null : null
@@ -21,6 +27,9 @@ export function BookmarkGrid() {
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const selected = useBookmarkStore(s => s.selected)
   const filterKind = useBookmarkStore(s => s.activeFilter?.kind ?? null)
+  const epoch = useGridMotion(s => s.epoch)
+  const near = useGridMotion(s => s.near)
+  const entering = useGridMotion(s => s.entering)
   const gridRef = useRef<HTMLDivElement>(null)
   const selectoRef = useRef<Selecto>(null)
 
@@ -90,15 +99,47 @@ export function BookmarkGrid() {
         className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]"
       >
         {visible.map((b, i) => (
-          <BookmarkCard
+          <GridItem
             key={b.id}
-            index={i}
             bookmark={b}
+            index={i}
+            stagger={entering.has(b.id) ? 0 : i}
             marked={pendingDeletes.has(b.id)}
             selected={selected.has(b.id)}
+            layoutDependency={near.has(b.id) ? epoch : 0}
           />
         ))}
       </div>
     </>
   )
 }
+
+interface GridItemProps {
+  bookmark: Bookmark
+  index: number
+  stagger: number
+  marked: boolean
+  selected: boolean
+  layoutDependency: number
+}
+
+// The wrapper slides the card when others leave or come back
+// (lib/gridMotion.ts); filtering and sorting do not change its
+// layoutDependency, so it jumps. The card keeps its CSS entrance on its own element, so the two
+// transforms do not override each other. Memoized because Motion components
+// are slow to re-render: a click only re-renders the cards it selects.
+const GridItem = memo(function GridItem({ layoutDependency, ...card }: GridItemProps) {
+  return (
+    <m.div
+      data-bookmark-id={card.bookmark.id}
+      layout="position"
+      layoutDependency={layoutDependency}
+      transition={LAYOUT_SPRING}
+      // Block, and the card fills its height (h-full): cheaper to lay out
+      // than a grid per card when there are thousands.
+      className="h-full"
+    >
+      <BookmarkCard {...card} />
+    </m.div>
+  )
+})
