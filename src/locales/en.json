@@ -29,6 +29,11 @@
       "loading": "exporting…",
       "titleDisabled": "delete at least one to export",
       "titleEnabled": "download filtered HTML"
+    },
+    "apply": {
+      "idle": "apply",
+      "titleDisabled": "delete at least one to apply",
+      "titleEnabled": "delete from Chrome the ones deleted here"
     }
   },
   "selectionBar": {
@@ -42,6 +47,34 @@
     "deleted_one": "{{count}} deleted",
     "deleted_other": "{{count}} deleted",
     "undo": "undo"
+  },
+  "startup": {
+    "loading": "loading bookmarks…",
+    "failedTitle": "Couldn't read your bookmarks",
+    "emptyTitle": "No bookmarks to review"
+  },
+  "applyDialog": {
+    "title_one": "Delete {{count}} bookmark from Chrome",
+    "title_other": "Delete {{count}} bookmarks from Chrome",
+    "folders": "Folders left empty are deleted too.",
+    "headsUpLabel": "heads up",
+    "headsUpBody": "Chrome can't undo this. Before deleting, a copy of these bookmarks is downloaded: if you change your mind, import it in the bookmarks manager and they'll come back, though in a new folder.",
+    "sync": "If sync is on, the deletion also reaches your other devices.",
+    "cancel": "cancel",
+    "confirm": "delete {{count}}",
+    "applying": "deleting…",
+    "doneTitle": "Triage applied",
+    "doneDeleted_one": "Deleted {{count}} bookmark from Chrome.",
+    "doneDeleted_other": "Deleted {{count}} bookmarks from Chrome.",
+    "doneFolders_one": "Also {{count}} folder left empty.",
+    "doneFolders_other": "Also {{count}} folders left empty.",
+    "doneSkipped_one": "{{count}} wasn't deleted because it changed in Chrome meanwhile.",
+    "doneSkipped_other": "{{count}} weren't deleted because they changed in Chrome meanwhile.",
+    "doneBackup": "copy downloaded: ",
+    "failedTitle": "Couldn't apply",
+    "failedHint": "Reload the tab to see how your bookmarks ended up.",
+    "done": "done",
+    "close": "close"
   },
   "fileUpload": {
     "loadAnother": "load another file",

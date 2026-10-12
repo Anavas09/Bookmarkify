@@ -56,6 +56,12 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   return ce === 'true' || ce === ''
 }
 
+// An open dialog has the keyboard to itself: Esc closes it, and Supr must
+// not delete anything behind it.
+export function isDialogOpen(): boolean {
+  return document.querySelector('[role="dialog"]') !== null
+}
+
 export function useKeyboardShortcuts(): void {
   const hasBookmarks = useBookmarkStore(s => s.bookmarks.length > 0)
 
@@ -63,7 +69,7 @@ export function useKeyboardShortcuts(): void {
     if (!hasBookmarks) return
 
     function onKey(e: KeyboardEvent) {
-      if (isEditableTarget(e.target)) return
+      if (isEditableTarget(e.target) || isDialogOpen()) return
 
       const store = useBookmarkStore.getState()
 

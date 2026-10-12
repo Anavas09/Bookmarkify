@@ -1,5 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { handleShortcut, isEditableTarget, type ShortcutActions } from './keyboardShortcuts.ts'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  handleShortcut,
+  isDialogOpen,
+  isEditableTarget,
+  type ShortcutActions,
+} from './keyboardShortcuts.ts'
 
 const NONE = { mod: false, alt: false, shift: false }
 const MOD = { mod: true, alt: false, shift: false }
@@ -125,5 +130,22 @@ describe('isEditableTarget', () => {
 
   it('returns false for null', () => {
     expect(isEditableTarget(null)).toBe(false)
+  })
+})
+
+describe('isDialogOpen', () => {
+  afterEach(() => {
+    document.body.replaceChildren()
+  })
+
+  it('is false when the page has no dialog', () => {
+    expect(isDialogOpen()).toBe(false)
+  })
+
+  it('is true while an element with role="dialog" is on the page', () => {
+    const dialog = document.createElement('div')
+    dialog.setAttribute('role', 'dialog')
+    document.body.append(dialog)
+    expect(isDialogOpen()).toBe(true)
   })
 })

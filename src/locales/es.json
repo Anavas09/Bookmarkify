@@ -29,6 +29,11 @@
       "loading": "exportando…",
       "titleDisabled": "elimina al menos uno para exportar",
       "titleEnabled": "descargar HTML filtrado"
+    },
+    "apply": {
+      "idle": "aplicar",
+      "titleDisabled": "elimina al menos uno para aplicar",
+      "titleEnabled": "borrar de Chrome los eliminados"
     }
   },
   "selectionBar": {
@@ -42,6 +47,34 @@
     "deleted_one": "{{count}} eliminado",
     "deleted_other": "{{count}} eliminados",
     "undo": "deshacer"
+  },
+  "startup": {
+    "loading": "cargando marcadores…",
+    "failedTitle": "No se pudieron leer los marcadores",
+    "emptyTitle": "No hay marcadores que revisar"
+  },
+  "applyDialog": {
+    "title_one": "Borrar {{count}} marcador de Chrome",
+    "title_other": "Borrar {{count}} marcadores de Chrome",
+    "folders": "Las carpetas que se queden vacías también se borran.",
+    "headsUpLabel": "aviso",
+    "headsUpBody": "Chrome no lo puede deshacer. Antes de borrar se descarga una copia con estos marcadores: si te arrepientes, impórtala en el gestor de marcadores y volverán, aunque en una carpeta nueva.",
+    "sync": "Si tienes activada la sincronización, el borrado también llega a tus otros dispositivos.",
+    "cancel": "cancelar",
+    "confirm": "borrar {{count}}",
+    "applying": "borrando…",
+    "doneTitle": "Triaje aplicado",
+    "doneDeleted_one": "Se borró {{count}} marcador de Chrome.",
+    "doneDeleted_other": "Se borraron {{count}} marcadores de Chrome.",
+    "doneFolders_one": "También {{count}} carpeta que se quedó vacía.",
+    "doneFolders_other": "También {{count}} carpetas que se quedaron vacías.",
+    "doneSkipped_one": "{{count}} no se borró porque cambió en Chrome mientras tanto.",
+    "doneSkipped_other": "{{count}} no se borraron porque cambiaron en Chrome mientras tanto.",
+    "doneBackup": "copia descargada: ",
+    "failedTitle": "No se pudo aplicar",
+    "failedHint": "Recarga la pestaña para ver cómo han quedado tus marcadores.",
+    "done": "hecho",
+    "close": "cerrar"
   },
   "fileUpload": {
     "loadAnother": "cargar otro archivo",
