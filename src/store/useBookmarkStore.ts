@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { Bookmark, DocumentMeta } from '../core/types.ts'
-import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
+import type { BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
 import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
 export const PERSIST_KEY = 'bookmarkify:v1'
@@ -31,7 +31,7 @@ export interface BookmarkStore {
   clearFilter(): void
   setSort(s: Sort): void
   clearSort(): void
-  exportFiltered(source: BookmarkSource): Promise<void>
+  commit(source: BookmarkSource): Promise<CommitResult>
 }
 
 export function getInitialState(): Pick<
@@ -197,10 +197,15 @@ export const useBookmarkStore = create<BookmarkStore>()(
         })
       },
 
-      async exportFiltered(source) {
+      async commit(source) {
         const { bookmarks, meta, pendingDeletes } = get()
-        const filtered = bookmarks.filter(b => !pendingDeletes.has(b.id))
-        await source.export({ bookmarks: filtered, meta })
+        const kept: Bookmark[] = []
+        const removed: Bookmark[] = []
+        for (const b of bookmarks) (pendingDeletes.has(b.id) ? removed : kept).push(b)
+        const result = await source.commit({ kept, removed, meta })
+        // The source changed, so what the grid shows is out of date.
+        if (result.kind === 'applied') await get().load(source)
+        return result
       },
     }),
     {

@@ -166,7 +166,7 @@ describe('serializeNetscape', () => {
 
     it('does not emit a folder that has no bookmarks (empty-after-filter case)', () => {
       // Simulate: user marked all bookmarks in "TrashMe" for deletion and
-      // exportFiltered stripped them — the resulting array has nothing at
+      // commit left them out of `kept` — the resulting array has nothing at
       // that path, so the folder must not appear in the output.
       const html = serializeNetscape([
         { id: '0', title: 'Kept', url: 'https://k.com', folderPath: ['Keep'] },

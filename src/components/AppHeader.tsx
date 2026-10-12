@@ -21,7 +21,7 @@ export function AppHeader() {
   const { t } = useTranslation()
   const total = useBookmarkStore(s => s.bookmarks.length)
   const deleted = useBookmarkStore(s => s.pendingDeletes.size)
-  const exportFiltered = useBookmarkStore(s => s.exportFiltered)
+  const commit = useBookmarkStore(s => s.commit)
   const kept = total - deleted
   const mac = isMac()
 
@@ -34,7 +34,7 @@ export function AppHeader() {
     const adapter = new NetscapeAdapter(null, filename)
     setExporting(true)
     try {
-      await exportFiltered(adapter)
+      await commit(adapter)
       setLastExport({ filename, kept, removed: deleted })
     } finally {
       setExporting(false)

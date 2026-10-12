@@ -1,7 +1,8 @@
 import type { BookmarkDocument } from '../types.ts'
-import type { BookmarkSource } from '../ports/BookmarkSource.ts'
+import type { BookmarkChange, BookmarkSource, CommitResult } from '../ports/BookmarkSource.ts'
 import { parseNetscape } from '../parser.ts'
 import { serializeNetscape } from '../serializer.ts'
+import { downloadFile } from './download.ts'
 
 const DEFAULT_FILENAME = 'bookmarks.html'
 
@@ -22,19 +23,9 @@ export class NetscapeAdapter implements BookmarkSource {
     return parseNetscape(html)
   }
 
-  async export(doc: BookmarkDocument): Promise<void> {
-    const html = serializeNetscape(doc.bookmarks, doc.meta)
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    try {
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = this.downloadName
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-    } finally {
-      URL.revokeObjectURL(url)
-    }
+  // A file can't be edited in place: the kept bookmarks go into a new one.
+  async commit({ kept, meta }: BookmarkChange): Promise<CommitResult> {
+    downloadFile(this.downloadName, serializeNetscape(kept, meta))
+    return { kind: 'downloaded', filename: this.downloadName }
   }
 }

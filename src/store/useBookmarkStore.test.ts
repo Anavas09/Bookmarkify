@@ -1,24 +1,34 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBookmarkStore, getInitialState, PERSIST_KEY } from './useBookmarkStore.ts'
 import type { Bookmark, BookmarkDocument, DocumentMeta } from '../core/types.ts'
-import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
+import type { BookmarkChange, BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
 
 class FakeSource implements BookmarkSource {
-  exportedWith: BookmarkDocument | null = null
-  private readonly seed: Bookmark[]
+  committed: BookmarkChange | null = null
+  loads = 0
+  private seed: Bookmark[]
   private readonly seedMeta: DocumentMeta
+  private readonly applies: boolean
 
-  constructor(seed: Bookmark[] = [], meta: DocumentMeta = {}) {
+  constructor(seed: Bookmark[] = [], meta: DocumentMeta = {}, { applies = false } = {}) {
     this.seed = seed
     this.seedMeta = meta
+    this.applies = applies
   }
 
   async load(): Promise<BookmarkDocument> {
+    this.loads++
     return { bookmarks: this.seed, meta: this.seedMeta }
   }
 
-  async export(doc: BookmarkDocument): Promise<void> {
-    this.exportedWith = doc
+  // Saves a copy, like a file. With `applies` it changes in place, like
+  // Chrome: the removed bookmarks are gone from the next load.
+  async commit(change: BookmarkChange): Promise<CommitResult> {
+    this.committed = change
+    if (!this.applies) return { kind: 'downloaded', filename: 'out.html' }
+    const gone = new Set(change.removed.map(b => b.id))
+    this.seed = this.seed.filter(b => !gone.has(b.id))
+    return { kind: 'applied', deleted: gone.size, skipped: 0, folders: 0, backupFilename: 'backup.html' }
   }
 }
 
@@ -100,34 +110,55 @@ describe('useBookmarkStore', () => {
     })
   })
 
-  describe('exportFiltered', () => {
-    it('exports only bookmarks not in pendingDeletes', async () => {
-      const source = new FakeSource([B('a'), B('b'), B('c')])
+  describe('commit', () => {
+    it('hands the source the kept and the removed bookmarks, with the meta', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')], { rootTitle: 'Marcadores' })
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('b')
 
-      await useBookmarkStore.getState().exportFiltered(source)
+      const result = await useBookmarkStore.getState().commit(source)
 
-      expect(source.exportedWith?.bookmarks.map(x => x.id)).toEqual(['a', 'c'])
+      expect(source.committed?.kept.map(x => x.id)).toEqual(['a', 'c'])
+      expect(source.committed?.removed.map(x => x.id)).toEqual(['b'])
+      expect(source.committed?.meta).toEqual({ rootTitle: 'Marcadores' })
+      expect(result).toEqual({ kind: 'downloaded', filename: 'out.html' })
     })
 
-    it('exports everything when nothing is marked', async () => {
+    it('removes nothing when nothing is marked', async () => {
       const source = new FakeSource([B('a'), B('b')])
       await useBookmarkStore.getState().load(source)
 
-      await useBookmarkStore.getState().exportFiltered(source)
+      await useBookmarkStore.getState().commit(source)
 
-      expect(source.exportedWith?.bookmarks.map(x => x.id)).toEqual(['a', 'b'])
+      expect(source.committed?.kept.map(x => x.id)).toEqual(['a', 'b'])
+      expect(source.committed?.removed).toEqual([])
     })
 
-    it('does not clear pendingDeletes after export', async () => {
+    it('keeps everything as it was after a download', async () => {
       const source = new FakeSource([B('a'), B('b')])
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('a')
 
-      await useBookmarkStore.getState().exportFiltered(source)
+      await useBookmarkStore.getState().commit(source)
 
-      expect(useBookmarkStore.getState().pendingDeletes.has('a')).toBe(true)
+      const s = useBookmarkStore.getState()
+      expect(source.loads).toBe(1)
+      expect(s.bookmarks.map(b => b.id)).toEqual(['a', 'b'])
+      expect(s.pendingDeletes.has('a')).toBe(true)
+    })
+
+    it('reloads from the source once the change is applied', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')], {}, { applies: true })
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().mark('b')
+
+      const result = await useBookmarkStore.getState().commit(source)
+
+      const s = useBookmarkStore.getState()
+      expect(result.kind).toBe('applied')
+      expect(source.loads).toBe(2)
+      expect(s.bookmarks.map(b => b.id)).toEqual(['a', 'c'])
+      expect(s.pendingDeletes.size).toBe(0)
     })
   })
 
