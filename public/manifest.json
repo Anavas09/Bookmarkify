@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmarkify",
+  "version": "0.1.0",
+  "description": "Visual triage for your bookmarks: review them in a grid, mark the ones you no longer need and delete them from Chrome.",
+  "permissions": ["bookmarks"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Bookmarkify"
+  }
+}

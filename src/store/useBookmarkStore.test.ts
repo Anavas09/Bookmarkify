@@ -1,24 +1,47 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBookmarkStore, getInitialState, PERSIST_KEY } from './useBookmarkStore.ts'
 import type { Bookmark, BookmarkDocument, DocumentMeta } from '../core/types.ts'
-import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
+import type { BookmarkChange, BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
 
 class FakeSource implements BookmarkSource {
-  exportedWith: BookmarkDocument | null = null
-  private readonly seed: Bookmark[]
+  committed: BookmarkChange | null = null
+  loads = 0
+  private seed: Bookmark[]
   private readonly seedMeta: DocumentMeta
+  private readonly applies: boolean
+  private readonly skips: string[]
 
-  constructor(seed: Bookmark[] = [], meta: DocumentMeta = {}) {
+  constructor(
+    seed: Bookmark[] = [],
+    meta: DocumentMeta = {},
+    { applies = false, skips = [] as string[] } = {},
+  ) {
     this.seed = seed
     this.seedMeta = meta
+    this.applies = applies
+    this.skips = skips
   }
 
   async load(): Promise<BookmarkDocument> {
+    this.loads++
     return { bookmarks: this.seed, meta: this.seedMeta }
   }
 
-  async export(doc: BookmarkDocument): Promise<void> {
-    this.exportedWith = doc
+  // Saves a copy, like a file. With `applies` it changes in place, like
+  // Chrome: the removed bookmarks are gone from the next load, except the
+  // ones it `skips`.
+  async commit(change: BookmarkChange): Promise<CommitResult> {
+    this.committed = change
+    if (!this.applies) return { kind: 'downloaded', filename: 'out.html' }
+    const gone = new Set(change.removed.map(b => b.id).filter(id => !this.skips.includes(id)))
+    this.seed = this.seed.filter(b => !gone.has(b.id))
+    return {
+      kind: 'applied',
+      deleted: gone.size,
+      skipped: change.removed.length - gone.size,
+      folders: 0,
+      backupFilename: 'backup.html',
+    }
   }
 }
 
@@ -46,11 +69,10 @@ describe('useBookmarkStore', () => {
   })
 
   describe('load', () => {
-    it('populates bookmarks and resets selection + pending deletes', async () => {
+    it('populates bookmarks and clears the selection', async () => {
       useBookmarkStore.setState({
-        selected: new Set(['stale']),
-        selectionAnchor: 'stale',
-        pendingDeletes: new Set(['stale']),
+        selected: new Set(['a']),
+        selectionAnchor: 'a',
       })
 
       const source = new FakeSource([B('a'), B('b')])
@@ -60,7 +82,14 @@ describe('useBookmarkStore', () => {
       expect(s.bookmarks).toHaveLength(2)
       expect(s.selected.size).toBe(0)
       expect(s.selectionAnchor).toBeNull()
-      expect(s.pendingDeletes.size).toBe(0)
+    })
+
+    it('keeps the marks on bookmarks still there and drops the rest', async () => {
+      useBookmarkStore.setState({ pendingDeletes: new Set(['b', 'gone']) })
+
+      await useBookmarkStore.getState().load(new FakeSource([B('a'), B('b')]))
+
+      expect([...useBookmarkStore.getState().pendingDeletes]).toEqual(['b'])
     })
   })
 
@@ -100,34 +129,69 @@ describe('useBookmarkStore', () => {
     })
   })
 
-  describe('exportFiltered', () => {
-    it('exports only bookmarks not in pendingDeletes', async () => {
-      const source = new FakeSource([B('a'), B('b'), B('c')])
+  describe('commit', () => {
+    it('hands the source the kept and the removed bookmarks, with the meta', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')], { rootTitle: 'Marcadores' })
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('b')
 
-      await useBookmarkStore.getState().exportFiltered(source)
+      const result = await useBookmarkStore.getState().commit(source)
 
-      expect(source.exportedWith?.bookmarks.map(x => x.id)).toEqual(['a', 'c'])
+      expect(source.committed?.kept.map(x => x.id)).toEqual(['a', 'c'])
+      expect(source.committed?.removed.map(x => x.id)).toEqual(['b'])
+      expect(source.committed?.meta).toEqual({ rootTitle: 'Marcadores' })
+      expect(result).toEqual({ kind: 'downloaded', filename: 'out.html' })
     })
 
-    it('exports everything when nothing is marked', async () => {
+    it('removes nothing when nothing is marked', async () => {
       const source = new FakeSource([B('a'), B('b')])
       await useBookmarkStore.getState().load(source)
 
-      await useBookmarkStore.getState().exportFiltered(source)
+      await useBookmarkStore.getState().commit(source)
 
-      expect(source.exportedWith?.bookmarks.map(x => x.id)).toEqual(['a', 'b'])
+      expect(source.committed?.kept.map(x => x.id)).toEqual(['a', 'b'])
+      expect(source.committed?.removed).toEqual([])
     })
 
-    it('does not clear pendingDeletes after export', async () => {
+    it('keeps everything as it was after a download', async () => {
       const source = new FakeSource([B('a'), B('b')])
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('a')
 
-      await useBookmarkStore.getState().exportFiltered(source)
+      await useBookmarkStore.getState().commit(source)
 
-      expect(useBookmarkStore.getState().pendingDeletes.has('a')).toBe(true)
+      const s = useBookmarkStore.getState()
+      expect(source.loads).toBe(1)
+      expect(s.bookmarks.map(b => b.id)).toEqual(['a', 'b'])
+      expect(s.pendingDeletes.has('a')).toBe(true)
+    })
+
+    it('reloads from the source once the change is applied', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')], {}, { applies: true })
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().mark('b')
+
+      const result = await useBookmarkStore.getState().commit(source)
+
+      const s = useBookmarkStore.getState()
+      expect(result.kind).toBe('applied')
+      expect(source.loads).toBe(2)
+      expect(s.bookmarks.map(b => b.id)).toEqual(['a', 'c'])
+      expect(s.pendingDeletes.size).toBe(0)
+    })
+
+    it('keeps marked what the source skipped', async () => {
+      const source = new FakeSource([B('a'), B('b'), B('c')], {}, { applies: true, skips: ['c'] })
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().mark('b')
+      useBookmarkStore.getState().mark('c')
+
+      const result = await useBookmarkStore.getState().commit(source)
+
+      const s = useBookmarkStore.getState()
+      expect(result).toMatchObject({ deleted: 1, skipped: 1 })
+      expect(s.bookmarks.map(b => b.id)).toEqual(['a', 'c'])
+      expect([...s.pendingDeletes]).toEqual(['c'])
     })
   })
 
@@ -174,11 +238,11 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().selected.size).toBe(0)
     })
 
-    it('load resets activeFilter to null', async () => {
+    it('load keeps the filter, as it was left on the last visit', async () => {
       useBookmarkStore.getState().setFilter({ kind: 'duplicate' })
       const source = new FakeSource([B('a')])
       await useBookmarkStore.getState().load(source)
-      expect(useBookmarkStore.getState().activeFilter).toBeNull()
+      expect(useBookmarkStore.getState().activeFilter).toEqual({ kind: 'duplicate' })
     })
   })
 
@@ -218,10 +282,10 @@ describe('useBookmarkStore', () => {
       expect(useBookmarkStore.getState().activeSort).toBeNull()
     })
 
-    it('load resets activeSort to null', async () => {
+    it('load keeps the sort, as it was left on the last visit', async () => {
       useBookmarkStore.getState().setSort({ kind: 'date', dir: 'desc' })
       await useBookmarkStore.getState().load(new FakeSource([B('a')]))
-      expect(useBookmarkStore.getState().activeSort).toBeNull()
+      expect(useBookmarkStore.getState().activeSort).toEqual({ kind: 'date', dir: 'desc' })
     })
 
     it('selectRangeTo follows the sorted order', async () => {
@@ -503,26 +567,30 @@ describe('useBookmarkStore', () => {
   })
 
   describe('persistence', () => {
-    interface PersistedShape {
-      state: {
-        bookmarks: Array<{ id: string }>
-        pendingDeletes: { __set: string[] }
-        activeFilter: unknown
-      }
-    }
-
-    it('writes bookmarks, pendingDeletes and activeFilter to localStorage', async () => {
-      const source = new FakeSource([B('a', 'https://a.com'), B('b', 'https://b.com')])
+    it('writes only the triage to localStorage: marks, filter and sort', async () => {
+      const source = new FakeSource([B('a', 'https://a.com'), B('b', 'https://b.com')], { rootTitle: 'X' })
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('a')
       useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
 
       const raw = localStorage.getItem(PERSIST_KEY)
       expect(raw).not.toBeNull()
-      const parsed = JSON.parse(raw as string) as PersistedShape
-      expect(parsed.state.bookmarks.map(b => b.id)).toEqual(['a', 'b'])
-      expect(parsed.state.pendingDeletes).toEqual({ __set: ['a'] })
-      expect(parsed.state.activeFilter).toEqual({ kind: 'domain', value: 'a.com' })
+      const parsed = JSON.parse(raw as string) as { state: Record<string, unknown> }
+      expect(parsed.state).toEqual({
+        pendingDeletes: { __set: ['a'] },
+        activeFilter: { kind: 'domain', value: 'a.com' },
+        activeSort: null,
+      })
+    })
+
+    it('leaves the triage saved under the old key as it was', async () => {
+      const old = JSON.stringify({ state: { bookmarks: [B('0')], pendingDeletes: { __set: ['0'] } }, version: 0 })
+      localStorage.setItem('bookmarkify:v1', old)
+
+      await useBookmarkStore.getState().load(new FakeSource([B('a')]))
+      useBookmarkStore.getState().mark('a')
+
+      expect(localStorage.getItem('bookmarkify:v1')).toBe(old)
     })
 
     it('writes activeSort to localStorage', async () => {
@@ -540,7 +608,6 @@ describe('useBookmarkStore', () => {
         PERSIST_KEY,
         JSON.stringify({
           state: {
-            bookmarks: [B('a')],
             pendingDeletes: { __set: [] },
             activeFilter: null,
             activeSort: { kind: 'date', dir: 'asc' },
@@ -573,9 +640,9 @@ describe('useBookmarkStore', () => {
         PERSIST_KEY,
         JSON.stringify({
           state: {
-            bookmarks: [B('x'), B('y')],
             pendingDeletes: { __set: ['x'] },
             activeFilter: { kind: 'duplicate' },
+            activeSort: null,
           },
           version: 0,
         }),
@@ -584,11 +651,24 @@ describe('useBookmarkStore', () => {
       await useBookmarkStore.persist.rehydrate()
 
       const s = useBookmarkStore.getState()
-      expect(s.bookmarks.map(b => b.id)).toEqual(['x', 'y'])
       expect(s.pendingDeletes).toBeInstanceOf(Set)
-      expect(s.pendingDeletes.has('x')).toBe(true)
-      expect(s.pendingDeletes.has('y')).toBe(false)
+      expect([...s.pendingDeletes]).toEqual(['x'])
       expect(s.activeFilter).toEqual({ kind: 'duplicate' })
+    })
+
+    it('applies the saved marks to the bookmarks loaded after rehydrating', async () => {
+      localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: { pendingDeletes: { __set: ['b', 'gone'] }, activeFilter: null, activeSort: null },
+          version: 0,
+        }),
+      )
+      await useBookmarkStore.persist.rehydrate()
+
+      await useBookmarkStore.getState().load(new FakeSource([B('a'), B('b')]))
+
+      expect([...useBookmarkStore.getState().pendingDeletes]).toEqual(['b'])
     })
   })
 })

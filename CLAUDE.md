@@ -4,71 +4,112 @@ Este archivo ofrece orientación a Claude Code (claude.ai/code) al trabajar con 
 
 # Triaje de marcadores
 
-App de triaje visual para limpiar los marcadores del navegador (archivo HTML en formato Netscape o extensión de Chrome).
+Extensión de Chrome de triaje visual para limpiar los marcadores. Los lee con `chrome.bookmarks` y, al pulsar «Aplicar», borra de Chrome los que el usuario eliminó. Empezó como web app que subía un HTML en formato Netscape; ese código está sin uso y se retira en el paso 18.
 
 ## Stack
 
-Vite + React + TypeScript. Zustand para el estado. Vitest para los tests. Sin backend.
+Vite + React + TypeScript, empaquetado como extensión de Chrome (Manifest V3). Zustand para el estado. Vitest para los tests. Sin backend.
 
 ## Comandos
 
 ```bash
-npm run dev        # arranca el servidor de desarrollo
-npm run build      # comprueba tipos + build
-npm run preview    # sirve el build de producción
+npm run dev        # servidor de desarrollo, con un chrome.bookmarks falso y marcadores de ejemplo
+npm run build      # comprueba tipos + build: deja la extensión en dist/
+npm run preview    # sirve dist/ como web: sin chrome.bookmarks, solo muestra el error de arranque
 npm run test       # ejecuta todos los tests una vez (Vitest)
 npm run test:watch # ejecuta los tests en modo watch
-npx vitest run src/core/parser.test.ts   # ejecuta un solo archivo de tests
+npx vitest run src/core/adapters/ChromeAdapter.test.ts   # ejecuta un solo archivo de tests
 npm run lint       # ESLint
 ```
+
+### Cargar la extensión
+
+1. `npm run build`.
+2. En `chrome://extensions`, activar el modo desarrollador, pulsar «Cargar descomprimida» y elegir `dist/`.
+3. Pulsar el icono de Bookmarkify (en el menú del puzle si no está fijado): la app se abre en su propia pestaña.
+4. Tras cada build, pulsar ↻ en la tarjeta de la extensión y recargar la pestaña.
+
+Los marcadores reales se prueban en un perfil de Chrome aparte, sin sincronización, con un HTML de marcadores importado en el gestor: «Aplicar» borra de verdad (ver [Aplicar en Chrome](#aplicar-en-chrome)).
 
 ## Estructura de directorios
 
 ```
+public/
+  manifest.json               # Manifest V3: solo pide el permiso bookmarks
+  background.js               # service worker: abre la app en su pestaña al pulsar el icono
+  theme-init.js               # tema antes de que monte React (la CSP bloquea los scripts inline)
 src/
+  main.tsx                    # crea la fuente con createBookmarkSource() y se la pasa a <App>
   core/
     ports/
-      BookmarkSource.ts   # la interfaz del puerto — lo único que la UI conoce
+      BookmarkSource.ts       # la interfaz del puerto — lo único que la UI conoce
     adapters/
-      NetscapeAdapter.ts  # parsea el .html subido (formato Netscape)
-      ChromeAdapter.ts    # envuelve chrome.bookmarks para el build de extensión
-    types.ts              # Bookmark, BookmarkFolder, etc.
-    parser.ts             # HTML Netscape → tipos (puro, testeable)
-    serializer.ts         # tipos → HTML Netscape (puro, testeable)
-    normalizeUrl.ts       # normalización de URLs para detectar duplicados
+      ChromeAdapter.ts        # lee y borra con chrome.bookmarks
+      createBookmarkSource.ts # elige la fuente: Chrome o, en npm run dev, la de ejemplo
+      fakeChromeBookmarks.ts  # chrome.bookmarks en memoria, para los tests y npm run dev
+      devBookmarks.ts         # los marcadores de ejemplo de npm run dev
+      download.ts             # descarga un archivo (la copia de seguridad)
+      NetscapeAdapter.ts      # parsea el .html subido — sin uso, se retira en el paso 18
+    types.ts                  # Bookmark, BookmarkDocument, etc.
+    parser.ts                 # HTML Netscape → tipos — sin uso, se retira en el paso 18
+    serializer.ts             # tipos → HTML Netscape (puro, testeable), para la copia de seguridad
+    normalizeUrl.ts           # normalización de URLs para detectar duplicados
   store/
-    useBookmarkStore.ts   # store de Zustand
-  components/             # solo UI — sin conocimiento de adapters ni del formato
+    useBookmarkStore.ts       # store de Zustand
+  components/                 # solo UI — sin conocimiento de adapters ni del formato
 ```
 
 ## Regla de arquitectura (crítica)
 
-Toda lectura y escritura de marcadores pasa por el puerto `BookmarkSource` en `src/core/ports/BookmarkSource.ts`. Ningún archivo fuera de `src/core/adapters/` puede conocer el formato HTML Netscape ni la API `chrome.bookmarks`. Esto desacopla la UI de la fuente de datos y permite migrar la app a una extensión de Chrome sin reescribir código de UI.
+Toda lectura y escritura de marcadores pasa por el puerto `BookmarkSource` en `src/core/ports/BookmarkSource.ts`. Ningún archivo fuera de `src/core/adapters/` puede conocer el formato HTML Netscape ni la API `chrome.bookmarks`. Esto desacopla la UI de la fuente de datos: el paso a extensión (paso 17) cambió el adaptador y el arranque, pero no el grid, los filtros ni la selección.
+
+La fuente se elige en un solo sitio, `createBookmarkSource()`: `chrome.bookmarks` dentro de la extensión y, con `npm run dev`, el falso de `fakeChromeBookmarks.ts` con marcadores de ejemplo. `main.tsx` la crea y se la pasa a `<App source>`.
 
 Interfaz `BookmarkSource`:
 
 ```ts
 interface BookmarkSource {
-  load(): Promise<Bookmark[]>;
-  export(bookmarks: Bookmark[]): Promise<void>;
+  load(): Promise<BookmarkDocument>; // BookmarkDocument = { bookmarks, meta }
+  commit(change: BookmarkChange): Promise<CommitResult>;
 }
+
+// El resultado del triaje. Cada adaptador usa la lista que necesita:
+// un archivo guarda `kept`; una fuente viva borra `removed` y nada más.
+interface BookmarkChange {
+  kept: Bookmark[];
+  removed: Bookmark[];
+  meta: DocumentMeta;
+}
+
+type CommitResult =
+  | { kind: 'downloaded'; filename: string } // se guardó una copia filtrada; la fuente no cambió
+  | {
+      kind: 'applied';                        // la fuente cambió
+      deleted: number;
+      skipped: number;                        // no borrados: cambiaron o desaparecieron desde la carga
+      folders: number;                        // carpetas que se quedaron vacías y se borraron
+      backupFilename: string | null;
+    };
 ```
 
 ## Tipos base
 
 ```ts
 interface Bookmark {
-  id: string;        // generado (crypto.randomUUID o basado en índice)
+  id: string;            // id del nodo en Chrome
   title: string;
   url: string;
-  addedAt?: number;  // ms unix, del atributo ADD_DATE
-  tags?: string[];   // del atributo TAGS
+  addedAt?: number;      // ms unix: dateAdded en Chrome
+  folderPath?: string[]; // carpetas desde la raíz; en Chrome empieza por la del navegador
+  tags?: string[];       // del atributo TAGS del HTML (se retira en el paso 18)
 }
 ```
 
 ## Modelo de estado
 
-Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `Set<string>` dentro del store de Zustand. La exportación real los filtra en el momento del commit. Nada se elimina de forma permanente hasta que el usuario dispara una acción explícita de exportación. Mientras tanto, los eliminados se ocultan del grid y de los contadores; solo aparecen en la vista «eliminados» (paso 15), desde donde se restauran.
+Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `Set<string>` dentro del store de Zustand. Nada se borra de Chrome hasta que el usuario pulsa «Aplicar» y lo confirma: entonces `commit` reparte los marcadores en conservados y eliminados y se los pasa al puerto. Mientras tanto, los eliminados se ocultan del grid y de los contadores; solo aparecen en la vista «eliminados» (paso 15), desde donde se restauran.
+
+Solo se persiste el triaje (`pendingDeletes`, `activeFilter` y `activeSort`), con la clave `bookmarkify:v2` en `localStorage`. Los marcadores se vuelven a leer de la fuente en cada visita, y `load()` descarta las marcas de los que ya no existen.
 
 ```ts
 interface BookmarkStore {
@@ -77,7 +118,7 @@ interface BookmarkStore {
   selected: Set<string>;          // selección visual efímera (no se persiste)
   selectionAnchor: string | null; // id del último clic simple, para Shift+clic
   lastDeleted: string[] | null;   // último lote eliminado, para deshacer (efímero)
-  load(source: BookmarkSource): Promise<void>;
+  load(source: BookmarkSource): Promise<void>; // relee la fuente; conserva las marcas que siguen existiendo
   mark(id: string): void;
   unmark(id: string): void;
   setSelection(ids: Iterable<string>, anchor?: string | null): void;
@@ -88,7 +129,7 @@ interface BookmarkStore {
   restoreSelected(): void;  // saca los seleccionados de pendingDeletes
   undoDelete(): void;       // devuelve el último lote
   dismissUndo(): void;      // olvida el último lote (se cierra el aviso)
-  exportFiltered(source: BookmarkSource): Promise<void>;
+  commit(source: BookmarkSource): Promise<CommitResult>; // los eliminados al puerto; si se aplicó, relee la fuente
 }
 ```
 
@@ -130,9 +171,25 @@ Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic sel
     - No se usa `AnimatePresence`: su diff de keys es O(n²) y `mode="popLayout"` inyecta un `<style>` por cada card que sale, así que se congela con Ctrl+A → Supr sobre miles de cards.
     - **Barra flotante** — `SelectionBar` decide si se muestra y un `Bar` interno pinta el contenido que recibe por props, dentro de `AnimatePresence`. Al salir, `AnimatePresence` sigue renderizando el último elemento, así que la barra se desvanece con sus contadores en vez de quedarse vacía. `useIsPresent` desactiva los botones mientras sale. Entra con `easeOut` (200 ms) y sale con `easeIn` (160 ms), con `opacity` y `y: 8`. Si vuelve a haber selección durante la salida, la animación se invierte desde donde esté.
     - `LazyMotion` con `domMax` y `strict`, y `MotionConfig reducedMotion="user"`, envuelven la app en `App.tsx`. Con `prefers-reduced-motion`, el grid cambia al instante y la barra solo hace el fundido.
+17. ✅ ChromeAdapter y extensión (rama `feat/chrome-adapter`): la app pasa a ser una extensión de Chrome que lee los marcadores con `chrome.bookmarks` y, al pulsar «Aplicar», borra de Chrome los eliminados. Las decisiones están en `docs/roadmap.md`.
+    - **Puerto `commit`** — `export(doc)` pasa a `commit({ kept, removed, meta })`, que devuelve un `CommitResult`: `downloaded` si se guardó un archivo y `applied` si cambió la fuente. Cada adaptador usa la lista que necesita. En el store, `commit` sustituye a `exportFiltered` y, tras un `applied`, vuelve a cargar la fuente. La descarga de archivos pasa a `adapters/download.ts`.
+    - **Leer** — `ChromeAdapter.load()` recorre `getTree()` en profundidad, en el orden del gestor, con el id de Chrome, `dateAdded` como `addedAt` y un `folderPath` que empieza por la carpeta del navegador (barra de marcadores, otros marcadores o móvil). Deja fuera los bookmarklets (`javascript:`) y lo que gestiona un administrador (`unmodifiable`). `meta` va vacío.
+    - **Borrar** — `ChromeAdapter.commit()` borra solo `removed`: nunca calcula «árbol actual − conservados», porque borraría lo añadido en Chrome después de cargar. Vuelve a leer el árbol y salta los que ya no existen o cambiaron de URL; también cuenta como `skipped` lo que Chrome no deja borrar. Antes de borrar descarga la copia de seguridad (`bookmarks-AAAA-MM-DD_deleted.html`, con `serializer.ts` y los datos actuales de Chrome), porque Chrome no lo puede deshacer. Después sube por los padres de lo borrado y quita las carpetas que quedaron vacías. No toca las del navegador (`folderType`, o colgar de la raíz antes de Chrome 134), las gestionadas, las que ya estaban vacías ni las que guardan algo que la app no muestra, como un bookmarklet.
+    - **`chrome.bookmarks` falso** — `fakeChromeBookmarks.ts` lo implementa en memoria con las reglas de Chrome: nada cuelga de la raíz, las carpetas del navegador y lo gestionado no se tocan, y solo se borran carpetas vacías. Lo usan los tests y `npm run dev`, que arranca con los marcadores de ejemplo de `devBookmarks.ts`: vuelven completos al recargar y el build no los incluye.
+    - **Extensión** — `public/manifest.json` (Manifest V3, solo el permiso `bookmarks`) y `public/background.js`, un service worker que abre `index.html` en una pestaña al pulsar el icono. `npm run build` deja la extensión en `dist/`. El script del tema pasa de `index.html` a `public/theme-init.js`, porque la CSP de las extensiones no ejecuta scripts inline. `createBookmarkSource()` elige la fuente: `chrome.bookmarks` si existe, el falso en desarrollo y, si no hay ninguno (como en `npm run preview`), una fuente que falla con un mensaje.
+    - **Arranque** — `App` recibe la fuente por props y llama a `load()` en cada visita. Muestra «cargando» (con 300 ms de retraso para no parpadear), el error con su mensaje o «no hay marcadores que revisar». Sustituye a la pantalla de subida del HTML.
+    - **«Aplicar»** — sustituye en el header a «exportar» y a «cargar otro archivo», y se desactiva si no hay eliminados. `ApplyDialog` (HeadlessUI) pide confirmación con el foco en «cancelar» y avisa de la copia, de las carpetas vacías y de la sincronización. No se puede cerrar mientras borra. Al acabar resume los borrados, las carpetas, los saltados y el nombre de la copia; si falla, pide recargar la pestaña. Se renderiza fuera de la rama del grid para que el resumen siga a la vista aunque se borre todo. Los atajos no actúan mientras hay un `[role="dialog"]` abierto.
+    - **Persistencia** — la clave pasa a `bookmarkify:v2` y guarda solo el triaje: `pendingDeletes`, `activeFilter` y `activeSort`. `v1` también guardaba los marcadores del HTML, cuyos ids no sirven en Chrome, y se deja intacta.
+    - `FileUpload`, `ExportModal`, `NetscapeAdapter` y `parser.ts` quedan sin uso hasta el paso 18.
+18. ⏳ Retirada de la importación: borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de `docs/eliminar-con-chrome-adapter.md`.
+19. ⏳ Enlaces rotos: escaneo al abrir la pestaña y botón para volver a escanear. Solo cuentan como rotos los 404/410 y los dominios que no responden, y 👍 «no está roto» descarta los falsos positivos.
+20. ⏳ Paso opcional final: elegir si los marcadores se ven como lista o como grid.
 
-## Limitación del ciclo web-app pura
+## Aplicar en Chrome
 
-Chrome (y otros navegadores) importan HTML de bookmarks de forma **aditiva, no destructiva**: todo lo importado va a una subcarpeta nueva dentro de "Other Bookmarks" (ej. `Imported YYYY-MM-DD`) sin borrar nada del perfil actual. Las raíces `bookmark_bar`, `other` y `synced` ("Mobile Bookmarks") son especiales y no se eliminan aunque el HTML no las incluya.
+«Aplicar» es lo único que borra de verdad, y Chrome no lo puede deshacer:
 
-Consecuencia: el HTML filtrado que exporta la app es una **herramienta de decisión** ("qué borrar"), no de aplicación ("bórralo"). Para aplicar el triaje al perfil real hace falta borrar manualmente los descartados en el navegador o usar el `ChromeAdapter` (extensión) cuando exista.
+- Solo se borra lo marcado (`removed`), nunca «árbol actual − conservados»: eso borraría lo que el usuario añadiera en Chrome con la app abierta.
+- Antes de borrar se descarga la copia de seguridad. Se recupera importándola en el gestor de marcadores; como Chrome importa de forma **aditiva**, lo recuperado vuelve dentro de una carpeta nueva, no a su sitio.
+- Las carpetas del navegador (barra de marcadores, otros marcadores, móvil) nunca se borran; las del usuario, solo si el triaje las deja vacías.
+- Con la sincronización activada, el borrado llega a los demás dispositivos.

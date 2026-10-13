@@ -2,10 +2,12 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { Bookmark, DocumentMeta } from '../core/types.ts'
-import type { BookmarkSource } from '../core/ports/BookmarkSource.ts'
+import type { BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
 import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
-export const PERSIST_KEY = 'bookmarkify:v1'
+// v1 also saved the bookmarks of an uploaded file, whose ids mean nothing
+// in Chrome; the new key starts the triage over and leaves v1 as it was.
+export const PERSIST_KEY = 'bookmarkify:v2'
 
 export interface BookmarkStore {
   bookmarks: Bookmark[]
@@ -31,7 +33,7 @@ export interface BookmarkStore {
   clearFilter(): void
   setSort(s: Sort): void
   clearSort(): void
-  exportFiltered(source: BookmarkSource): Promise<void>
+  commit(source: BookmarkSource): Promise<CommitResult>
 }
 
 export function getInitialState(): Pick<
@@ -62,17 +64,21 @@ export const useBookmarkStore = create<BookmarkStore>()(
     (set, get) => ({
       ...getInitialState(),
 
+      // The bookmarks are read again on every visit, so the saved triage
+      // applies to whatever is still there: marks on bookmarks that are gone
+      // are dropped, and the filter and the sort stay as they were.
       async load(source) {
         const doc = await source.load()
-        set({
-          bookmarks: doc.bookmarks,
-          meta: doc.meta,
-          pendingDeletes: new Set(),
-          selected: new Set(),
-          selectionAnchor: null,
-          lastDeleted: null,
-          activeFilter: null,
-          activeSort: null,
+        set(state => {
+          const ids = new Set(doc.bookmarks.map(b => b.id))
+          return {
+            bookmarks: doc.bookmarks,
+            meta: doc.meta,
+            pendingDeletes: new Set([...state.pendingDeletes].filter(id => ids.has(id))),
+            selected: new Set(),
+            selectionAnchor: null,
+            lastDeleted: null,
+          }
         })
       },
 
@@ -197,10 +203,15 @@ export const useBookmarkStore = create<BookmarkStore>()(
         })
       },
 
-      async exportFiltered(source) {
+      async commit(source) {
         const { bookmarks, meta, pendingDeletes } = get()
-        const filtered = bookmarks.filter(b => !pendingDeletes.has(b.id))
-        await source.export({ bookmarks: filtered, meta })
+        const kept: Bookmark[] = []
+        const removed: Bookmark[] = []
+        for (const b of bookmarks) (pendingDeletes.has(b.id) ? removed : kept).push(b)
+        const result = await source.commit({ kept, removed, meta })
+        // The source changed, so what the grid shows is out of date.
+        if (result.kind === 'applied') await get().load(source)
+        return result
       },
     }),
     {
@@ -211,9 +222,8 @@ export const useBookmarkStore = create<BookmarkStore>()(
         reviver: (_key, value) =>
           isEncodedSet(value) ? new Set(value.__set) : value,
       }),
+      // Only the triage: the bookmarks come from the source on every visit.
       partialize: state => ({
-        bookmarks: state.bookmarks,
-        meta: state.meta,
         pendingDeletes: state.pendingDeletes,
         activeFilter: state.activeFilter,
         activeSort: state.activeSort,

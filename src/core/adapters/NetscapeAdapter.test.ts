@@ -24,7 +24,7 @@ describe('NetscapeAdapter', () => {
     await expect(adapter.load()).rejects.toThrow(/without a file/i)
   })
 
-  describe('export()', () => {
+  describe('commit()', () => {
     beforeEach(() => {
       URL.createObjectURL = vi.fn(() => 'blob:mock')
       URL.revokeObjectURL = vi.fn()
@@ -34,17 +34,23 @@ describe('NetscapeAdapter', () => {
       vi.restoreAllMocks()
     })
 
-    it('triggers a download with the serialized HTML', async () => {
+    it('downloads the kept bookmarks as HTML and leaves the removed ones out', async () => {
       const file = new File([''], 'in.html')
       const adapter = new NetscapeAdapter(file, 'out.html')
       const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-      await adapter.export({ bookmarks: [{ id: '0', title: 'X', url: 'https://x.com' }], meta: {} })
+      const result = await adapter.commit({
+        kept: [{ id: '0', title: 'X', url: 'https://x.com' }],
+        removed: [{ id: '1', title: 'Y', url: 'https://y.com' }],
+        meta: {},
+      })
 
+      expect(result).toEqual({ kind: 'downloaded', filename: 'out.html' })
       expect(URL.createObjectURL).toHaveBeenCalledOnce()
       const blob = (URL.createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0] as Blob
       const text = await blob.text()
       expect(text).toContain('HREF="https://x.com"')
+      expect(text).not.toContain('https://y.com')
       expect(clickSpy).toHaveBeenCalledOnce()
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock')
     })
