@@ -1,19 +1,19 @@
 # Bookmarkify
 
-App de triaje visual para limpiar los marcadores del navegador. Sube un archivo `.html` en formato Netscape (la exportación de Chrome, Firefox, Edge, Safari o cualquier otro navegador), revisa tus marcadores en un grid de tarjetas, selecciona los que ya no te sirvan, elimínalos y descarga un `.html` filtrado.
+Extensión de Chrome para hacer triaje visual de tus marcadores: los revisas en un grid de tarjetas, seleccionas los que ya no te sirven, los eliminas y, al pulsar «Aplicar», se borran de Chrome.
 
-Las eliminaciones son **no destructivas**: los marcadores eliminados se ocultan, pero puedes restaurarlos en cualquier momento, y tu exportación original no cambia. Sobre cómo aplicar el resultado al navegador, mira la sección [Reimportar en el navegador](#reimportar-en-el-navegador): hay una limitación importante.
+Hasta ese momento, eliminar es **no destructivo**: los marcadores eliminados se ocultan, pero puedes restaurarlos o deshacer el borrado. Antes de borrar de Chrome, la extensión descarga una copia de seguridad con los que se van. Más detalles en [Aplicar en Chrome](#aplicar-en-chrome).
 
 ## Características
 
-- **Importación** de exportaciones HTML Netscape de cualquier navegador mayoritario, con su jerarquía de carpetas.
-- **Grid de tarjetas** con favicon, dominio, fecha y etiquetas de cada marcador.
+- **Tus marcadores de Chrome**, con sus carpetas, leídos directamente del navegador.
+- **Grid de tarjetas** con favicon, dominio y fecha de cada marcador.
 - **Selección estilo Explorador de Windows**: clic, `Ctrl`/`Cmd`+clic, `Shift`+clic para rangos y lazo arrastrando con el ratón.
 - **Eliminar, restaurar y deshacer** desde una barra flotante. Los eliminados desaparecen del grid y se pueden recuperar en la vista «eliminados».
 - **Filtros** por dominio, carpeta y URL duplicada (normalizada), y búsqueda por título, URL o carpeta.
 - **Orden** original, por título, por fecha o por dominio.
-- **Exportación** del conjunto filtrado como HTML Netscape válido, con instrucciones de reimportación para cada navegador.
-- **Progreso guardado** en el navegador: si cierras la pestaña, el triaje sigue donde lo dejaste.
+- **Aplicar en Chrome**: borra los eliminados y las carpetas que se queden vacías, tras confirmar y con una copia de seguridad.
+- **Progreso guardado**: si cierras la pestaña, los eliminados, el filtro y el orden siguen ahí al volver.
 - **Tema claro y oscuro**, e interfaz en **español e inglés**.
 - **Animaciones** al eliminar y restaurar. Con «reducir movimiento» activado en el sistema, los cambios son instantáneos.
 
@@ -29,24 +29,38 @@ Las eliminaciones son **no destructivas**: los marcadores eliminados se ocultan,
 
 Doble clic en una tarjeta, o clic en su título, abre el enlace.
 
-## Puesta en marcha
+## Instalación
 
-Requiere Node.js 20.19 o superior (o 22.12 o superior).
+Requiere Node.js 20.19 o superior (o 22.12 o superior) y Google Chrome.
 
 ```bash
 npm install
+npm run build
+```
+
+1. Abre `chrome://extensions` y activa el **modo desarrollador**.
+2. Pulsa **Cargar descomprimida** y elige la carpeta `dist/`.
+3. Pulsa el icono de Bookmarkify (en el menú del puzle si no está fijado): la app se abre en su propia pestaña.
+
+Tras cada `npm run build`, pulsa ↻ en la tarjeta de la extensión y recarga la pestaña.
+
+> **Ojo:** «Aplicar» borra de verdad y, con la sincronización activada, el borrado llega a tus otros dispositivos. Para probar sin riesgo, usa un perfil de Chrome aparte, sin sincronización, e importa en él un HTML con tus marcadores (⋮ · Marcadores · Administrador de marcadores · ⋮ · Importar marcadores).
+
+## Desarrollo
+
+```bash
 npm run dev
 ```
 
-Después abre la URL que imprima Vite (normalmente `http://localhost:5173`).
+Abre la URL que imprima Vite (normalmente `http://localhost:5173`). Fuera de la extensión no existe `chrome.bookmarks`, así que la app usa uno falso en memoria con marcadores de ejemplo, que vuelven a estar completos al recargar.
 
 ## Scripts
 
 | Script | Descripción |
 | --- | --- |
-| `npm run dev` | Arranca el servidor de desarrollo de Vite con HMR. |
-| `npm run build` | Comprueba tipos y genera un build de producción. |
-| `npm run preview` | Sirve el build de producción en local. |
+| `npm run dev` | Servidor de desarrollo de Vite con HMR y marcadores de ejemplo. |
+| `npm run build` | Comprueba tipos y genera la extensión en `dist/`. |
+| `npm run preview` | Sirve `dist/` como web. Sin `chrome.bookmarks` solo muestra el error de arranque: la extensión se prueba cargándola en Chrome. |
 | `npm run test` | Ejecuta la suite de Vitest una vez. |
 | `npm run test:watch` | Ejecuta Vitest en modo watch. |
 | `npm run lint` | Ejecuta ESLint sobre el proyecto. |
@@ -54,22 +68,25 @@ Después abre la URL que imprima Vite (normalmente `http://localhost:5173`).
 Para ejecutar un solo archivo de tests:
 
 ```bash
-npx vitest run src/core/parser.test.ts
+npx vitest run src/core/adapters/ChromeAdapter.test.ts
 ```
 
 ## Estructura del proyecto
 
 ```
+public/
+  manifest.json      # manifiesto de la extensión (Manifest V3)
+  background.js      # abre la app en su pestaña al pulsar el icono
+  theme-init.js      # aplica el tema antes de que monte React
 src/
   core/
     ports/           # BookmarkSource — el único contrato que conoce la UI
-    adapters/        # NetscapeAdapter (archivo .html)
-    parser.ts        # HTML Netscape → marcadores tipados (puro y testeable)
-    serializer.ts    # marcadores tipados → HTML Netscape (puro y testeable)
+    adapters/        # ChromeAdapter (chrome.bookmarks) y su versión falsa para desarrollo y tests
+    serializer.ts    # marcadores → HTML Netscape, para la copia de seguridad
     normalizeUrl.ts  # normalización de URLs para detectar duplicados
     types.ts         # Bookmark y tipos relacionados
   store/             # store de Zustand, selectores y acciones animadas
-  components/        # solo UI — sin conocimiento del formato subyacente
+  components/        # solo UI — sin conocimiento de la fuente de los marcadores
   hooks/             # atajos de teclado y tema
   lib/               # utilidades (animación del grid, favicons, dominios…)
   i18n/, locales/    # configuración de i18next y textos en español e inglés
@@ -77,40 +94,36 @@ src/
 
 ## Arquitectura
 
-Toda lectura y escritura de marcadores pasa por el puerto `BookmarkSource`, definido en `src/core/ports/BookmarkSource.ts`. La UI nunca toca directamente el formato HTML Netscape ni la API `chrome.bookmarks`: ese conocimiento queda confinado en `src/core/adapters/`. Así, la misma UI puede distribuirse hoy como web app y mañana como extensión de Chrome sin cambios.
+Toda lectura y escritura de marcadores pasa por el puerto `BookmarkSource`, definido en `src/core/ports/BookmarkSource.ts`. La UI nunca toca directamente la API `chrome.bookmarks` ni el formato HTML Netscape: ese conocimiento queda confinado en `src/core/adapters/`. Por eso la app pudo pasar de web app a extensión de Chrome cambiando el adaptador y el arranque, sin tocar el grid, los filtros ni la selección.
 
 Consulta [`CLAUDE.md`](./CLAUDE.md) para el detalle completo del diseño, los invariantes y el modelo de estado.
 
 ## Stack técnico
 
 - [Vite](https://vitejs.dev/) + [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- Extensión de Chrome con Manifest V3 y la API [`chrome.bookmarks`](https://developer.chrome.com/docs/extensions/reference/api/bookmarks)
 - [Zustand](https://zustand-demo.pmnd.rs/) para la gestión de estado, con persistencia en `localStorage`
 - [Tailwind CSS v4](https://tailwindcss.com/) para los estilos
-- [Headless UI](https://headlessui.com/) para el modal y los menús desplegables
+- [Headless UI](https://headlessui.com/) para el diálogo de «Aplicar» y los menús desplegables
 - [react-selecto](https://github.com/daybrush/selecto) para la selección con lazo
 - [Motion](https://motion.dev/) para las animaciones
 - [i18next](https://www.i18next.com/) para la traducción
 - [Vitest](https://vitest.dev/) con jsdom para los tests
 - ESLint
 
-## Reimportar en el navegador
+## Aplicar en Chrome
 
-Chrome (y los navegadores basados en él) importan HTML de marcadores de forma **aditiva, no destructiva**. Cuando reimportas el `.html` filtrado que exporta la app:
+Al pulsar **Aplicar** y confirmar, la extensión:
 
-- Chrome no borra tus marcadores actuales: **añade** los del archivo dentro de una subcarpeta nueva en *Otros marcadores*, con un nombre como `Imported YYYY-MM-DD`.
-- Las carpetas raíz de Chrome (*Barra de marcadores*, *Otros marcadores*, *Marcadores del móvil*) son especiales y **no se eliminan** aunque el archivo importado no las incluya.
-- Firefox y Safari se comportan de forma similar.
+1. Descarga una copia de seguridad, `bookmarks-AAAA-MM-DD_deleted.html`, solo con los marcadores que va a borrar.
+2. Borra de Chrome los marcadores que eliminaste, y solo esos: lo que añadas en Chrome mientras tienes la app abierta no se toca. Si alguno cambió de URL o ya no existe, lo salta.
+3. Borra las carpetas que se hayan quedado vacías. Las del navegador (*Barra de marcadores*, *Otros marcadores*, *Marcadores del móvil*) nunca se borran.
 
-Es decir, el archivo filtrado es una **herramienta de decisión** («qué borrar»), no de aplicación automática («bórralo»). Para aplicar el triaje a tu perfil real tienes dos vías:
-
-1. Borrar manualmente en el navegador los marcadores que descartaste, usando el archivo filtrado como referencia.
-2. Esperar a la versión como extensión de Chrome, que usará `chrome.bookmarks.remove()` para aplicar los cambios directamente, sin pasar por HTML.
+Chrome no puede deshacerlo. Si te arrepientes, importa la copia en el gestor de marcadores: Chrome importa de forma aditiva, así que los marcadores vuelven, pero dentro de una carpeta nueva y no en su sitio.
 
 ## Estado
 
-La web app está completa: los 16 pasos del plan están hechos (ver [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación)).
-
-Pendiente: el build como extensión de Chrome con un `ChromeAdapter` que aplique el triaje directamente al perfil del navegador.
+Los 17 pasos del plan están hechos: la app funciona como extensión de Chrome. Lo siguiente es retirar el código de la importación por HTML, que ya no se usa. El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
 
 ## Licencia
 
