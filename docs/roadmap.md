@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 26-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 en curso en la rama `refactor/remove-import`: hechas las partes 1 y 2 de 3, y corregidos tres textos de las [observaciones de traducción](./observaciones-traducciones.md).
+**Última actualización:** 26-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 hecho en la rama `refactor/remove-import`, pendiente de PR: las tres partes, y tres textos corregidos de las [observaciones de traducción](./observaciones-traducciones.md).
 
 ## Resumen
 
@@ -10,7 +10,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 |---|---|---|
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
-| 18 | Retirada de la importación | 🚧 en curso |
+| 18 | Retirada de la importación | ✅ hecho, pendiente de PR |
 | 19 | Enlaces rotos | ⏳ pendiente |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 
@@ -74,10 +74,10 @@ Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de 
    - [x] Tipos sin `tags`, `icon` ni `meta`, y tarjetas sin las etiquetas ni el favicon del HTML
    - [x] Puerto solo con los eliminados, y el store, los adaptadores y `ApplyDialog` al día
    - [x] Serializer y nombre de archivo solo para la copia de seguridad
-3. [ ] **Documentación y `npm run preview`**
-   - [ ] `CLAUDE.md` sin la importación
-   - [ ] Sin `npm run preview`: el script y sus menciones en el README y `CLAUDE.md`
-   - [ ] Sin el chip «(raíz)»: la rama de ruta vacía de `formatFolder` y la clave `filterBar.folderRoot` (observación 7 de las [traducciones](./observaciones-traducciones.md))
+3. [x] **Documentación y `npm run preview`**
+   - [x] `CLAUDE.md` sin la importación
+   - [x] Sin `npm run preview`: el script y sus menciones en el README y `CLAUDE.md`
+   - [x] Sin el chip «(raíz)»: la rama de ruta vacía de `formatFolder` y la clave `filterBar.folderRoot` (observación 7 de las [traducciones](./observaciones-traducciones.md))
 
 ## Paso 19 — Enlaces rotos
 

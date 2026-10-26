@@ -32,11 +32,12 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
 - **`src/lib/exportFilename.ts`**: `buildExportFilename` (`bookmarks-AAAA-MM-DD_edited.html`) y su test del formato; el del relleno con ceros pasa a `buildBackupFilename`. Se queda `buildBackupFilename`, y el archivo pasa a llamarse `backupFilename.ts`.
 - **`src/index.css`**: `.sr-input` y `.progress-bar` (con `@keyframes progressSlide`), que solo usa `FileUpload`. `.progress-bar` podría servir para el progreso del escaneo de enlaces; se decide al llegar a ese paso.
 - **`src/locales/es.json` y `en.json`**: `fileUpload.*` (11 claves), `exportModal.*` (10) y `header.export.*` (4). «Aplicar» ya tiene las suyas en `header.apply.*`.
+- **Chip «(raíz)»**: `filterBar.folderRoot` y la rama de ruta vacía de `formatFolder` en `FilterBarTabs.tsx`. Solo servían para los marcadores sueltos en la raíz de un HTML; en Chrome todo cuelga de una carpeta del navegador.
 - **`package.json`**: el script `preview`. Sirve `dist/` como web, donde no hay `chrome.bookmarks`, así que solo muestra el error de arranque. Se quita (decidido el 25-10-2026).
 
 ## Documentación
 
-Lo que queda para el paso 18; el resto se hizo en el 17.
+Hecho en la parte 3 del paso 18; el resto se hizo en el 17.
 
 - **`CLAUDE.md`**: `NetscapeAdapter.ts` y `parser.ts` en la estructura, `tags` en «Tipos base», `kept`, `meta` y `downloaded` en la interfaz del puerto, y las notas «se retira en el paso 18». El historial de los pasos 1–17 se queda como historia.
 - **`README.md`** y **`CLAUDE.md`**: `npm run preview`, que se quita.

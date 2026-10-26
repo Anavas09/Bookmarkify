@@ -60,7 +60,6 @@ Abre la URL que imprima Vite (normalmente `http://localhost:5173`). Fuera de la 
 | --- | --- |
 | `npm run dev` | Servidor de desarrollo de Vite con HMR y marcadores de ejemplo. |
 | `npm run build` | Comprueba tipos y genera la extensión en `dist/`. |
-| `npm run preview` | Sirve `dist/` como web. Sin `chrome.bookmarks` solo muestra el error de arranque: la extensión se prueba cargándola en Chrome. |
 | `npm run test` | Ejecuta la suite de Vitest una vez. |
 | `npm run test:watch` | Ejecuta Vitest en modo watch. |
 | `npm run lint` | Ejecuta ESLint sobre el proyecto. |
@@ -119,11 +118,11 @@ Al pulsar **Aplicar** y confirmar, la extensión:
 2. Borra de Chrome los marcadores que eliminaste, y solo esos: lo que añadas en Chrome mientras tienes la app abierta no se toca. Si alguno cambió de URL o ya no existe, lo salta.
 3. Borra las carpetas que se hayan quedado vacías. Las del navegador (*Barra de marcadores*, *Otros marcadores*, *Marcadores del móvil*) nunca se borran.
 
-Chrome no puede deshacerlo. Si te arrepientes, importa la copia en el gestor de marcadores: Chrome importa de forma aditiva, así que los marcadores vuelven, pero dentro de una carpeta nueva y no en su sitio.
+Chrome no puede deshacerlo. Si te arrepientes, importa la copia en el Administrador de marcadores: Chrome importa de forma aditiva, así que los marcadores vuelven, pero dentro de una carpeta nueva y no en su sitio.
 
 ## Estado
 
-Los 17 pasos del plan están hechos: la app funciona como extensión de Chrome. Lo siguiente es retirar el código de la importación por HTML, que ya no se usa. El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
+Los 18 primeros pasos del plan están hechos: la app es solo una extensión de Chrome y ya no queda código de la importación por HTML. Lo siguiente es detectar los enlaces rotos (paso 19). El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
 
 ## Licencia
 
