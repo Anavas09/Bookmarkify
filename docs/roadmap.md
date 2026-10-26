@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 25-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 en curso en la rama `refactor/remove-import`: hechas las partes 1 y 2 de 3.
+**Última actualización:** 26-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 en curso en la rama `refactor/remove-import`: hechas las partes 1 y 2 de 3, y corregidos tres textos de las [observaciones de traducción](./observaciones-traducciones.md).
 
 ## Resumen
 
@@ -77,6 +77,7 @@ Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de 
 3. [ ] **Documentación y `npm run preview`**
    - [ ] `CLAUDE.md` sin la importación
    - [ ] Sin `npm run preview`: el script y sus menciones en el README y `CLAUDE.md`
+   - [ ] Sin el chip «(raíz)»: la rama de ruta vacía de `formatFolder` y la clave `filterBar.folderRoot` (observación 7 de las [traducciones](./observaciones-traducciones.md))
 
 ## Paso 19 — Enlaces rotos
 
@@ -87,3 +88,5 @@ Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de 
 ## Paso 20 (opcional final) — Lista o grid
 
 Elegir si los marcadores se ven como lista o como grid.
+
+De paso, las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md): la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español.

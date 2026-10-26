@@ -1,6 +1,6 @@
 # Observaciones de traducción
 
-Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`) al revisar las partes 1 y 2 del paso 18, el 25-10-2026. Nada de esto lo causó el paso 18 y no se ha aplicado nada: queda para decidirlo en una próxima sesión.
+Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`) al revisar las partes 1 y 2 del paso 18, el 25-10-2026. Nada de esto lo causó el paso 18. Decidido el 26-10-2026 (ver [Decisión](#decisión)).
 
 ## Solo textos (`src/locales`)
 
@@ -27,8 +27,8 @@ Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`)
 - El error de arranque de `createBookmarkSource.ts` está solo en inglés, pero solo sale fuera de la extensión.
 - El español tiene plural `many` para los millones exactos; con marcadores no pasa en la práctica.
 
-## Propuesta
+## Decisión
 
-- Los tres textos (1–3), en un commit pequeño: solo tocan los JSON y dos se ven mal.
-- «(raíz)» (7), dentro de la parte 3 del paso 18.
-- El resto (4–6), al paso opcional final.
+- ✅ Los tres textos (1–3), en un commit pequeño: hechos en `f816231`. El agente de traducciones lo revisó y no hizo falta tocar nada más.
+- ⏳ «(raíz)» (7), dentro de la parte 3 del paso 18.
+- ⏳ El resto (4–6), al paso opcional final (paso 20).
