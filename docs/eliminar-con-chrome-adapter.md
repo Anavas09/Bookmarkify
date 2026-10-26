@@ -32,14 +32,14 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
 - **`src/lib/exportFilename.ts`**: `buildExportFilename` (`bookmarks-AAAA-MM-DD_edited.html`) y sus 2 tests. Se queda `buildBackupFilename`, y el archivo puede pasar a llamarse `backupFilename.ts`.
 - **`src/index.css`**: `.sr-input` y `.progress-bar` (con `@keyframes progressSlide`), que solo usa `FileUpload`. `.progress-bar` podría servir para el progreso del escaneo de enlaces; se decide al llegar a ese paso.
 - **`src/locales/es.json` y `en.json`**: `fileUpload.*` (11 claves), `exportModal.*` (10) y `header.export.*` (4). «Aplicar» ya tiene las suyas en `header.apply.*`.
-- **`package.json`**: el script `preview`, si no le ves uso. Sirve `dist/` como web, donde no hay `chrome.bookmarks`, así que solo muestra el error de arranque.
+- **`package.json`**: el script `preview`. Sirve `dist/` como web, donde no hay `chrome.bookmarks`, así que solo muestra el error de arranque. Se quita (decidido el 25-10-2026).
 
 ## Documentación
 
 Lo que queda para el paso 18; el resto se hizo en el 17.
 
 - **`CLAUDE.md`**: `NetscapeAdapter.ts` y `parser.ts` en la estructura, `tags` en «Tipos base», `kept`, `meta` y `downloaded` en la interfaz del puerto, y las notas «se retira en el paso 18». El historial de los pasos 1–17 se queda como historia.
-- **`README.md`** y **`CLAUDE.md`**: `npm run preview`, si se quita el script.
+- **`README.md`** y **`CLAUDE.md`**: `npm run preview`, que se quita.
 
 ## Lo que se queda (no borrar por error)
 
@@ -61,9 +61,9 @@ Lo que queda para el paso 18; el resto se hizo en el 17.
 
 ## Orden de retirada
 
-1. **UI**: `FileUpload`, `ExportModal`, la rama `downloaded` de `ApplyDialog`, las claves de i18n y el CSS.
-2. **Núcleo**: `NetscapeAdapter`, `parser`, `meta`, `tags` e `icon` en los tipos, y el recorte del puerto, del store y del serializer.
-3. **Documentación**: lo que queda en CLAUDE.md y, si se quita `preview`, en el README.
+1. **UI**: `FileUpload`, `ExportModal`, las claves de i18n, el CSS y los restos de la plantilla.
+2. **Núcleo**: `NetscapeAdapter`, `parser`, `meta`, `tags` e `icon` en los tipos, y el recorte del puerto, del store, del serializer y de `ApplyDialog`. La rama `downloaded` de `ApplyDialog` pasó aquí desde la UI porque cae con el `downloaded` de `CommitResult`.
+3. **Documentación**: lo que queda en CLAUDE.md, y el script `preview` con sus menciones en el README y CLAUDE.md.
 
 Tras cada bloque, `npm run build`, `npm test` y `npm run lint` en verde.
 

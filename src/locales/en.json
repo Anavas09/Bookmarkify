@@ -24,12 +24,6 @@
       "deleted_one": "{{count}} deleted",
       "deleted_other": "{{count}} deleted"
     },
-    "export": {
-      "idle": "export",
-      "loading": "exporting…",
-      "titleDisabled": "delete at least one to export",
-      "titleEnabled": "download filtered HTML"
-    },
     "apply": {
       "idle": "apply",
       "titleDisabled": "delete at least one to apply",
@@ -76,19 +70,6 @@
     "done": "done",
     "close": "close"
   },
-  "fileUpload": {
-    "loadAnother": "load another file",
-    "parsing": "parsing…",
-    "title": "Drop your bookmark export",
-    "hint": "or click to select a Netscape <code>.html</code> file",
-    "browserChrome": "Chrome",
-    "browserFirefox": "Firefox",
-    "browserSafari": "Safari",
-    "instructionsChrome": "⋮ · Bookmarks · Bookmarks manager · ⋮ · Export bookmarks",
-    "instructionsFirefox": "Library · Bookmarks · Import and Backup · Export",
-    "instructionsSafari": "File · Export Bookmarks",
-    "errorGeneric": "Failed to read file"
-  },
   "grid": {
     "empty": "No bookmarks match the current filter.",
     "emptyAll": "No bookmarks left — all of them are deleted.",
@@ -117,17 +98,5 @@
     },
     "menuNoDomains": "no domains",
     "menuNoFolders": "no folders"
-  },
-  "exportModal": {
-    "title": "Export ready",
-    "savedAs": "saved as ",
-    "counters": "{{kept}} kept · {{removed}} removed",
-    "headsUpLabel": "heads up",
-    "headsUpBody": "Browsers import bookmark HTML <strong>additively</strong>. Reimporting will not replace your current bookmarks — the file gets placed in a new <code>Imported YYYY-MM-DD</code> folder inside <em>Other bookmarks</em>. To actually apply the triage, delete the discarded ones manually in your browser.",
-    "reimportLabel": "reimport",
-    "reimportChrome": "⋮ · Bookmarks · Bookmarks manager · ⋮ · Import bookmarks",
-    "reimportFirefox": "Library · Bookmarks · Import and Backup · Import Bookmarks from HTML",
-    "reimportSafari": "File · Import From · Bookmarks HTML File",
-    "done": "done"
   }
 }

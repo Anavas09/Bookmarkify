@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 13-10-2026. Paso 17 hecho en la rama `feat/chrome-adapter`, que falta subir y fusionar en `main` con un PR. Siguiente: el paso 18.
+**Última actualización:** 25-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 en curso en la rama `refactor/remove-import`: hecha la parte 1 de 3.
 
 ## Resumen
 
@@ -10,7 +10,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 |---|---|---|
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
-| 18 | Retirada de la importación | ⏳ pendiente |
+| 18 | Retirada de la importación | 🚧 en curso |
 | 19 | Enlaces rotos | ⏳ pendiente |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 
@@ -61,6 +61,22 @@ La app pasa a ser una extensión de Chrome: lee tus marcadores con `chrome.bookm
 ## Paso 18 — Retirada de la importación
 
 Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de [`eliminar-con-chrome-adapter.md`](./eliminar-con-chrome-adapter.md). Build, tests y lint en verde tras cada bloque.
+
+### Partes
+
+1. [x] **UI**
+   - [x] `FileUpload` y `ExportModal`
+   - [x] Sus textos en español e inglés, y los de «exportar»
+   - [x] El CSS que solo usaba la subida
+   - [x] Los restos de la plantilla de Vite: `src/assets/` y `public/icons.svg`
+2. [ ] **Núcleo**
+   - [ ] `NetscapeAdapter` y `parser.ts`, con sus tests
+   - [ ] Tipos sin `tags`, `icon` ni `meta`, y tarjetas sin las etiquetas ni el favicon del HTML
+   - [ ] Puerto solo con los eliminados, y el store, los adaptadores y `ApplyDialog` al día
+   - [ ] Serializer y nombre de archivo solo para la copia de seguridad
+3. [ ] **Documentación y `npm run preview`**
+   - [ ] `CLAUDE.md` sin la importación
+   - [ ] Sin `npm run preview`: el script y sus menciones en el README y `CLAUDE.md`
 
 ## Paso 19 — Enlaces rotos
 

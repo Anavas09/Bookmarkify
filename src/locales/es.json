@@ -24,12 +24,6 @@
       "deleted_one": "{{count}} eliminado",
       "deleted_other": "{{count}} eliminados"
     },
-    "export": {
-      "idle": "exportar",
-      "loading": "exportando…",
-      "titleDisabled": "elimina al menos uno para exportar",
-      "titleEnabled": "descargar HTML filtrado"
-    },
     "apply": {
       "idle": "aplicar",
       "titleDisabled": "elimina al menos uno para aplicar",
@@ -76,19 +70,6 @@
     "done": "hecho",
     "close": "cerrar"
   },
-  "fileUpload": {
-    "loadAnother": "cargar otro archivo",
-    "parsing": "procesando…",
-    "title": "Suelta tu export de marcadores",
-    "hint": "o haz clic para elegir un archivo Netscape <code>.html</code>",
-    "browserChrome": "Chrome",
-    "browserFirefox": "Firefox",
-    "browserSafari": "Safari",
-    "instructionsChrome": "⋮ · Marcadores · Administrador de marcadores · ⋮ · Exportar marcadores",
-    "instructionsFirefox": "Biblioteca · Marcadores · Importar y respaldar · Exportar",
-    "instructionsSafari": "Archivo · Exportar marcadores",
-    "errorGeneric": "No se pudo leer el archivo"
-  },
   "grid": {
     "empty": "Ningún marcador coincide con el filtro.",
     "emptyAll": "No quedan marcadores: todos están eliminados.",
@@ -117,17 +98,5 @@
     },
     "menuNoDomains": "sin dominios",
     "menuNoFolders": "sin carpetas"
-  },
-  "exportModal": {
-    "title": "Exportación lista",
-    "savedAs": "guardado como ",
-    "counters": "{{kept}} conservados · {{removed}} eliminados",
-    "headsUpLabel": "aviso",
-    "headsUpBody": "Los navegadores importan el HTML de marcadores <strong>de forma aditiva</strong>. Reimportar no reemplaza tus marcadores actuales — el archivo se coloca en una carpeta nueva <code>Imported YYYY-MM-DD</code> dentro de <em>Otros marcadores</em>. Para aplicar el triaje de verdad, borra manualmente los descartados en tu navegador.",
-    "reimportLabel": "reimportar",
-    "reimportChrome": "⋮ · Marcadores · Administrador de marcadores · ⋮ · Importar marcadores",
-    "reimportFirefox": "Biblioteca · Marcadores · Importar y respaldar · Importar marcadores desde HTML",
-    "reimportSafari": "Archivo · Importar desde · Archivo HTML de marcadores",
-    "done": "hecho"
   }
 }
