@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 25-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 en curso en la rama `refactor/remove-import`: hecha la parte 1 de 3.
+**Última actualización:** 25-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 en curso en la rama `refactor/remove-import`: hechas las partes 1 y 2 de 3.
 
 ## Resumen
 
@@ -69,11 +69,11 @@ Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de 
    - [x] Sus textos en español e inglés, y los de «exportar»
    - [x] El CSS que solo usaba la subida
    - [x] Los restos de la plantilla de Vite: `src/assets/` y `public/icons.svg`
-2. [ ] **Núcleo**
-   - [ ] `NetscapeAdapter` y `parser.ts`, con sus tests
-   - [ ] Tipos sin `tags`, `icon` ni `meta`, y tarjetas sin las etiquetas ni el favicon del HTML
-   - [ ] Puerto solo con los eliminados, y el store, los adaptadores y `ApplyDialog` al día
-   - [ ] Serializer y nombre de archivo solo para la copia de seguridad
+2. [x] **Núcleo**
+   - [x] `NetscapeAdapter` y `parser.ts`, con sus tests
+   - [x] Tipos sin `tags`, `icon` ni `meta`, y tarjetas sin las etiquetas ni el favicon del HTML
+   - [x] Puerto solo con los eliminados, y el store, los adaptadores y `ApplyDialog` al día
+   - [x] Serializer y nombre de archivo solo para la copia de seguridad
 3. [ ] **Documentación y `npm run preview`**
    - [ ] `CLAUDE.md` sin la importación
    - [ ] Sin `npm run preview`: el script y sus menciones en el README y `CLAUDE.md`

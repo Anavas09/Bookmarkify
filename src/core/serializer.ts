@@ -1,21 +1,22 @@
-import type { Bookmark, DocumentMeta, SpecialFolder } from './types.ts'
+import type { Bookmark } from './types.ts'
 
 interface FolderNode {
   subfolders: Map<string, FolderNode>
   bookmarks: Bookmark[]
 }
 
-export function serializeNetscape(bookmarks: Bookmark[], meta: DocumentMeta = {}): string {
+// The backup of the bookmarks about to be deleted, in the format Chrome's
+// bookmark manager imports.
+export function serializeNetscape(bookmarks: Bookmark[]): string {
   const root = buildTree(bookmarks)
   const body: string[] = []
-  emit(root, '    ', body, meta.specialFolders, [])
+  emit(root, '    ', body)
 
-  const title = meta.rootTitle ?? 'Bookmarks'
   const lines = [
     '<!DOCTYPE NETSCAPE-Bookmark-file-1>',
     '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">',
-    `<TITLE>${escapeText(title)}</TITLE>`,
-    `<H1>${escapeText(title)}</H1>`,
+    '<TITLE>Bookmarks</TITLE>',
+    '<H1>Bookmarks</H1>',
     '<DL><p>',
     ...body,
     '</DL><p>',
@@ -50,20 +51,11 @@ function buildTree(bookmarks: Bookmark[]): FolderNode {
  * each level (Map preserves insertion order in JS, so subfolders come out
  * in the order the first bookmark referenced them).
  */
-function emit(
-  node: FolderNode,
-  indent: string,
-  out: string[],
-  specialFolders: SpecialFolder[] | undefined,
-  path: string[],
-): void {
+function emit(node: FolderNode, indent: string, out: string[]): void {
   for (const [name, sub] of node.subfolders) {
-    const currentPath = [...path, name]
-    const special = specialFolders?.find(sf => pathsEqual(sf.path, currentPath))
-    const attrPrefix = special ? ' ' + toAttrString(special.attributes) : ''
-    out.push(`${indent}<DT><H3${attrPrefix}>${escapeText(name)}</H3>`)
+    out.push(`${indent}<DT><H3>${escapeText(name)}</H3>`)
     out.push(`${indent}<DL><p>`)
-    emit(sub, indent + '    ', out, specialFolders, currentPath)
+    emit(sub, indent + '    ', out)
     out.push(`${indent}</DL><p>`)
   }
   for (const b of node.bookmarks) {
@@ -71,27 +63,10 @@ function emit(
   }
 }
 
-function pathsEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false
-  return a.every((s, i) => s === b[i])
-}
-
-function toAttrString(attrs: Record<string, string>): string {
-  return Object.entries(attrs)
-    .map(([k, v]) => `${k}="${escapeAttr(v)}"`)
-    .join(' ')
-}
-
 function bookmarkToLine(b: Bookmark, indent: string): string {
   const attrs = [`HREF="${escapeAttr(b.url)}"`]
   if (b.addedAt !== undefined) {
     attrs.push(`ADD_DATE="${Math.floor(b.addedAt / 1000)}"`)
-  }
-  if (b.tags && b.tags.length > 0) {
-    attrs.push(`TAGS="${escapeAttr(b.tags.join(','))}"`)
-  }
-  if (b.icon) {
-    attrs.push(`ICON="${escapeAttr(b.icon)}"`)
   }
   return `${indent}<DT><A ${attrs.join(' ')}>${escapeText(b.title)}</A>`
 }

@@ -1,7 +1,3 @@
-export function buildExportFilename(date: Date): string {
-  return `bookmarks-${formatDate(date)}_edited.html`
-}
-
 // The copy of the bookmarks about to be deleted from Chrome.
 export function buildBackupFilename(date: Date): string {
   return `bookmarks-${formatDate(date)}_deleted.html`

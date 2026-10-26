@@ -1,12 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import { serializeNetscape } from './serializer.ts'
-import { parseNetscape } from './parser.ts'
-import type { Bookmark, DocumentMeta } from './types.ts'
+import type { Bookmark } from './types.ts'
+
+// The lines between the outer <DL><p> and its closing tag.
+function body(html: string): string[] {
+  const lines = html.trimEnd().split('\n')
+  return lines.slice(lines.indexOf('<DL><p>') + 1, -1)
+}
 
 describe('serializeNetscape', () => {
   it('emits a valid Netscape header and footer', () => {
     const html = serializeNetscape([])
     expect(html).toContain('<!DOCTYPE NETSCAPE-Bookmark-file-1>')
+    expect(html).toContain('<TITLE>Bookmarks</TITLE>')
     expect(html).toContain('<H1>Bookmarks</H1>')
     expect(html).toContain('<DL><p>')
     expect(html).toContain('</DL>')
@@ -27,39 +33,11 @@ describe('serializeNetscape', () => {
     expect(html).toContain('ADD_DATE="1700000000"')
   })
 
-  it('emits TAGS as a comma-separated list', () => {
-    const html = serializeNetscape([
-      { id: '0', title: 'X', url: 'https://x.com', tags: ['ai', 'research'] },
-    ])
-    expect(html).toContain('TAGS="ai,research"')
-  })
-
-  it('omits ADD_DATE and TAGS when absent', () => {
+  it('omits ADD_DATE when absent', () => {
     const html = serializeNetscape([
       { id: '0', title: 'X', url: 'https://x.com' },
     ])
     expect(html).not.toContain('ADD_DATE')
-    expect(html).not.toContain('TAGS')
-  })
-
-  it('emits ICON when present and omits it when absent', () => {
-    const withIcon = serializeNetscape([
-      { id: '0', title: 'X', url: 'https://x.com', icon: 'data:image/png;base64,ZZZ' },
-    ])
-    expect(withIcon).toContain('ICON="data:image/png;base64,ZZZ"')
-
-    const withoutIcon = serializeNetscape([
-      { id: '0', title: 'X', url: 'https://x.com' },
-    ])
-    expect(withoutIcon).not.toContain('ICON')
-  })
-
-  it('round-trips icon through parseNetscape', () => {
-    const input: Bookmark[] = [
-      { id: '0', title: 'A', url: 'https://a.com', icon: 'data:image/png;base64,AAA' },
-    ]
-    const [b] = parseNetscape(serializeNetscape(input)).bookmarks
-    expect(b.icon).toBe('data:image/png;base64,AAA')
   })
 
   it('escapes special characters in the title', () => {
@@ -76,17 +54,17 @@ describe('serializeNetscape', () => {
     expect(html).toContain('HREF="https://x.com/?a=1&amp;b=&quot;2&quot;"')
   })
 
-  it('round-trips flat bookmarks through parseNetscape', () => {
+  it('writes each bookmark on its own line, in order', () => {
     const input: Bookmark[] = [
       { id: 'a', title: 'Example', url: 'https://example.com', addedAt: 1700000000000 },
-      { id: 'b', title: 'Tagged', url: 'https://tagged.com', tags: ['a', 'b'] },
+      { id: 'b', title: 'Undated', url: 'https://undated.com' },
       { id: 'c', title: 'Plain & Simple', url: 'https://plain.com' },
     ]
-    const output = parseNetscape(serializeNetscape(input)).bookmarks
-    expect(output).toHaveLength(input.length)
-    expect(output[0]).toMatchObject({ title: 'Example', url: 'https://example.com', addedAt: 1700000000000 })
-    expect(output[1]).toMatchObject({ title: 'Tagged', url: 'https://tagged.com', tags: ['a', 'b'] })
-    expect(output[2]).toMatchObject({ title: 'Plain & Simple', url: 'https://plain.com' })
+    expect(body(serializeNetscape(input))).toEqual([
+      '    <DT><A HREF="https://example.com" ADD_DATE="1700000000">Example</A>',
+      '    <DT><A HREF="https://undated.com">Undated</A>',
+      '    <DT><A HREF="https://plain.com">Plain &amp; Simple</A>',
+    ])
   })
 
   describe('folder hierarchy', () => {
@@ -146,114 +124,41 @@ describe('serializeNetscape', () => {
       expect(subIdx).toBeLessThan(rootIdx)
     })
 
-    it('round-trips folder hierarchy through parseNetscape', () => {
+    it('nests each bookmark under its folders, as in Chrome', () => {
       const input: Bookmark[] = [
-        { id: 'a', title: 'Root', url: 'https://root.com' },
-        { id: 'b', title: 'Work1', url: 'https://work1.com', folderPath: ['Work'] },
-        { id: 'c', title: 'Work2', url: 'https://work2.com', folderPath: ['Work'] },
-        { id: 'd', title: 'Nested', url: 'https://nested.com', folderPath: ['Work', 'Frontend'] },
-        { id: 'e', title: 'Personal1', url: 'https://p1.com', folderPath: ['Personal'] },
+        { id: 'a', title: 'Work1', url: 'https://work1.com', folderPath: ['Bookmarks bar', 'Work'] },
+        { id: 'b', title: 'Nested', url: 'https://nested.com', folderPath: ['Bookmarks bar', 'Work', 'Frontend'] },
+        { id: 'c', title: 'Work2', url: 'https://work2.com', folderPath: ['Bookmarks bar', 'Work'] },
+        { id: 'd', title: 'Recipes', url: 'https://recipes.com', folderPath: ['Other bookmarks'] },
       ]
-      const output = parseNetscape(serializeNetscape(input)).bookmarks
-      expect(output).toHaveLength(input.length)
-      const byUrl = Object.fromEntries(output.map(b => [b.url, b.folderPath]))
-      expect(byUrl['https://root.com']).toBeUndefined()
-      expect(byUrl['https://work1.com']).toEqual(['Work'])
-      expect(byUrl['https://work2.com']).toEqual(['Work'])
-      expect(byUrl['https://nested.com']).toEqual(['Work', 'Frontend'])
-      expect(byUrl['https://p1.com']).toEqual(['Personal'])
-    })
-
-    it('does not emit a folder that has no bookmarks (empty-after-filter case)', () => {
-      // Simulate: user marked all bookmarks in "TrashMe" for deletion and
-      // commit left them out of `kept` — the resulting array has nothing at
-      // that path, so the folder must not appear in the output.
-      const html = serializeNetscape([
-        { id: '0', title: 'Kept', url: 'https://k.com', folderPath: ['Keep'] },
+      expect(body(serializeNetscape(input))).toEqual([
+        '    <DT><H3>Bookmarks bar</H3>',
+        '    <DL><p>',
+        '        <DT><H3>Work</H3>',
+        '        <DL><p>',
+        '            <DT><H3>Frontend</H3>',
+        '            <DL><p>',
+        '                <DT><A HREF="https://nested.com">Nested</A>',
+        '            </DL><p>',
+        '            <DT><A HREF="https://work1.com">Work1</A>',
+        '            <DT><A HREF="https://work2.com">Work2</A>',
+        '        </DL><p>',
+        '    </DL><p>',
+        '    <DT><H3>Other bookmarks</H3>',
+        '    <DL><p>',
+        '        <DT><A HREF="https://recipes.com">Recipes</A>',
+        '    </DL><p>',
       ])
-      expect(html).not.toContain('<H3>TrashMe</H3>')
-      expect(html).toContain('<H3>Keep</H3>')
-    })
-  })
-
-  describe('meta.rootTitle', () => {
-    it('uses rootTitle in both TITLE and H1 when provided', () => {
-      const html = serializeNetscape([], { rootTitle: 'Menú Marcadores' })
-      expect(html).toContain('<TITLE>Menú Marcadores</TITLE>')
-      expect(html).toContain('<H1>Menú Marcadores</H1>')
     })
 
-    it('falls back to "Bookmarks" when meta is empty', () => {
-      const html = serializeNetscape([])
-      expect(html).toContain('<TITLE>Bookmarks</TITLE>')
-      expect(html).toContain('<H1>Bookmarks</H1>')
-    })
-
-    it('escapes special characters in the rootTitle', () => {
-      const html = serializeNetscape([], { rootTitle: 'Marcas & <cosas>' })
-      expect(html).toContain('<TITLE>Marcas &amp; &lt;cosas&gt;</TITLE>')
-    })
-  })
-
-  describe('meta.specialFolders', () => {
-    it('emits preserved attributes on the matching H3', () => {
-      const html = serializeNetscape(
-        [{ id: '0', title: 'A', url: 'https://a.com', folderPath: ['Bookmarks bar'] }],
-        {
-          specialFolders: [
-            { path: ['Bookmarks bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
-          ],
-        },
-      )
-      expect(html).toContain('<H3 PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>')
-    })
-
-    it('does not touch folders whose path is not in specialFolders', () => {
-      const html = serializeNetscape(
-        [
-          { id: '0', title: 'A', url: 'https://a.com', folderPath: ['Bar'] },
-          { id: '1', title: 'B', url: 'https://b.com', folderPath: ['Other'] },
-        ],
-        {
-          specialFolders: [
-            { path: ['Bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
-          ],
-        },
-      )
-      expect(html).toContain('<H3 PERSONAL_TOOLBAR_FOLDER="true">Bar</H3>')
-      expect(html).toContain('<H3>Other</H3>')
-    })
-
-    it('omits attrs of a folder that was emptied by filtering', () => {
-      // specialFolder refers to "Bar" but no bookmark points there anymore
-      const html = serializeNetscape(
-        [{ id: '0', title: 'A', url: 'https://a.com', folderPath: ['Kept'] }],
-        {
-          specialFolders: [
-            { path: ['Bar'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
-          ],
-        },
-      )
-      expect(html).not.toContain('PERSONAL_TOOLBAR_FOLDER')
-      expect(html).toContain('<H3>Kept</H3>')
-    })
-
-    it('round-trips rootTitle + specialFolders (Firefox-like export)', () => {
-      const input: Bookmark[] = [
-        { id: 'a', title: 'A', url: 'https://a.com', folderPath: ['Barra de marcadores'] },
-        { id: 'b', title: 'B', url: 'https://b.com', folderPath: ['Otros marcadores'] },
-      ]
-      const meta: DocumentMeta = {
-        rootTitle: 'Menú Marcadores',
-        specialFolders: [
-          { path: ['Barra de marcadores'], attributes: { PERSONAL_TOOLBAR_FOLDER: 'true' } },
-          { path: ['Otros marcadores'], attributes: { UNFILED_BOOKMARKS_FOLDER: 'true' } },
-        ],
-      }
-      const out = parseNetscape(serializeNetscape(input, meta))
-      expect(out.meta.rootTitle).toBe('Menú Marcadores')
-      expect(out.meta.specialFolders).toEqual(meta.specialFolders)
-      expect(out.bookmarks).toHaveLength(2)
+    it('does not emit a folder none of the bookmarks is in', () => {
+      // The backup only has the bookmarks about to be deleted, so the
+      // folders that keep all of theirs stay out of it.
+      const html = serializeNetscape([
+        { id: '0', title: 'Gone', url: 'https://g.com', folderPath: ['Trash'] },
+      ])
+      expect(html).not.toContain('<H3>Keep</H3>')
+      expect(html).toContain('<H3>Trash</H3>')
     })
   })
 })

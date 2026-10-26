@@ -15,11 +15,7 @@ function setup(tree: FakeTree) {
 // Loads, then marks for deletion the bookmarks with these titles.
 async function loadAndMark(adapter: ChromeAdapter, ...titles: string[]): Promise<BookmarkChange> {
   const { bookmarks } = await adapter.load()
-  return {
-    kept: bookmarks.filter(b => !titles.includes(b.title)),
-    removed: bookmarks.filter(b => titles.includes(b.title)),
-    meta: {},
-  }
+  return { removed: bookmarks.filter(b => titles.includes(b.title)) }
 }
 
 // Every title left in Chrome, depth-first, without the root's.
@@ -46,7 +42,7 @@ describe('ChromeAdapter', () => {
         other: [{ title: 'Recipes', url: 'https://recipes.example', dateAdded: 4000 }],
       })
 
-      const { bookmarks, meta } = await adapter.load()
+      const { bookmarks } = await adapter.load()
 
       expect(bookmarks).toEqual([
         { id: '4', title: 'React', url: 'https://react.dev', addedAt: 1000, folderPath: ['Bookmarks bar'] },
@@ -72,7 +68,6 @@ describe('ChromeAdapter', () => {
           folderPath: ['Other bookmarks'],
         },
       ])
-      expect(meta).toEqual({})
     })
 
     it('leaves out bookmarklets and the bookmarks an administrator set up', async () => {
@@ -105,7 +100,6 @@ describe('ChromeAdapter', () => {
       const result = await adapter.commit(change)
 
       expect(result).toEqual({
-        kind: 'applied',
         deleted: 1,
         skipped: 0,
         folders: 0,
@@ -146,7 +140,7 @@ describe('ChromeAdapter', () => {
       expect(order[0]).toMatch(/^download /)
       expect(order.slice(1)).toEqual(['remove 6', 'remove 5'])
       const [filename, html] = download.mock.calls[0]
-      expect(filename).toBe(result.kind === 'applied' ? result.backupFilename : null)
+      expect(filename).toBe(result.backupFilename)
       expect(html).toContain('<H3>Bookmarks bar</H3>')
       expect(html).toContain('<H3>Work</H3>')
       expect(html).toContain('HREF="https://gone.example"')
@@ -260,7 +254,7 @@ describe('ChromeAdapter', () => {
 
       const result = await adapter.commit(change)
 
-      expect(result).toEqual({ kind: 'applied', deleted: 0, skipped: 1, folders: 0, backupFilename: null })
+      expect(result).toEqual({ deleted: 0, skipped: 1, folders: 0, backupFilename: null })
       expect(download).not.toHaveBeenCalled()
     })
   })

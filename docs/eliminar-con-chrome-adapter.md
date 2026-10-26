@@ -12,7 +12,7 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
 |---|---|---|
 | `src/components/FileUpload.tsx` | Nada: era la pantalla para soltar el HTML, y nadie la importa desde el paso 17 | — |
 | `src/components/ExportModal.tsx` | Nada: era el modal tras exportar, y nadie lo importa desde el paso 17 | — |
-| `src/core/adapters/NetscapeAdapter.ts` | Lee el archivo subido y descarga el HTML filtrado. Solo lo usa `FileUpload` | 3 |
+| `src/core/adapters/NetscapeAdapter.ts` | Lee el archivo subido y descarga el HTML filtrado. Solo lo usa `FileUpload` | 3; el de la descarga pasa a `download.test.ts`, porque era el único que cubría `download.ts` |
 | `src/core/parser.ts` | HTML Netscape → marcadores. Solo lo usan `NetscapeAdapter` y los tests del serializer | 27 |
 
 ## Lo que se recorta
@@ -21,7 +21,7 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
   - `Bookmark.tags`: venía del atributo `TAGS` de Firefox. Chrome no tiene etiquetas.
   - `Bookmark.icon`: venía del atributo `ICON` del HTML. La API de Chrome no da el favicon.
   - `DocumentMeta` y `SpecialFolder` (`rootTitle`, `specialFolders`): solo servían para reconstruir el HTML. `BookmarkDocument` pierde `meta`.
-- **`src/core/ports/BookmarkSource.ts`**: `BookmarkChange` se queda solo con `removed`, sin `kept` ni `meta`, y `CommitResult` pierde `downloaded`.
+- **`src/core/ports/BookmarkSource.ts`**: `BookmarkChange` se queda solo con `removed`, sin `kept` ni `meta`, y `CommitResult` pierde `downloaded` y, con él, el campo `kind`, que ya no distingue nada.
 - **`src/core/serializer.ts`**: se queda solo para la copia de seguridad de los marcadores borrados. Pierde `ICON`, `TAGS`, `rootTitle` y `specialFolders`, y con ellos sus tests. Los tests de ida y vuelta con `parseNetscape` hay que reescribirlos sin el parser.
 - **`src/store/useBookmarkStore.ts`**
   - `meta`: estado, `getInitialState` y lo que `commit` pasa al puerto.
@@ -29,7 +29,7 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
   - Tests: el `meta` del `FakeSource` y el que comprueba que `commit` pasa los conservados y el `meta`.
 - **`src/components/ApplyDialog.tsx`**: la rama que cierra el diálogo cuando el resultado es `downloaded`.
 - **`src/components/BookmarkCard.tsx`**: las etiquetas del pie (`bookmark.tags`) y `bookmark.icon ?? faviconUrl(...)`, que queda en `faviconUrl(...)`.
-- **`src/lib/exportFilename.ts`**: `buildExportFilename` (`bookmarks-AAAA-MM-DD_edited.html`) y sus 2 tests. Se queda `buildBackupFilename`, y el archivo puede pasar a llamarse `backupFilename.ts`.
+- **`src/lib/exportFilename.ts`**: `buildExportFilename` (`bookmarks-AAAA-MM-DD_edited.html`) y su test del formato; el del relleno con ceros pasa a `buildBackupFilename`. Se queda `buildBackupFilename`, y el archivo pasa a llamarse `backupFilename.ts`.
 - **`src/index.css`**: `.sr-input` y `.progress-bar` (con `@keyframes progressSlide`), que solo usa `FileUpload`. `.progress-bar` podría servir para el progreso del escaneo de enlaces; se decide al llegar a ese paso.
 - **`src/locales/es.json` y `en.json`**: `fileUpload.*` (11 claves), `exportModal.*` (10) y `header.export.*` (4). «Aplicar» ya tiene las suyas en `header.apply.*`.
 - **`package.json`**: el script `preview`. Sirve `dist/` como web, donde no hay `chrome.bookmarks`, así que solo muestra el error de arranque. Se quita (decidido el 25-10-2026).
