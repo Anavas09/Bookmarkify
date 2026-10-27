@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
-import type { BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
+import { BackupFailedError, type BookmarkSource, type CommitResult } from '../core/ports/BookmarkSource.ts'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import { cx } from '../lib/cx.ts'
 
 type Phase =
   | { kind: 'confirm' }
   | { kind: 'applying' }
+  // Nothing is deleted yet: the copy could not be made, and going on is up to the user.
+  | { kind: 'noBackup'; reason: 'denied' | 'failed' }
   | { kind: 'done'; result: CommitResult }
   | { kind: 'failed'; message: string }
 
@@ -30,11 +32,25 @@ export function ApplyDialog({ source, onClose }: Props) {
   const [count] = useState(() => useBookmarkStore.getState().pendingDeletes.size)
   const [phase, setPhase] = useState<Phase>({ kind: 'confirm' })
 
-  async function apply() {
+  async function run(backup: boolean) {
     setPhase({ kind: 'applying' })
     try {
-      const result = await commit(source, { backup: true })
+      const result = await commit(source, { backup })
       setPhase({ kind: 'done', result })
+    } catch (error) {
+      if (error instanceof BackupFailedError) setPhase({ kind: 'noBackup', reason: 'failed' })
+      else setPhase({ kind: 'failed', message: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  // The permission prompt needs the click's user gesture, so the request is
+  // the first thing the click does.
+  async function apply() {
+    const allowed = source.allowBackup()
+    setPhase({ kind: 'applying' })
+    try {
+      if (await allowed) await run(true)
+      else setPhase({ kind: 'noBackup', reason: 'denied' })
     } catch (error) {
       setPhase({ kind: 'failed', message: error instanceof Error ? error.message : String(error) })
     }
@@ -52,6 +68,8 @@ export function ApplyDialog({ source, onClose }: Props) {
             <Summary result={phase.result} onClose={onClose} />
           ) : phase.kind === 'failed' ? (
             <Failure message={phase.message} onClose={onClose} />
+          ) : phase.kind === 'noBackup' ? (
+            <NoBackup count={count} reason={phase.reason} onProceed={() => run(false)} onCancel={onClose} />
           ) : (
             <Confirmation
               count={count}
@@ -122,6 +140,52 @@ function Confirmation({ count, applying, onApply, onCancel }: ConfirmationProps)
           )}
         >
           {applying ? t('applyDialog.applying') : t('applyDialog.confirm', { count })}
+        </button>
+      </footer>
+    </>
+  )
+}
+
+interface NoBackupProps {
+  count: number
+  reason: 'denied' | 'failed'
+  onProceed: () => void
+  onCancel: () => void
+}
+
+function NoBackup({ count, reason, onProceed, onCancel }: NoBackupProps) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <header className="px-6 pt-6 pb-4 border-b border-edge">
+        <DialogTitle as="h2" className="font-display text-2xl leading-tight text-ink m-0">
+          {t('applyDialog.noBackupTitle')}
+        </DialogTitle>
+        <Description as="p" className="mt-1 font-mono text-[12px] text-accent m-0">
+          {t(reason === 'denied' ? 'applyDialog.noBackupDenied' : 'applyDialog.noBackupFailed')}
+        </Description>
+      </header>
+
+      <div className="px-6 py-5">
+        <p className="text-[14px] leading-relaxed text-ink-soft m-0">{t('applyDialog.noBackupBody', { count })}</p>
+      </div>
+
+      <footer className="px-6 py-4 border-t border-edge flex justify-end gap-3">
+        {/* Starts on cancel, like the first step: an Enter too many deletes nothing. */}
+        <button
+          type="button"
+          data-autofocus
+          onClick={onCancel}
+          className={cx(BTN_CLASS, 'border-edge text-ink-soft hover:border-ink-mute hover:text-ink')}
+        >
+          {t('applyDialog.cancel')}
+        </button>
+        <button
+          type="button"
+          onClick={onProceed}
+          className={cx(BTN_CLASS, 'border-accent bg-accent text-paper hover:bg-paper-card hover:text-accent')}
+        >
+          {t('applyDialog.noBackupConfirm')}
         </button>
       </footer>
     </>
