@@ -20,15 +20,10 @@
     },
     "stats": {
       "total": "{{count}} total",
-      "kept": "{{count}} kept",
+      "kept_one": "{{count}} kept",
+      "kept_other": "{{count}} kept",
       "deleted_one": "{{count}} deleted",
       "deleted_other": "{{count}} deleted"
-    },
-    "export": {
-      "idle": "export",
-      "loading": "exporting…",
-      "titleDisabled": "delete at least one to export",
-      "titleEnabled": "download filtered HTML"
     },
     "apply": {
       "idle": "apply",
@@ -58,7 +53,7 @@
     "title_other": "Delete {{count}} bookmarks from Chrome",
     "folders": "Folders left empty are deleted too.",
     "headsUpLabel": "heads up",
-    "headsUpBody": "Chrome can't undo this. Before deleting, a copy of these bookmarks is downloaded: if you change your mind, import it in the bookmarks manager and they'll come back, though in a new folder.",
+    "headsUpBody": "Chrome can't undo this. Before deleting, a copy of these bookmarks is downloaded: if you change your mind, import it in the Bookmark manager and they'll come back, though in a new folder.",
     "sync": "If sync is on, the deletion also reaches your other devices.",
     "cancel": "cancel",
     "confirm": "delete {{count}}",
@@ -66,8 +61,8 @@
     "doneTitle": "Triage applied",
     "doneDeleted_one": "Deleted {{count}} bookmark from Chrome.",
     "doneDeleted_other": "Deleted {{count}} bookmarks from Chrome.",
-    "doneFolders_one": "Also {{count}} folder left empty.",
-    "doneFolders_other": "Also {{count}} folders left empty.",
+    "doneFolders_one": "Also deleted {{count}} folder left empty.",
+    "doneFolders_other": "Also deleted {{count}} folders left empty.",
     "doneSkipped_one": "{{count}} wasn't deleted because it changed in Chrome meanwhile.",
     "doneSkipped_other": "{{count}} weren't deleted because they changed in Chrome meanwhile.",
     "doneBackup": "copy downloaded: ",
@@ -75,19 +70,6 @@
     "failedHint": "Reload the tab to see how your bookmarks ended up.",
     "done": "done",
     "close": "close"
-  },
-  "fileUpload": {
-    "loadAnother": "load another file",
-    "parsing": "parsing…",
-    "title": "Drop your bookmark export",
-    "hint": "or click to select a Netscape <code>.html</code> file",
-    "browserChrome": "Chrome",
-    "browserFirefox": "Firefox",
-    "browserSafari": "Safari",
-    "instructionsChrome": "⋮ · Bookmarks · Bookmarks manager · ⋮ · Export bookmarks",
-    "instructionsFirefox": "Library · Bookmarks · Import and Backup · Export",
-    "instructionsSafari": "File · Export Bookmarks",
-    "errorGeneric": "Failed to read file"
   },
   "grid": {
     "empty": "No bookmarks match the current filter.",
@@ -106,7 +88,6 @@
     "chipDeleted": "deleted · {{count}}",
     "chipDomainPlaceholder": "domain",
     "chipFolderPlaceholder": "folder",
-    "folderRoot": "(root)",
     "sortOptions": {
       "original": "original",
       "titleAZ": "title A→Z",
@@ -117,17 +98,5 @@
     },
     "menuNoDomains": "no domains",
     "menuNoFolders": "no folders"
-  },
-  "exportModal": {
-    "title": "Export ready",
-    "savedAs": "saved as ",
-    "counters": "{{kept}} kept · {{removed}} removed",
-    "headsUpLabel": "heads up",
-    "headsUpBody": "Browsers import bookmark HTML <strong>additively</strong>. Reimporting will not replace your current bookmarks — the file gets placed in a new <code>Imported YYYY-MM-DD</code> folder inside <em>Other bookmarks</em>. To actually apply the triage, delete the discarded ones manually in your browser.",
-    "reimportLabel": "reimport",
-    "reimportChrome": "⋮ · Bookmarks · Bookmarks manager · ⋮ · Import bookmarks",
-    "reimportFirefox": "Library · Bookmarks · Import and Backup · Import Bookmarks from HTML",
-    "reimportSafari": "File · Import From · Bookmarks HTML File",
-    "done": "done"
   }
 }

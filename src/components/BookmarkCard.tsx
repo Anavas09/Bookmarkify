@@ -30,7 +30,7 @@ export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Pro
   const { t } = useTranslation()
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
-  const favicon = bookmark.icon ?? faviconUrl(bookmark.url)
+  const favicon = faviconUrl(bookmark.url)
   const [faviconBroken, setFaviconBroken] = useState(false)
   // Read once: changing the delay of a card-in already under way replays it.
   const [entranceStep] = useState(Math.min(stagger, 24))
@@ -104,18 +104,8 @@ export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Pro
 
       <footer className="mt-3 flex flex-col gap-2">
         <span className="block h-px bg-edge" aria-hidden="true" />
-        <div className="flex items-baseline justify-between gap-3 font-mono text-[0.68rem] text-ink-mute">
+        <div className="flex items-baseline font-mono text-[0.68rem] text-ink-mute">
           {date && <span className="whitespace-nowrap">{date}</span>}
-          {bookmark.tags && bookmark.tags.length > 0 && (
-            <span className="min-w-0 truncate text-right text-ink-mute">
-              {bookmark.tags.map((tag, i) => (
-                <span key={tag}>
-                  {i > 0 && <span className="text-edge"> · </span>}
-                  {tag}
-                </span>
-              ))}
-            </span>
-          )}
         </div>
       </footer>
     </article>

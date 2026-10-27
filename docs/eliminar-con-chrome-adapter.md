@@ -1,6 +1,6 @@
 # Qué se elimina al tener el ChromeAdapter
 
-Lista viva: se irá ampliando mientras avanzamos. Se aplica en el paso 18, ahora que la extensión ya carga y aplica el triaje en Chrome. Lo que el paso 17 ya adelantó está al final, en [Adelantado en el paso 17](#adelantado-en-el-paso-17).
+Registro de lo que se retiró en el paso 18 (PR #4), una vez que la extensión cargaba y aplicaba el triaje en Chrome. Lo que el paso 17 ya adelantó está al final, en [Adelantado en el paso 17](#adelantado-en-el-paso-17).
 
 ## Supuesto
 
@@ -12,7 +12,7 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
 |---|---|---|
 | `src/components/FileUpload.tsx` | Nada: era la pantalla para soltar el HTML, y nadie la importa desde el paso 17 | — |
 | `src/components/ExportModal.tsx` | Nada: era el modal tras exportar, y nadie lo importa desde el paso 17 | — |
-| `src/core/adapters/NetscapeAdapter.ts` | Lee el archivo subido y descarga el HTML filtrado. Solo lo usa `FileUpload` | 3 |
+| `src/core/adapters/NetscapeAdapter.ts` | Lee el archivo subido y descarga el HTML filtrado. Solo lo usa `FileUpload` | 3; el de la descarga pasa a `download.test.ts`, porque era el único que cubría `download.ts` |
 | `src/core/parser.ts` | HTML Netscape → marcadores. Solo lo usan `NetscapeAdapter` y los tests del serializer | 27 |
 
 ## Lo que se recorta
@@ -21,25 +21,26 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
   - `Bookmark.tags`: venía del atributo `TAGS` de Firefox. Chrome no tiene etiquetas.
   - `Bookmark.icon`: venía del atributo `ICON` del HTML. La API de Chrome no da el favicon.
   - `DocumentMeta` y `SpecialFolder` (`rootTitle`, `specialFolders`): solo servían para reconstruir el HTML. `BookmarkDocument` pierde `meta`.
-- **`src/core/ports/BookmarkSource.ts`**: `BookmarkChange` se queda solo con `removed`, sin `kept` ni `meta`, y `CommitResult` pierde `downloaded`.
-- **`src/core/serializer.ts`**: se queda solo para la copia de seguridad de los marcadores borrados. Pierde `ICON`, `TAGS`, `rootTitle` y `specialFolders`, y con ellos sus tests. Los tests de ida y vuelta con `parseNetscape` hay que reescribirlos sin el parser.
+- **`src/core/ports/BookmarkSource.ts`**: `BookmarkChange` se queda solo con `removed`, sin `kept` ni `meta`, y `CommitResult` pierde `downloaded` y, con él, el campo `kind`, que ya no distingue nada.
+- **`serializer.ts`** (hoy en `src/core/adapters/`, movido en `a263f32`): se queda solo para la copia de seguridad de los marcadores borrados. Pierde `ICON`, `TAGS`, `rootTitle` y `specialFolders`, y con ellos sus tests. Los tests de ida y vuelta con `parseNetscape` hay que reescribirlos sin el parser.
 - **`src/store/useBookmarkStore.ts`**
   - `meta`: estado, `getInitialState` y lo que `commit` pasa al puerto.
   - `commit`: deja de repartir en conservados y eliminados; le bastan los eliminados.
   - Tests: el `meta` del `FakeSource` y el que comprueba que `commit` pasa los conservados y el `meta`.
 - **`src/components/ApplyDialog.tsx`**: la rama que cierra el diálogo cuando el resultado es `downloaded`.
 - **`src/components/BookmarkCard.tsx`**: las etiquetas del pie (`bookmark.tags`) y `bookmark.icon ?? faviconUrl(...)`, que queda en `faviconUrl(...)`.
-- **`src/lib/exportFilename.ts`**: `buildExportFilename` (`bookmarks-AAAA-MM-DD_edited.html`) y sus 2 tests. Se queda `buildBackupFilename`, y el archivo puede pasar a llamarse `backupFilename.ts`.
+- **`src/lib/exportFilename.ts`**: `buildExportFilename` (`bookmarks-AAAA-MM-DD_edited.html`) y su test del formato; el del relleno con ceros pasa a `buildBackupFilename`. Se queda `buildBackupFilename`, y el archivo pasa a llamarse `backupFilename.ts`.
 - **`src/index.css`**: `.sr-input` y `.progress-bar` (con `@keyframes progressSlide`), que solo usa `FileUpload`. `.progress-bar` podría servir para el progreso del escaneo de enlaces; se decide al llegar a ese paso.
 - **`src/locales/es.json` y `en.json`**: `fileUpload.*` (11 claves), `exportModal.*` (10) y `header.export.*` (4). «Aplicar» ya tiene las suyas en `header.apply.*`.
-- **`package.json`**: el script `preview`, si no le ves uso. Sirve `dist/` como web, donde no hay `chrome.bookmarks`, así que solo muestra el error de arranque.
+- **Chip «(raíz)»**: `filterBar.folderRoot` y la rama de ruta vacía de `formatFolder` en `FilterBarTabs.tsx`. Solo servían para los marcadores sueltos en la raíz de un HTML; en Chrome todo cuelga de una carpeta del navegador.
+- **`package.json`**: el script `preview`. Sirve `dist/` como web, donde no hay `chrome.bookmarks`, así que solo muestra el error de arranque. Se quita (decidido el 25-10-2026).
 
 ## Documentación
 
-Lo que queda para el paso 18; el resto se hizo en el 17.
+Hecho en la parte 3 del paso 18; el resto se hizo en el 17.
 
 - **`CLAUDE.md`**: `NetscapeAdapter.ts` y `parser.ts` en la estructura, `tags` en «Tipos base», `kept`, `meta` y `downloaded` en la interfaz del puerto, y las notas «se retira en el paso 18». El historial de los pasos 1–17 se queda como historia.
-- **`README.md`** y **`CLAUDE.md`**: `npm run preview`, si se quita el script.
+- **`README.md`** y **`CLAUDE.md`**: `npm run preview`, que se quita.
 
 ## Lo que se queda (no borrar por error)
 
@@ -53,7 +54,7 @@ Lo que queda para el paso 18; el resto se hizo en el 17.
 - **`jsdom`**: lo necesitan los tests del store por `localStorage`.
 - **`public/favicon.svg`**: icono de la pestaña.
 
-## Restos sin relación con el adaptador (se pueden quitar ya)
+## Restos sin relación con el adaptador (quitados en la parte 1 del paso 18)
 
 - `src/assets/hero.png`, `react.svg` y `vite.svg`: vienen de la plantilla de Vite y nadie los importa.
 - `public/icons.svg`: sin referencias.
@@ -61,9 +62,9 @@ Lo que queda para el paso 18; el resto se hizo en el 17.
 
 ## Orden de retirada
 
-1. **UI**: `FileUpload`, `ExportModal`, la rama `downloaded` de `ApplyDialog`, las claves de i18n y el CSS.
-2. **Núcleo**: `NetscapeAdapter`, `parser`, `meta`, `tags` e `icon` en los tipos, y el recorte del puerto, del store y del serializer.
-3. **Documentación**: lo que queda en CLAUDE.md y, si se quita `preview`, en el README.
+1. **UI**: `FileUpload`, `ExportModal`, las claves de i18n, el CSS y los restos de la plantilla.
+2. **Núcleo**: `NetscapeAdapter`, `parser`, `meta`, `tags` e `icon` en los tipos, y el recorte del puerto, del store, del serializer y de `ApplyDialog`. La rama `downloaded` de `ApplyDialog` pasó aquí desde la UI porque cae con el `downloaded` de `CommitResult`.
+3. **Documentación**: lo que queda en CLAUDE.md, y el script `preview` con sus menciones en el README y CLAUDE.md.
 
 Tras cada bloque, `npm run build`, `npm test` y `npm run lint` en verde.
 

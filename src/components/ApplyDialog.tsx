@@ -5,12 +5,10 @@ import type { BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import { cx } from '../lib/cx.ts'
 
-type Applied = Extract<CommitResult, { kind: 'applied' }>
-
 type Phase =
   | { kind: 'confirm' }
   | { kind: 'applying' }
-  | { kind: 'done'; result: Applied }
+  | { kind: 'done'; result: CommitResult }
   | { kind: 'failed'; message: string }
 
 interface Props {
@@ -36,8 +34,7 @@ export function ApplyDialog({ source, onClose }: Props) {
     setPhase({ kind: 'applying' })
     try {
       const result = await commit(source)
-      if (result.kind === 'applied') setPhase({ kind: 'done', result })
-      else onClose()
+      setPhase({ kind: 'done', result })
     } catch (error) {
       setPhase({ kind: 'failed', message: error instanceof Error ? error.message : String(error) })
     }
@@ -131,7 +128,7 @@ function Confirmation({ count, applying, onApply, onCancel }: ConfirmationProps)
   )
 }
 
-function Summary({ result, onClose }: { result: Applied; onClose: () => void }) {
+function Summary({ result, onClose }: { result: CommitResult; onClose: () => void }) {
   const { t } = useTranslation()
   return (
     <>

@@ -1,7 +1,7 @@
 import type { Bookmark, BookmarkDocument } from '../types.ts'
 import type { BookmarkChange, BookmarkSource, CommitResult } from '../ports/BookmarkSource.ts'
-import { serializeNetscape } from '../serializer.ts'
-import { buildBackupFilename } from '../../lib/exportFilename.ts'
+import { serializeNetscape } from './serializer.ts'
+import { buildBackupFilename } from '../../lib/backupFilename.ts'
 import { downloadFile } from './download.ts'
 
 type Node = chrome.bookmarks.BookmarkTreeNode
@@ -24,11 +24,11 @@ export class ChromeAdapter implements BookmarkSource {
   }
 
   async load(): Promise<BookmarkDocument> {
-    return { bookmarks: collectBookmarks(await this.api.getTree()), meta: {} }
+    return { bookmarks: collectBookmarks(await this.api.getTree()) }
   }
 
   // Deletes the removed bookmarks and nothing else. Diffing the tree against
-  // `kept` would also delete whatever was added in Chrome after loading.
+  // the kept ones would also delete whatever was added in Chrome after loading.
   async commit({ removed }: BookmarkChange): Promise<CommitResult> {
     const tree = await this.api.getTree()
     const current = new Map(collectBookmarks(tree).map(b => [b.id, b]))
@@ -39,7 +39,7 @@ export class ChromeAdapter implements BookmarkSource {
       return now !== undefined && now.url === b.url ? [now] : []
     })
     if (doomed.length === 0) {
-      return { kind: 'applied', deleted: 0, skipped: removed.length, folders: 0, backupFilename: null }
+      return { deleted: 0, skipped: removed.length, folders: 0, backupFilename: null }
     }
 
     // Chrome has no undo for this, so the copy is saved before anything goes.
@@ -60,7 +60,7 @@ export class ChromeAdapter implements BookmarkSource {
       if (parentId !== undefined) touched.add(parentId)
     }
     const folders = await this.removeEmptiedFolders(touched, nodes)
-    return { kind: 'applied', deleted, skipped: removed.length - deleted, folders, backupFilename }
+    return { deleted, skipped: removed.length - deleted, folders, backupFilename }
   }
 
   // Climbs from each folder that lost bookmarks, deleting it while it is
@@ -104,7 +104,7 @@ function collect(node: Node, path: string[], out: Bookmark[]): void {
     for (const child of node.children ?? []) collect(child, inside, out)
     return
   }
-  // Bookmarklets run code instead of opening a page; the HTML parser skips them too.
+  // Bookmarklets run code instead of opening a page.
   if (node.url.startsWith('javascript:')) return
   out.push({
     id: node.id,

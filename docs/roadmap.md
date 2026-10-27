@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 13-10-2026. Paso 17 hecho en la rama `feat/chrome-adapter`, que falta subir y fusionar en `main` con un PR. Siguiente: el paso 18.
+**Última actualización:** 27-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 hecho en la rama `refactor/remove-import` ([PR #4](https://github.com/Anavas09/Bookmarkify/pull/4)): las tres partes, tres textos corregidos de las [observaciones de traducción](./observaciones-traducciones.md) y los arreglos 11–14 del [code review](./code-review.md) (`serializer.ts` a `adapters/`, test de la carpeta hermana y documentación al día).
 
 ## Resumen
 
@@ -10,7 +10,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 |---|---|---|
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
-| 18 | Retirada de la importación | ⏳ pendiente |
+| 18 | Retirada de la importación | ✅ hecho, en la PR #4 |
 | 19 | Enlaces rotos | ⏳ pendiente |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 
@@ -62,6 +62,23 @@ La app pasa a ser una extensión de Chrome: lee tus marcadores con `chrome.bookm
 
 Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de [`eliminar-con-chrome-adapter.md`](./eliminar-con-chrome-adapter.md). Build, tests y lint en verde tras cada bloque.
 
+### Partes
+
+1. [x] **UI**
+   - [x] `FileUpload` y `ExportModal`
+   - [x] Sus textos en español e inglés, y los de «exportar»
+   - [x] El CSS que solo usaba la subida
+   - [x] Los restos de la plantilla de Vite: `src/assets/` y `public/icons.svg`
+2. [x] **Núcleo**
+   - [x] `NetscapeAdapter` y `parser.ts`, con sus tests
+   - [x] Tipos sin `tags`, `icon` ni `meta`, y tarjetas sin las etiquetas ni el favicon del HTML
+   - [x] Puerto solo con los eliminados, y el store, los adaptadores y `ApplyDialog` al día
+   - [x] Serializer y nombre de archivo solo para la copia de seguridad
+3. [x] **Documentación y `npm run preview`**
+   - [x] `CLAUDE.md` sin la importación
+   - [x] Sin `npm run preview`: el script y sus menciones en el README y `CLAUDE.md`
+   - [x] Sin el chip «(raíz)»: la rama de ruta vacía de `formatFolder` y la clave `filterBar.folderRoot` (observación 7 de las [traducciones](./observaciones-traducciones.md))
+
 ## Paso 19 — Enlaces rotos
 
 - Escaneo al abrir la pestaña y botón para volver a escanear.
@@ -71,3 +88,5 @@ Borrar lo que deja de usarse al ser solo extensión, siguiendo la lista viva de 
 ## Paso 20 (opcional final) — Lista o grid
 
 Elegir si los marcadores se ven como lista o como grid.
+
+De paso, las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md): la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español.

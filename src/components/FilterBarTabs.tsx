@@ -45,16 +45,16 @@ function sortToKey(s: Sort): SortKey {
   }
 }
 
-function formatFolder(path: string[], rootLabel: string): string {
-  return path.length === 0 ? rootLabel : path.join(' / ')
+function formatFolder(path: string[]): string {
+  return path.join(' / ')
 }
 
 function domainLabel(f: Filter): string | null {
   return f?.kind === 'domain' ? f.value : null
 }
 
-function folderLabel(f: Filter, rootLabel: string): string | null {
-  return f?.kind === 'folder' ? formatFolder(f.path, rootLabel) : null
+function folderLabel(f: Filter): string | null {
+  return f?.kind === 'folder' ? formatFolder(f.path) : null
 }
 
 export function FilterBarTabs() {
@@ -68,7 +68,6 @@ export function FilterBarTabs() {
   const setSort = useBookmarkStore(s => s.setSort)
   const clearSort = useBookmarkStore(s => s.clearSort)
 
-  const rootLabel = t('filterBar.folderRoot')
   // Counts describe what each filter would show, so deleted bookmarks are left out.
   const kept = useMemo(
     () => selectKeptBookmarks(bookmarks, pendingDeletes),
@@ -81,7 +80,7 @@ export function FilterBarTabs() {
   const activeSortKey = sortToKey(activeSort)
 
   const activeDomain = domainLabel(activeFilter)
-  const activeFolder = folderLabel(activeFilter, rootLabel)
+  const activeFolder = folderLabel(activeFilter)
   const duplicateActive = activeFilter?.kind === 'duplicate'
   const deletedActive = activeFilter?.kind === 'deleted'
 
@@ -127,11 +126,11 @@ export function FilterBarTabs() {
           folderCounts.map(f => (
             <MenuItem
               key={folderKey(f.path)}
-              selected={activeFolder === formatFolder(f.path, rootLabel)}
+              selected={activeFolder === formatFolder(f.path)}
               count={f.count}
               onClick={() => setFilter({ kind: 'folder', path: f.path })}
             >
-              {formatFolder(f.path, rootLabel)}
+              {formatFolder(f.path)}
             </MenuItem>
           ))
         )}

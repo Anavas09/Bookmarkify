@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
-import type { Bookmark, DocumentMeta } from '../core/types.ts'
+import type { Bookmark } from '../core/types.ts'
 import type { BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
 import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
@@ -11,7 +11,6 @@ export const PERSIST_KEY = 'bookmarkify:v2'
 
 export interface BookmarkStore {
   bookmarks: Bookmark[]
-  meta: DocumentMeta
   pendingDeletes: Set<string>
   selected: Set<string>
   selectionAnchor: string | null
@@ -39,7 +38,6 @@ export interface BookmarkStore {
 export function getInitialState(): Pick<
   BookmarkStore,
   | 'bookmarks'
-  | 'meta'
   | 'pendingDeletes'
   | 'selected'
   | 'selectionAnchor'
@@ -49,7 +47,6 @@ export function getInitialState(): Pick<
 > {
   return {
     bookmarks: [],
-    meta: {},
     pendingDeletes: new Set(),
     selected: new Set(),
     selectionAnchor: null,
@@ -73,7 +70,6 @@ export const useBookmarkStore = create<BookmarkStore>()(
           const ids = new Set(doc.bookmarks.map(b => b.id))
           return {
             bookmarks: doc.bookmarks,
-            meta: doc.meta,
             pendingDeletes: new Set([...state.pendingDeletes].filter(id => ids.has(id))),
             selected: new Set(),
             selectionAnchor: null,
@@ -204,13 +200,11 @@ export const useBookmarkStore = create<BookmarkStore>()(
       },
 
       async commit(source) {
-        const { bookmarks, meta, pendingDeletes } = get()
-        const kept: Bookmark[] = []
-        const removed: Bookmark[] = []
-        for (const b of bookmarks) (pendingDeletes.has(b.id) ? removed : kept).push(b)
-        const result = await source.commit({ kept, removed, meta })
+        const { bookmarks, pendingDeletes } = get()
+        const removed = bookmarks.filter(b => pendingDeletes.has(b.id))
+        const result = await source.commit({ removed })
         // The source changed, so what the grid shows is out of date.
-        if (result.kind === 'applied') await get().load(source)
+        await get().load(source)
         return result
       },
     }),

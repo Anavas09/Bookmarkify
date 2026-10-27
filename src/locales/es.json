@@ -20,15 +20,10 @@
     },
     "stats": {
       "total": "{{count}} en total",
-      "kept": "{{count}} conservados",
+      "kept_one": "{{count}} conservado",
+      "kept_other": "{{count}} conservados",
       "deleted_one": "{{count}} eliminado",
       "deleted_other": "{{count}} eliminados"
-    },
-    "export": {
-      "idle": "exportar",
-      "loading": "exportando…",
-      "titleDisabled": "elimina al menos uno para exportar",
-      "titleEnabled": "descargar HTML filtrado"
     },
     "apply": {
       "idle": "aplicar",
@@ -58,7 +53,7 @@
     "title_other": "Borrar {{count}} marcadores de Chrome",
     "folders": "Las carpetas que se queden vacías también se borran.",
     "headsUpLabel": "aviso",
-    "headsUpBody": "Chrome no lo puede deshacer. Antes de borrar se descarga una copia con estos marcadores: si te arrepientes, impórtala en el gestor de marcadores y volverán, aunque en una carpeta nueva.",
+    "headsUpBody": "Chrome no lo puede deshacer. Antes de borrar se descarga una copia con estos marcadores: si te arrepientes, impórtala en el Administrador de marcadores y volverán, aunque en una carpeta nueva.",
     "sync": "Si tienes activada la sincronización, el borrado también llega a tus otros dispositivos.",
     "cancel": "cancelar",
     "confirm": "borrar {{count}}",
@@ -66,8 +61,8 @@
     "doneTitle": "Triaje aplicado",
     "doneDeleted_one": "Se borró {{count}} marcador de Chrome.",
     "doneDeleted_other": "Se borraron {{count}} marcadores de Chrome.",
-    "doneFolders_one": "También {{count}} carpeta que se quedó vacía.",
-    "doneFolders_other": "También {{count}} carpetas que se quedaron vacías.",
+    "doneFolders_one": "También se borró {{count}} carpeta que se quedó vacía.",
+    "doneFolders_other": "También se borraron {{count}} carpetas que se quedaron vacías.",
     "doneSkipped_one": "{{count}} no se borró porque cambió en Chrome mientras tanto.",
     "doneSkipped_other": "{{count}} no se borraron porque cambiaron en Chrome mientras tanto.",
     "doneBackup": "copia descargada: ",
@@ -75,19 +70,6 @@
     "failedHint": "Recarga la pestaña para ver cómo han quedado tus marcadores.",
     "done": "hecho",
     "close": "cerrar"
-  },
-  "fileUpload": {
-    "loadAnother": "cargar otro archivo",
-    "parsing": "procesando…",
-    "title": "Suelta tu export de marcadores",
-    "hint": "o haz clic para elegir un archivo Netscape <code>.html</code>",
-    "browserChrome": "Chrome",
-    "browserFirefox": "Firefox",
-    "browserSafari": "Safari",
-    "instructionsChrome": "⋮ · Marcadores · Administrador de marcadores · ⋮ · Exportar marcadores",
-    "instructionsFirefox": "Biblioteca · Marcadores · Importar y respaldar · Exportar",
-    "instructionsSafari": "Archivo · Exportar marcadores",
-    "errorGeneric": "No se pudo leer el archivo"
   },
   "grid": {
     "empty": "Ningún marcador coincide con el filtro.",
@@ -106,7 +88,6 @@
     "chipDeleted": "eliminados · {{count}}",
     "chipDomainPlaceholder": "dominio",
     "chipFolderPlaceholder": "carpeta",
-    "folderRoot": "(raíz)",
     "sortOptions": {
       "original": "original",
       "titleAZ": "título A→Z",
@@ -117,17 +98,5 @@
     },
     "menuNoDomains": "sin dominios",
     "menuNoFolders": "sin carpetas"
-  },
-  "exportModal": {
-    "title": "Exportación lista",
-    "savedAs": "guardado como ",
-    "counters": "{{kept}} conservados · {{removed}} eliminados",
-    "headsUpLabel": "aviso",
-    "headsUpBody": "Los navegadores importan el HTML de marcadores <strong>de forma aditiva</strong>. Reimportar no reemplaza tus marcadores actuales — el archivo se coloca en una carpeta nueva <code>Imported YYYY-MM-DD</code> dentro de <em>Otros marcadores</em>. Para aplicar el triaje de verdad, borra manualmente los descartados en tu navegador.",
-    "reimportLabel": "reimportar",
-    "reimportChrome": "⋮ · Marcadores · Administrador de marcadores · ⋮ · Importar marcadores",
-    "reimportFirefox": "Biblioteca · Marcadores · Importar y respaldar · Importar marcadores desde HTML",
-    "reimportSafari": "Archivo · Importar desde · Archivo HTML de marcadores",
-    "done": "hecho"
   }
 }
