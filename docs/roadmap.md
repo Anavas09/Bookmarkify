@@ -10,7 +10,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 |---|---|---|
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
-| 18 | Retirada de la importación | ✅ hecho, en la PR #4 |
+| 18 | Retirada de la importación | ✅ hecho |
 | 19 | Enlaces rotos | ⏳ pendiente |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 
