@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 26-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 hecho en la rama `refactor/remove-import`, pendiente de PR: las tres partes, y tres textos corregidos de las [observaciones de traducción](./observaciones-traducciones.md).
+**Última actualización:** 27-10-2026. Paso 17 fusionado en `main` (PR #3). Paso 18 hecho en la rama `refactor/remove-import` ([PR #4](https://github.com/Anavas09/Bookmarkify/pull/4)): las tres partes, tres textos corregidos de las [observaciones de traducción](./observaciones-traducciones.md) y los arreglos 11–14 del [code review](./code-review.md) (`serializer.ts` a `adapters/`, test de la carpeta hermana y documentación al día).
 
 ## Resumen
 
@@ -10,7 +10,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 |---|---|---|
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
-| 18 | Retirada de la importación | ✅ hecho, pendiente de PR |
+| 18 | Retirada de la importación | ✅ hecho, en la PR #4 |
 | 19 | Enlaces rotos | ⏳ pendiente |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 

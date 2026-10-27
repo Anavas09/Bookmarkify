@@ -20,7 +20,7 @@ Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`)
 
 ## Para el paso 18
 
-7. **Chip «(raíz)»**: `filterBar.folderRoot` solo servía para los marcadores sueltos en la raíz de un HTML. En Chrome todo cuelga de una carpeta del navegador, así que ya nunca se ve. Quitarlo es borrar la rama de ruta vacía de `formatFolder` en `src/components/FilterBarTabs.tsx` y la clave de los dos JSON, en el mismo cambio.
+7. **Chip «(raíz)»**: `filterBar.folderRoot` solo servía para los marcadores sueltos en la raíz de un HTML. En Chrome todo cuelga de una carpeta del navegador, así que ya nunca se veía. Se quitó (`6df5de6`): la rama de ruta vacía de `formatFolder` en `src/components/FilterBarTabs.tsx` y la clave de los dos JSON, en el mismo cambio.
 
 ## Vistas y descartadas
 
@@ -30,5 +30,5 @@ Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`)
 ## Decisión
 
 - ✅ Los tres textos (1–3), en un commit pequeño: hechos en `f816231`. El agente de traducciones lo revisó y no hizo falta tocar nada más.
-- ⏳ «(raíz)» (7), dentro de la parte 3 del paso 18.
+- ✅ «(raíz)» (7): hecho en la parte 3 del paso 18 (`6df5de6`).
 - ⏳ El resto (4–6), al paso opcional final (paso 20).

@@ -1,6 +1,6 @@
 # Qué se elimina al tener el ChromeAdapter
 
-Lista viva: se irá ampliando mientras avanzamos. Se aplica en el paso 18, ahora que la extensión ya carga y aplica el triaje en Chrome. Lo que el paso 17 ya adelantó está al final, en [Adelantado en el paso 17](#adelantado-en-el-paso-17).
+Registro de lo que se retiró en el paso 18 (PR #4), una vez que la extensión cargaba y aplicaba el triaje en Chrome. Lo que el paso 17 ya adelantó está al final, en [Adelantado en el paso 17](#adelantado-en-el-paso-17).
 
 ## Supuesto
 
@@ -22,7 +22,7 @@ La app pasa a ser solo una extensión de Chrome: lee los marcadores con `chrome.
   - `Bookmark.icon`: venía del atributo `ICON` del HTML. La API de Chrome no da el favicon.
   - `DocumentMeta` y `SpecialFolder` (`rootTitle`, `specialFolders`): solo servían para reconstruir el HTML. `BookmarkDocument` pierde `meta`.
 - **`src/core/ports/BookmarkSource.ts`**: `BookmarkChange` se queda solo con `removed`, sin `kept` ni `meta`, y `CommitResult` pierde `downloaded` y, con él, el campo `kind`, que ya no distingue nada.
-- **`src/core/serializer.ts`**: se queda solo para la copia de seguridad de los marcadores borrados. Pierde `ICON`, `TAGS`, `rootTitle` y `specialFolders`, y con ellos sus tests. Los tests de ida y vuelta con `parseNetscape` hay que reescribirlos sin el parser.
+- **`serializer.ts`** (hoy en `src/core/adapters/`, movido en `a263f32`): se queda solo para la copia de seguridad de los marcadores borrados. Pierde `ICON`, `TAGS`, `rootTitle` y `specialFolders`, y con ellos sus tests. Los tests de ida y vuelta con `parseNetscape` hay que reescribirlos sin el parser.
 - **`src/store/useBookmarkStore.ts`**
   - `meta`: estado, `getInitialState` y lo que `commit` pasa al puerto.
   - `commit`: deja de repartir en conservados y eliminados; le bastan los eliminados.
@@ -54,7 +54,7 @@ Hecho en la parte 3 del paso 18; el resto se hizo en el 17.
 - **`jsdom`**: lo necesitan los tests del store por `localStorage`.
 - **`public/favicon.svg`**: icono de la pestaña.
 
-## Restos sin relación con el adaptador (se pueden quitar ya)
+## Restos sin relación con el adaptador (quitados en la parte 1 del paso 18)
 
 - `src/assets/hero.png`, `react.svg` y `vite.svg`: vienen de la plantilla de Vite y nadie los importa.
 - `public/icons.svg`: sin referencias.
