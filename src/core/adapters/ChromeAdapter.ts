@@ -1,6 +1,6 @@
 import type { Bookmark, BookmarkDocument } from '../types.ts'
 import type { BookmarkChange, BookmarkSource, CommitResult } from '../ports/BookmarkSource.ts'
-import { serializeNetscape } from '../serializer.ts'
+import { serializeNetscape } from './serializer.ts'
 import { buildBackupFilename } from '../../lib/backupFilename.ts'
 import { downloadFile } from './download.ts'
 

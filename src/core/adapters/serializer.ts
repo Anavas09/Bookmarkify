@@ -1,4 +1,4 @@
-import type { Bookmark } from './types.ts'
+import type { Bookmark } from '../types.ts'
 
 interface FolderNode {
   subfolders: Map<string, FolderNode>

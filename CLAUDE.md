@@ -49,10 +49,10 @@ src/
       devBookmarks.ts         # los marcadores de ejemplo de npm run dev
       download.ts             # descarga un archivo (la copia de seguridad)
     types.ts                  # Bookmark, BookmarkDocument, etc.
-    serializer.ts             # marcadores → HTML Netscape (puro, testeable), para la copia de seguridad
     normalizeUrl.ts           # normalización de URLs para detectar duplicados
   store/
     useBookmarkStore.ts       # store de Zustand
+      serializer.ts           # marcadores → HTML Netscape (puro, testeable), para la copia de seguridad
   components/                 # solo UI — sin conocimiento de adapters ni del formato
 ```
 

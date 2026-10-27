@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { serializeNetscape } from './serializer.ts'
-import type { Bookmark } from './types.ts'
+import type { Bookmark } from '../types.ts'
 
 // The lines between the outer <DL><p> and its closing tag.
 function body(html: string): string[] {

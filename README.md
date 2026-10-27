@@ -80,8 +80,7 @@ public/
 src/
   core/
     ports/           # BookmarkSource — el único contrato que conoce la UI
-    adapters/        # ChromeAdapter (chrome.bookmarks) y su versión falsa para desarrollo y tests
-    serializer.ts    # marcadores → HTML Netscape, para la copia de seguridad
+    adapters/        # ChromeAdapter (chrome.bookmarks), su versión falsa para desarrollo y tests, y el serializer (HTML Netscape de la copia de seguridad)
     normalizeUrl.ts  # normalización de URLs para detectar duplicados
     types.ts         # Bookmark y tipos relacionados
   store/             # store de Zustand, selectores y acciones animadas
