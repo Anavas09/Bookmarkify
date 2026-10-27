@@ -2,7 +2,7 @@
 
 Extensión de Chrome para hacer triaje visual de tus marcadores: los revisas en un grid de tarjetas, seleccionas los que ya no te sirven, los eliminas y, al pulsar «Aplicar», se borran de Chrome.
 
-Hasta ese momento, eliminar es **no destructivo**: los marcadores eliminados se ocultan, pero puedes restaurarlos o deshacer el borrado. Antes de borrar de Chrome, la extensión descarga una copia de seguridad con los que se van. Más detalles en [Aplicar en Chrome](#aplicar-en-chrome).
+Hasta ese momento, eliminar es **no destructivo**: los marcadores eliminados se ocultan, pero puedes restaurarlos o deshacer el borrado. Antes de borrar de Chrome, la extensión guarda una copia de seguridad con los que se van. Más detalles en [Aplicar en Chrome](#aplicar-en-chrome).
 
 ## Características
 
@@ -113,7 +113,7 @@ Consulta [`CLAUDE.md`](./CLAUDE.md) para el detalle completo del diseño, los in
 
 Al pulsar **Aplicar** y confirmar, la extensión:
 
-1. Descarga una copia de seguridad, `bookmarks-AAAA-MM-DD_deleted.html`, solo con los marcadores que va a borrar.
+1. Guarda una copia de seguridad, `bookmarks-AAAA-MM-DD_deleted.html`, solo con los marcadores que va a borrar. Para ello Chrome te pide el permiso de descargas (opcional, puedes revocarlo); si lo rechazas, o la copia no se guarda, no se borra nada salvo que elijas borrar sin copia.
 2. Borra de Chrome los marcadores que eliminaste, y solo esos: lo que añadas en Chrome mientras tienes la app abierta no se toca. Si alguno cambió de URL o ya no existe, lo salta.
 3. Borra las carpetas que se hayan quedado vacías. Las del navegador (*Barra de marcadores*, *Otros marcadores*, *Marcadores del móvil*) nunca se borran.
 
