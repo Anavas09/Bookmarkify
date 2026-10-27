@@ -2,6 +2,11 @@
 
 Este archivo ofrece orientación a Claude Code (claude.ai/code) al trabajar con el código de este repositorio.
 
+## Skills
+
+- Antes de actuar, usar Superpowers (`superpowers:using-superpowers`) para buscar la skill que mejor se ajusta a la tarea.
+- Para funcionalidades nuevas, empezar por `superpowers:brainstorming`, antes de planificar o escribir código.
+
 # Triaje de marcadores
 
 Extensión de Chrome de triaje visual para limpiar los marcadores. Los lee con `chrome.bookmarks` y, al pulsar «Aplicar», borra de Chrome los que el usuario eliminó. Empezó como web app que subía un HTML en formato Netscape; el paso 18 retiró ese código.
@@ -48,11 +53,11 @@ src/
       fakeChromeBookmarks.ts  # chrome.bookmarks en memoria, para los tests y npm run dev
       devBookmarks.ts         # los marcadores de ejemplo de npm run dev
       download.ts             # descarga un archivo (la copia de seguridad)
+      serializer.ts           # marcadores → HTML Netscape (puro, testeable), para la copia de seguridad
     types.ts                  # Bookmark, BookmarkDocument, etc.
     normalizeUrl.ts           # normalización de URLs para detectar duplicados
   store/
     useBookmarkStore.ts       # store de Zustand
-      serializer.ts           # marcadores → HTML Netscape (puro, testeable), para la copia de seguridad
   components/                 # solo UI — sin conocimiento de adapters ni del formato
 ```
 
