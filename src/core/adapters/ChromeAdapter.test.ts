@@ -117,6 +117,8 @@ describe('ChromeAdapter', () => {
         bar: [
           { title: 'Kept', url: 'https://kept.example' },
           { title: 'Work', children: [{ title: 'Gone', url: 'https://gone.example' }] },
+          // After "Work", so the ids the removes check stay the same.
+          { title: 'Keep', children: [{ title: 'Stays', url: 'https://stays.example' }] },
         ],
       })
       const order: string[] = []
@@ -145,6 +147,9 @@ describe('ChromeAdapter', () => {
       expect(html).toContain('<H3>Work</H3>')
       expect(html).toContain('HREF="https://gone.example"')
       expect(html).not.toContain('kept.example')
+      // A sibling folder that keeps everything has no place in the copy.
+      expect(html).not.toContain('<H3>Keep</H3>')
+      expect(html).not.toContain('stays.example')
     })
 
     it('leaves alone what was deleted or got another url in Chrome since loading', async () => {

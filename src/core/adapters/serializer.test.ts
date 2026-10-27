@@ -150,15 +150,5 @@ describe('serializeNetscape', () => {
         '    </DL><p>',
       ])
     })
-
-    it('does not emit a folder none of the bookmarks is in', () => {
-      // The backup only has the bookmarks about to be deleted, so the
-      // folders that keep all of theirs stay out of it.
-      const html = serializeNetscape([
-        { id: '0', title: 'Gone', url: 'https://g.com', folderPath: ['Trash'] },
-      ])
-      expect(html).not.toContain('<H3>Keep</H3>')
-      expect(html).toContain('<H3>Trash</H3>')
-    })
   })
 })
