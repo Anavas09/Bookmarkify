@@ -33,7 +33,7 @@ export function ApplyDialog({ source, onClose }: Props) {
   async function apply() {
     setPhase({ kind: 'applying' })
     try {
-      const result = await commit(source)
+      const result = await commit(source, { backup: true })
       setPhase({ kind: 'done', result })
     } catch (error) {
       setPhase({ kind: 'failed', message: error instanceof Error ? error.message : String(error) })

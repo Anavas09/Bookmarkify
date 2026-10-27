@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBookmarkStore, getInitialState, PERSIST_KEY } from './useBookmarkStore.ts'
 import type { Bookmark, BookmarkDocument } from '../core/types.ts'
-import type { BookmarkChange, BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
+import type { BookmarkChange, BookmarkSource, CommitOptions, CommitResult } from '../core/ports/BookmarkSource.ts'
 
 class FakeSource implements BookmarkSource {
   committed: BookmarkChange | null = null
+  options: CommitOptions | null = null
   loads = 0
   private seed: Bookmark[]
   private readonly skips: string[]
@@ -21,8 +22,13 @@ class FakeSource implements BookmarkSource {
 
   // Changes in place, like Chrome: the removed bookmarks are gone from the
   // next load, except the ones it `skips`.
-  async commit(change: BookmarkChange): Promise<CommitResult> {
+  async allowBackup(): Promise<boolean> {
+    return true
+  }
+
+  async commit(change: BookmarkChange, options: CommitOptions): Promise<CommitResult> {
     this.committed = change
+    this.options = options
     const gone = new Set(change.removed.map(b => b.id).filter(id => !this.skips.includes(id)))
     this.seed = this.seed.filter(b => !gone.has(b.id))
     return {
@@ -124,7 +130,7 @@ describe('useBookmarkStore', () => {
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('b')
 
-      await useBookmarkStore.getState().commit(source)
+      await useBookmarkStore.getState().commit(source, { backup: true })
 
       expect(source.committed).toEqual({ removed: [B('b')] })
     })
@@ -133,7 +139,7 @@ describe('useBookmarkStore', () => {
       const source = new FakeSource([B('a'), B('b')])
       await useBookmarkStore.getState().load(source)
 
-      await useBookmarkStore.getState().commit(source)
+      await useBookmarkStore.getState().commit(source, { backup: true })
 
       expect(source.committed).toEqual({ removed: [] })
     })
@@ -143,7 +149,7 @@ describe('useBookmarkStore', () => {
       await useBookmarkStore.getState().load(source)
       useBookmarkStore.getState().mark('b')
 
-      const result = await useBookmarkStore.getState().commit(source)
+      const result = await useBookmarkStore.getState().commit(source, { backup: true })
 
       const s = useBookmarkStore.getState()
       expect(result).toEqual({ deleted: 1, skipped: 0, folders: 0, backupFilename: 'backup.html' })
@@ -158,7 +164,7 @@ describe('useBookmarkStore', () => {
       useBookmarkStore.getState().mark('b')
       useBookmarkStore.getState().mark('c')
 
-      const result = await useBookmarkStore.getState().commit(source)
+      const result = await useBookmarkStore.getState().commit(source, { backup: true })
 
       const s = useBookmarkStore.getState()
       expect(result).toMatchObject({ deleted: 1, skipped: 1 })
