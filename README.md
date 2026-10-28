@@ -113,7 +113,7 @@ Consulta [`CLAUDE.md`](./CLAUDE.md) para el detalle completo del diseño, los in
 
 Al pulsar **Aplicar** y confirmar, la extensión:
 
-1. Guarda una copia de seguridad, `bookmarks-AAAA-MM-DD_deleted.html`, solo con los marcadores que va a borrar. Para ello Chrome te pide el permiso de descargas (opcional, puedes revocarlo); si lo rechazas, o la copia no se guarda, no se borra nada salvo que elijas borrar sin copia.
+1. Guarda una copia de seguridad, `bookmarks-AAAA-MM-DD_deleted.html`, solo con los marcadores que va a borrar. Para ello Chrome te pide el permiso de descargas (opcional; solo lo pide la primera vez); si lo rechazas, o la copia no se guarda, no se borra nada salvo que elijas borrar sin copia.
 2. Borra de Chrome los marcadores que eliminaste, y solo esos: lo que añadas en Chrome mientras tienes la app abierta no se toca. Si alguno cambió de URL o ya no existe, lo salta.
 3. Borra las carpetas que se hayan quedado vacías. Las del navegador (*Barra de marcadores*, *Otros marcadores*, *Marcadores del móvil*) nunca se borran.
 

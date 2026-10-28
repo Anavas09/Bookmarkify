@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 27-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), empezando por el 1 y el 2 (copia de seguridad) en la rama `fix/backup-downloads`.
+**Última actualización:** 28-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), empezando por el 1 y el 2 (copia de seguridad) en la rama `fix/backup-downloads`, probada en Chrome y a la espera de fusionar.
 
 ## Resumen
 
@@ -90,7 +90,8 @@ Permiso `downloads` opcional, pedido al confirmar en el diálogo. Sin permiso, o
 1. [x] **Núcleo**: puerto con `allowBackup()` y `commit(change, { backup })`, `chromeBackup.ts` con `chrome.downloads`, `BackupFailedError` y tests
 2. [x] **UI**: `ApplyDialog` pide el permiso y avisa si no hay copia, con sus textos en español e inglés
 3. [x] **Documentación**: `CLAUDE.md`, README, `code-review.md` y este roadmap
-4. [ ] Probarlo en Chrome (perfil de prueba) y fusionar
+4. [x] Probarlo en Chrome (perfil de prueba), con [`pruebas-copia-de-seguridad.md`](./pruebas-copia-de-seguridad.md)
+5. [ ] Fusionar la PR
 
 Siguen sin hacer los hallazgos 3–10.
 
