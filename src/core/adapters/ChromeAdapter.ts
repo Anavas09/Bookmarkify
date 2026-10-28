@@ -1,8 +1,14 @@
 import type { Bookmark, BookmarkDocument } from '../types.ts'
-import type { BookmarkChange, BookmarkSource, CommitResult } from '../ports/BookmarkSource.ts'
+import {
+  BackupFailedError,
+  type BookmarkChange,
+  type BookmarkSource,
+  type CommitOptions,
+  type CommitResult,
+} from '../ports/BookmarkSource.ts'
 import { serializeNetscape } from './serializer.ts'
 import { buildBackupFilename } from '../../lib/backupFilename.ts'
-import { downloadFile } from './download.ts'
+import type { BackupSaver } from './chromeBackup.ts'
 
 type Node = chrome.bookmarks.BookmarkTreeNode
 
@@ -16,11 +22,15 @@ export interface BookmarksApi {
 
 export class ChromeAdapter implements BookmarkSource {
   private readonly api: BookmarksApi
-  private readonly download: (filename: string, content: string) => void
+  private readonly backup: BackupSaver
 
-  constructor(api: BookmarksApi, download: (filename: string, content: string) => void = downloadFile) {
+  constructor(api: BookmarksApi, backup: BackupSaver) {
     this.api = api
-    this.download = download
+    this.backup = backup
+  }
+
+  allowBackup(): Promise<boolean> {
+    return this.backup.allow()
   }
 
   async load(): Promise<BookmarkDocument> {
@@ -29,7 +39,7 @@ export class ChromeAdapter implements BookmarkSource {
 
   // Deletes the removed bookmarks and nothing else. Diffing the tree against
   // the kept ones would also delete whatever was added in Chrome after loading.
-  async commit({ removed }: BookmarkChange): Promise<CommitResult> {
+  async commit({ removed }: BookmarkChange, { backup }: CommitOptions): Promise<CommitResult> {
     const tree = await this.api.getTree()
     const current = new Map(collectBookmarks(tree).map(b => [b.id, b]))
     // One deleted or edited in Chrome since loading is no longer what the
@@ -42,9 +52,16 @@ export class ChromeAdapter implements BookmarkSource {
       return { deleted: 0, skipped: removed.length, folders: 0, backupFilename: null }
     }
 
-    // Chrome has no undo for this, so the copy is saved before anything goes.
-    const backupFilename = buildBackupFilename(new Date())
-    this.download(backupFilename, serializeNetscape(doomed))
+    // Chrome has no undo for this, so the copy is saved, and confirmed on
+    // disk, before anything goes. Without one, the caller already agreed.
+    let backupFilename: string | null = null
+    if (backup) {
+      try {
+        backupFilename = await this.backup.save(buildBackupFilename(new Date()), serializeNetscape(doomed))
+      } catch (error) {
+        throw new BackupFailedError(error)
+      }
+    }
 
     const nodes = indexNodes(tree)
     const touched = new Set<string>()

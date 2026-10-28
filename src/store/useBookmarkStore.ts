@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { Bookmark } from '../core/types.ts'
-import type { BookmarkSource, CommitResult } from '../core/ports/BookmarkSource.ts'
+import type { BookmarkSource, CommitOptions, CommitResult } from '../core/ports/BookmarkSource.ts'
 import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
 // v1 also saved the bookmarks of an uploaded file, whose ids mean nothing
@@ -32,7 +32,7 @@ export interface BookmarkStore {
   clearFilter(): void
   setSort(s: Sort): void
   clearSort(): void
-  commit(source: BookmarkSource): Promise<CommitResult>
+  commit(source: BookmarkSource, options: CommitOptions): Promise<CommitResult>
 }
 
 export function getInitialState(): Pick<
@@ -199,10 +199,10 @@ export const useBookmarkStore = create<BookmarkStore>()(
         })
       },
 
-      async commit(source) {
+      async commit(source, options) {
         const { bookmarks, pendingDeletes } = get()
         const removed = bookmarks.filter(b => pendingDeletes.has(b.id))
-        const result = await source.commit({ removed })
+        const result = await source.commit({ removed }, options)
         // The source changed, so what the grid shows is out of date.
         await get().load(source)
         return result

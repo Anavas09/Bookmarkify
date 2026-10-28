@@ -1,6 +1,6 @@
 # Code review del paso 18
 
-Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`, PR #4), hecho el 27-10-2026 con la skill `code-review` a nivel max. Diez búsquedas desde ángulos distintos dejaron 18 hallazgos. El review se cortó por el límite de uso con 9 verificados; los otros 9 los verifiqué a mano el mismo día, leyendo el código y midiendo cuando hacía falta. Al verificarlos salió uno más, el 6. Arreglados en la PR #4: el 11, el 12, el 13 y el 14 (ver [Antes de fusionar la PR #4](#antes-de-fusionar-la-pr-4)); el resto sigue sin arreglar.
+Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`, PR #4), hecho el 27-10-2026 con la skill `code-review` a nivel max. Diez búsquedas desde ángulos distintos dejaron 18 hallazgos. El review se cortó por el límite de uso con 9 verificados; los otros 9 los verifiqué a mano el mismo día, leyendo el código y midiendo cuando hacía falta. Al verificarlos salió uno más, el 6. Arreglados en la PR #4: el 11, el 12, el 13 y el 14; el 1 y el 2, en `fix/backup-downloads` (ver [Antes de fusionar la PR #4](#antes-de-fusionar-la-pr-4)); el resto sigue sin arreglar.
 
 **En resumen:** 19 hallazgos: 10 confirmados, 5 probables y 4 descartados. Del paso 18 solo vienen tres (11, 15 y 17), y ninguno rompe nada. Los fallos de verdad ya estaban en `main`: lo más serio es que la copia de seguridad no está garantizada (1 y 2).
 
@@ -36,7 +36,7 @@ Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`
 
 ### 1. La copia no se confirma antes de borrar
 
-**Confirmado.** `src/core/adapters/ChromeAdapter.ts:45-61`, `src/core/adapters/download.ts`, `src/components/ApplyDialog.tsx:139-143`.
+**Confirmado. Arreglado** en la rama `fix/backup-downloads`: la copia se guarda con `chrome.downloads` (permiso opcional `downloads`, pedido al confirmar) y no se borra nada si no se guardó; el diálogo ofrece cancelar o borrar sin copia. `src/core/adapters/ChromeAdapter.ts:45-61`, `src/core/adapters/download.ts`, `src/components/ApplyDialog.tsx:139-143`.
 
 `commit` llama a `this.download(...)`, que hace clic en un `<a download>` y vuelve sin saber si el archivo se guardó, y acto seguido empieza a borrar. La página no recibe ninguna señal de la descarga, y el manifest no pide el permiso `downloads`.
 
@@ -46,7 +46,7 @@ Con «Preguntar dónde guardar cada archivo antes de descargarlo» activado en C
 
 ### 2. El nombre de la copia puede no ser el del archivo guardado
 
-**Confirmado.** `ChromeAdapter.ts:46`, `src/lib/backupFilename.ts`, `ApplyDialog.tsx:142`.
+**Confirmado. Arreglado** con el 1: el resumen muestra el nombre que devuelve `chrome.downloads` (con `conflictAction: 'uniquify'`). `ChromeAdapter.ts:46`, `src/lib/backupFilename.ts`, `ApplyDialog.tsx:142`.
 
 El nombre solo lleva la fecha: `bookmarks-AAAA-MM-DD_deleted.html`. Si se aplica dos veces el mismo día y la primera copia sigue en Descargas, Chrome guarda la segunda como `bookmarks-AAAA-MM-DD_deleted (1).html`, pero el resumen muestra el nombre sin `(1)`, que es el archivo de la primera tanda. Con «Preguntar dónde guardar», si se sobrescribe, la primera copia se pierde.
 

@@ -1,15 +1,23 @@
 import { describe, it, expect, vi } from 'vitest'
 import { ChromeAdapter, type BookmarksApi } from './ChromeAdapter.ts'
 import { createFakeBookmarks, type FakeTree } from './fakeChromeBookmarks.ts'
-import type { BookmarkChange } from '../ports/BookmarkSource.ts'
+import { BackupFailedError, type BookmarkChange } from '../ports/BookmarkSource.ts'
+import type { BackupSaver } from './chromeBackup.ts'
 
 // Ids count up as in Chrome: "0" is the root; "1", "2" and "3" are the
 // bookmarks bar, other bookmarks and mobile bookmarks; the seed starts at "4".
 
+const WITH_COPY = { backup: true }
+
+// A saver that reports the file as saved under the name it was given.
+function fakeSaver(save: BackupSaver['save'] = filename => Promise.resolve(filename)) {
+  return { allow: vi.fn(() => Promise.resolve(true)), save: vi.fn(save) }
+}
+
 function setup(tree: FakeTree) {
   const fake = createFakeBookmarks(tree)
-  const download = vi.fn<(filename: string, content: string) => void>()
-  return { fake, download, adapter: new ChromeAdapter(fake, download) }
+  const backup = fakeSaver()
+  return { fake, backup, adapter: new ChromeAdapter(fake, backup) }
 }
 
 // Loads, then marks for deletion the bookmarks with these titles.
@@ -97,7 +105,7 @@ describe('ChromeAdapter', () => {
       const change = await loadAndMark(adapter, 'b')
       await fake.create({ parentId: '1', title: 'added later', url: 'https://later.example' })
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
       expect(result).toEqual({
         deleted: 1,
@@ -122,8 +130,9 @@ describe('ChromeAdapter', () => {
         ],
       })
       const order: string[] = []
-      const download = vi.fn((filename: string, content: string) => {
-        order.push(`download ${filename} (${content.length} chars)`)
+      const backup = fakeSaver((filename, content) => {
+        order.push(`save ${filename} (${content.length} chars)`)
+        return Promise.resolve(filename)
       })
       const adapter = new ChromeAdapter(
         {
@@ -133,15 +142,15 @@ describe('ChromeAdapter', () => {
             return fake.remove(id)
           },
         },
-        download,
+        backup,
       )
       const change = await loadAndMark(adapter, 'Gone')
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
-      expect(order[0]).toMatch(/^download /)
+      expect(order[0]).toMatch(/^save /)
       expect(order.slice(1)).toEqual(['remove 6', 'remove 5'])
-      const [filename, html] = download.mock.calls[0]
+      const [filename, html] = backup.save.mock.calls[0]
       expect(filename).toBe(result.backupFilename)
       expect(html).toContain('<H3>Bookmarks bar</H3>')
       expect(html).toContain('<H3>Work</H3>')
@@ -153,7 +162,7 @@ describe('ChromeAdapter', () => {
     })
 
     it('leaves alone what was deleted or got another url in Chrome since loading', async () => {
-      const { fake, download, adapter } = setup({
+      const { fake, backup, adapter } = setup({
         bar: [
           { title: 'deleted meanwhile', url: 'https://a.example' },
           { title: 'edited', url: 'https://b.example' },
@@ -165,12 +174,12 @@ describe('ChromeAdapter', () => {
       await fake.update('5', { url: 'https://b.example/new' })
       await fake.update('6', { title: 'renamed in Chrome' })
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
       // Same url, so the renamed one goes, and the copy has its new title.
       expect(result).toMatchObject({ deleted: 1, skipped: 2 })
       expect(await titlesIn(fake)).toEqual(['Bookmarks bar', 'edited', 'Other bookmarks', 'Mobile bookmarks'])
-      const html = download.mock.calls[0][1]
+      const html = backup.save.mock.calls[0][1]
       expect(html).toContain('>renamed in Chrome</A>')
       expect(html).not.toContain('b.example')
     })
@@ -193,7 +202,7 @@ describe('ChromeAdapter', () => {
       })
       const change = await loadAndMark(adapter, 'x', 'y', 'z')
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
       expect(result).toMatchObject({ deleted: 3, skipped: 0, folders: 4 })
       expect(await titlesIn(fake)).toEqual(['Bookmarks bar', 'keep', 'Other bookmarks', 'Mobile bookmarks'])
@@ -222,7 +231,7 @@ describe('ChromeAdapter', () => {
       })
       const change = await loadAndMark(adapter, 'the only one', 'a', 'b')
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
       expect(result).toMatchObject({ deleted: 3, folders: 0 })
       expect(await titlesIn(fake)).toEqual([
@@ -242,25 +251,65 @@ describe('ChromeAdapter', () => {
       })
       const adapter = new ChromeAdapter(
         { ...fake, remove: id => (id === '5' ? Promise.reject(new Error('refused')) : fake.remove(id)) },
-        vi.fn(),
+        fakeSaver(),
       )
       const change = await loadAndMark(adapter, 'a', 'b', 'c')
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
       expect(result).toMatchObject({ deleted: 2, skipped: 1 })
       expect(await titlesIn(fake)).toEqual(['Bookmarks bar', 'b', 'Other bookmarks', 'Mobile bookmarks'])
     })
 
     it('saves no copy when nothing is left to delete', async () => {
-      const { fake, download, adapter } = setup({ bar: [{ title: 'a', url: 'https://a.example' }] })
+      const { fake, backup, adapter } = setup({ bar: [{ title: 'a', url: 'https://a.example' }] })
       const change = await loadAndMark(adapter, 'a')
       await fake.remove('4')
 
-      const result = await adapter.commit(change)
+      const result = await adapter.commit(change, WITH_COPY)
 
       expect(result).toEqual({ deleted: 0, skipped: 1, folders: 0, backupFilename: null })
-      expect(download).not.toHaveBeenCalled()
+      expect(backup.save).not.toHaveBeenCalled()
+    })
+
+    it('reports the name the copy was saved under, which Chrome may have changed', async () => {
+      const fake = createFakeBookmarks({ bar: [{ title: 'a', url: 'https://a.example' }] })
+      const adapter = new ChromeAdapter(fake, fakeSaver(() => Promise.resolve('bookmarks-2026-10-27_deleted (1).html')))
+      const change = await loadAndMark(adapter, 'a')
+
+      const result = await adapter.commit(change, WITH_COPY)
+
+      expect(result.backupFilename).toBe('bookmarks-2026-10-27_deleted (1).html')
+    })
+
+    it('deletes nothing when the copy could not be saved', async () => {
+      const fake = createFakeBookmarks({ bar: [{ title: 'a', url: 'https://a.example' }] })
+      const adapter = new ChromeAdapter(fake, fakeSaver(() => Promise.reject(new Error('USER_CANCELED'))))
+      const change = await loadAndMark(adapter, 'a')
+
+      await expect(adapter.commit(change, WITH_COPY)).rejects.toBeInstanceOf(BackupFailedError)
+
+      expect(await titlesIn(fake)).toEqual(['Bookmarks bar', 'a', 'Other bookmarks', 'Mobile bookmarks'])
+    })
+
+    it('deletes without a copy when told to', async () => {
+      const { fake, backup, adapter } = setup({ bar: [{ title: 'a', url: 'https://a.example' }] })
+      const change = await loadAndMark(adapter, 'a')
+
+      const result = await adapter.commit(change, { backup: false })
+
+      expect(result).toEqual({ deleted: 1, skipped: 0, folders: 0, backupFilename: null })
+      expect(backup.save).not.toHaveBeenCalled()
+      expect(await titlesIn(fake)).toEqual(['Bookmarks bar', 'Other bookmarks', 'Mobile bookmarks'])
+    })
+  })
+
+  describe('allowBackup()', () => {
+    it('asks the saver for what it needs', async () => {
+      const { backup, adapter } = setup({})
+
+      expect(await adapter.allowBackup()).toBe(true)
+      expect(backup.allow).toHaveBeenCalledOnce()
     })
   })
 })

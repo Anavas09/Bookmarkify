@@ -39,7 +39,7 @@ Los marcadores reales se prueban en un perfil de Chrome aparte, sin sincronizaci
 
 ```
 public/
-  manifest.json               # Manifest V3: solo pide el permiso bookmarks
+  manifest.json               # Manifest V3: permiso bookmarks y, opcional, downloads (la copia de seguridad)
   background.js               # service worker: abre la app en su pestaña al pulsar el icono
   theme-init.js               # tema antes de que monte React (la CSP bloquea los scripts inline)
 src/
@@ -52,7 +52,8 @@ src/
       createBookmarkSource.ts # elige la fuente: Chrome o, en npm run dev, la de ejemplo
       fakeChromeBookmarks.ts  # chrome.bookmarks en memoria, para los tests y npm run dev
       devBookmarks.ts         # los marcadores de ejemplo de npm run dev
-      download.ts             # descarga un archivo (la copia de seguridad)
+      chromeBackup.ts         # guarda la copia con chrome.downloads (confirma que llegó a disco) y pide su permiso opcional
+      download.ts             # descarga con un enlace; solo para la copia en npm run dev
       serializer.ts           # marcadores → HTML Netscape (puro, testeable), para la copia de seguridad
     types.ts                  # Bookmark, BookmarkDocument, etc.
     normalizeUrl.ts           # normalización de URLs para detectar duplicados
@@ -72,8 +73,11 @@ Interfaz `BookmarkSource`:
 ```ts
 interface BookmarkSource {
   load(): Promise<BookmarkDocument>; // BookmarkDocument = { bookmarks }
-  commit(change: BookmarkChange): Promise<CommitResult>;
+  allowBackup(): Promise<boolean>;   // pide el permiso de la copia; va en el clic de confirmar
+  commit(change: BookmarkChange, options: { backup: boolean }): Promise<CommitResult>;
 }
+
+// Con backup: true, commit lanza BackupFailedError si la copia no se guardó, y no borra nada.
 
 // El resultado del triaje: los marcadores que hay que borrar, y nada más.
 interface BookmarkChange {
@@ -84,7 +88,7 @@ interface CommitResult {
   deleted: number;
   skipped: number;               // no borrados: cambiaron o desaparecieron desde la carga
   folders: number;               // carpetas que se quedaron vacías y se borraron
-  backupFilename: string | null;
+  backupFilename: string | null; // el nombre con el que se guardó de verdad, o null sin copia
 }
 ```
 
@@ -124,7 +128,7 @@ interface BookmarkStore {
   restoreSelected(): void;  // saca los seleccionados de pendingDeletes
   undoDelete(): void;       // devuelve el último lote
   dismissUndo(): void;      // olvida el último lote (se cierra el aviso)
-  commit(source: BookmarkSource): Promise<CommitResult>; // los eliminados al puerto; después relee la fuente
+  commit(source: BookmarkSource, options: CommitOptions): Promise<CommitResult>; // los eliminados al puerto; después relee la fuente
 }
 ```
 
@@ -188,6 +192,6 @@ Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic sel
 «Aplicar» es lo único que borra de verdad, y Chrome no lo puede deshacer:
 
 - Solo se borra lo marcado (`removed`), nunca «árbol actual − conservados»: eso borraría lo que el usuario añadiera en Chrome con la app abierta.
-- Antes de borrar se descarga la copia de seguridad. Se recupera importándola en el Administrador de marcadores; como Chrome importa de forma **aditiva**, lo recuperado vuelve dentro de una carpeta nueva, no a su sitio.
+- Antes de borrar se guarda la copia de seguridad con `chrome.downloads` y se espera a que esté en disco. El permiso `downloads` es **opcional**: se pide al confirmar en el diálogo y el usuario puede rechazarlo. Una vez concedido, Chrome no deja revocarlo desde su interfaz y, si se quita con `chrome.permissions.remove`, vuelve a activarlo al pedirlo sin preguntar; para repetir el aviso hay que reinstalar la extensión. Sin permiso, o si la copia no se guarda, no se borra nada y el diálogo ofrece cancelar o «borrar sin copia». El resumen muestra el nombre real del archivo. Se recupera importándola en el Administrador de marcadores; como Chrome importa de forma **aditiva**, lo recuperado vuelve dentro de una carpeta nueva, no a su sitio.
 - Las carpetas del navegador (barra de marcadores, otros marcadores, móvil) nunca se borran; las del usuario, solo si el triaje las deja vacías.
 - Con la sincronización activada, el borrado llega a los demás dispositivos.
