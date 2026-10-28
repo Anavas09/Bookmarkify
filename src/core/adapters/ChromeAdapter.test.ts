@@ -53,13 +53,23 @@ describe('ChromeAdapter', () => {
       const { bookmarks } = await adapter.load()
 
       expect(bookmarks).toEqual([
-        { id: '4', title: 'React', url: 'https://react.dev', addedAt: 1000, folderPath: ['Bookmarks bar'] },
+        {
+          id: '4',
+          title: 'React',
+          url: 'https://react.dev',
+          addedAt: 1000,
+          folderPath: ['Bookmarks bar'],
+          folderIds: ['1'],
+          inAccount: false,
+        },
         {
           id: '6',
           title: 'Vite',
           url: 'https://vite.dev',
           addedAt: 2000,
           folderPath: ['Bookmarks bar', 'Work'],
+          folderIds: ['1', '5'],
+          inAccount: false,
         },
         {
           id: '7',
@@ -67,6 +77,8 @@ describe('ChromeAdapter', () => {
           url: 'https://developer.mozilla.org',
           addedAt: 3000,
           folderPath: ['Bookmarks bar'],
+          folderIds: ['1'],
+          inAccount: false,
         },
         {
           id: '8',
@@ -74,7 +86,33 @@ describe('ChromeAdapter', () => {
           url: 'https://recipes.example',
           addedAt: 4000,
           folderPath: ['Other bookmarks'],
+          folderIds: ['2'],
+          inAccount: false,
         },
+      ])
+    })
+
+    it("tells the account's bookmarks from the device's, and sibling folders with one name apart by id", async () => {
+      const { adapter } = setup({
+        bar: [
+          { title: 'Work', children: [{ title: 'first', url: 'https://first.example' }] },
+          { title: 'Work', children: [{ title: 'second', url: 'https://second.example' }] },
+        ],
+        account: { bar: [{ title: 'Work', children: [{ title: 'synced', url: 'https://synced.example' }] }] },
+      })
+
+      const { bookmarks } = await adapter.load()
+
+      // Two "Bookmarks bar" (ids 1 and 8), and three "Work" folders (4, 6 and 11).
+      expect(bookmarks.map(b => [b.title, b.folderIds, b.inAccount])).toEqual([
+        ['first', ['1', '4'], false],
+        ['second', ['1', '6'], false],
+        ['synced', ['8', '11'], true],
+      ])
+      expect(bookmarks.map(b => b.folderPath)).toEqual([
+        ['Bookmarks bar', 'Work'],
+        ['Bookmarks bar', 'Work'],
+        ['Bookmarks bar', 'Work'],
       ])
     })
 
@@ -159,6 +197,42 @@ describe('ChromeAdapter', () => {
       // A sibling folder that keeps everything has no place in the copy.
       expect(html).not.toContain('<H3>Keep</H3>')
       expect(html).not.toContain('stays.example')
+    })
+
+    it('keeps sibling folders with the same name apart in the copy', async () => {
+      const { backup, adapter } = setup({
+        bar: [
+          { title: 'Work', children: [{ title: 'a', url: 'https://a.example' }] },
+          { title: 'Work', children: [{ title: 'b', url: 'https://b.example' }] },
+        ],
+        account: { bar: [{ title: 'c', url: 'https://c.example' }] },
+      })
+      const change = await loadAndMark(adapter, 'a', 'b', 'c')
+
+      await adapter.commit(change, WITH_COPY)
+
+      const html = backup.save.mock.calls[0][1]
+      expect(html.match(/<H3>Work<\/H3>/g)).toHaveLength(2)
+      // The account's own bar is another folder, even with the same name.
+      expect(html.match(/<H3>Bookmarks bar<\/H3>/g)).toHaveLength(2)
+    })
+
+    it("writes the copy in Chrome's order, whatever the order of the change", async () => {
+      const { backup, adapter } = setup({
+        bar: [
+          { title: 'x', url: 'https://x.example' },
+          { title: 'Sub', children: [{ title: 's', url: 'https://s.example' }] },
+          { title: 'y', url: 'https://y.example' },
+        ],
+      })
+      const { removed } = await loadAndMark(adapter, 'x', 's', 'y')
+
+      await adapter.commit({ removed: removed.toReversed() }, WITH_COPY)
+
+      const html = backup.save.mock.calls[0][1]
+      const at = (text: string) => html.indexOf(text)
+      expect(at('>x</A>')).toBeLessThan(at('<H3>Sub</H3>'))
+      expect(at('>s</A>')).toBeLessThan(at('>y</A>'))
     })
 
     it('leaves alone what was deleted or got another url in Chrome since loading', async () => {

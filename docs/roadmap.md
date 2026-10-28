@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 28-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), empezando por el 1 y el 2 (copia de seguridad) en la rama `fix/backup-downloads`, probada en Chrome y a la espera de fusionar.
+**Última actualización:** 28-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), y el 3, el 4 y el 5 (carpetas por id) en curso en la rama `fix/folder-ids`, parte 1 de 3 hecha.
 
 ## Resumen
 
@@ -91,9 +91,19 @@ Permiso `downloads` opcional, pedido al confirmar en el diálogo. Sin permiso, o
 2. [x] **UI**: `ApplyDialog` pide el permiso y avisa si no hay copia, con sus textos en español e inglés
 3. [x] **Documentación**: `CLAUDE.md`, README, `code-review.md` y este roadmap
 4. [x] Probarlo en Chrome (perfil de prueba), con [`pruebas-copia-de-seguridad.md`](./pruebas-copia-de-seguridad.md)
+5. [x] Fusionar la PR (PR #5)
+
+### #3, #4 y #5 — Carpetas por id (`fix/folder-ids`)
+
+Cada marcador lleva los ids de sus carpetas para identificarlas y los nombres solo para mostrarlas. Arregla las carpetas con la misma etiqueta («A / B» frente a «A» + «B»), los marcadores de la cuenta frente a los del dispositivo, y las hermanas con el mismo nombre; la copia además respeta el orden de Chrome.
+
+1. [x] **Núcleo y copia** (28-10-2026): `folderIds` e `inAccount` en `Bookmark`, el falso con el juego de carpetas de la cuenta, y el serializador por id y en el orden de Chrome
+2. [ ] **Filtro y menú**: filtro por id, etiquetas con «(cuenta)» / «(este dispositivo)» y «(2)», filtro guardado en el formato antiguo descartado una vez, y el ejemplo de `npm run dev` con los tres casos
+3. [ ] **Documentación**: `CLAUDE.md`, `code-review.md`, y [`pruebas-carpetas.md`](./pruebas-carpetas.md)
+4. [ ] Probarlo en Chrome (perfil de prueba)
 5. [ ] Fusionar la PR
 
-Siguen sin hacer los hallazgos 3–10.
+Siguen sin hacer los hallazgos 6–10.
 
 ## Paso 19 — Enlaces rotos
 

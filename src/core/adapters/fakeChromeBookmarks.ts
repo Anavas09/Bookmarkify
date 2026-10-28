@@ -7,12 +7,18 @@ export type FakeNode =
   | { title: string; url: string; dateAdded?: number }
   | { title: string; children: FakeNode[]; dateAdded?: number }
 
-// What goes inside each of the browser's folders. `managed` is the folder
-// an administrator sets up; it only exists when given.
-export interface FakeTree {
+// What goes inside each of the browser's folders.
+export interface FakeFolders {
   bar?: FakeNode[]
   other?: FakeNode[]
   mobile?: FakeNode[]
+}
+
+// `account` is the second set of the same folders that Chrome keeps for the
+// Google account (syncing), next to the local ones; `managed` is the folder an
+// administrator sets up. Each only exists when given.
+export interface FakeTree extends FakeFolders {
+  account?: FakeFolders
   managed?: FakeNode[]
 }
 
@@ -32,12 +38,12 @@ export function createFakeBookmarks(seed: FakeTree = {}): FakeBookmarks {
   const byId = new Map<string, Node>()
   let nextId = 0
 
-  function add(parent: Node | null, fields: Omit<Node, 'id' | 'parentId' | 'syncing'>): Node {
+  function add(parent: Node | null, fields: Omit<Node, 'id' | 'parentId' | 'syncing'>, syncing = false): Node {
     const node: Node = {
       ...fields,
       dateAdded: fields.dateAdded ?? DEFAULT_DATE,
       id: String(nextId++),
-      syncing: false,
+      syncing,
     }
     if (parent !== null) {
       node.parentId = parent.id
@@ -47,25 +53,32 @@ export function createFakeBookmarks(seed: FakeTree = {}): FakeBookmarks {
     return node
   }
 
-  function addSeed(parent: Node, item: FakeNode, managed: boolean): void {
+  function addSeed(parent: Node, item: FakeNode, managed: boolean, syncing = false): void {
     const flag = managed ? { unmodifiable: 'managed' as const } : {}
     if ('url' in item) {
-      add(parent, { ...item, ...flag })
+      add(parent, { ...item, ...flag }, syncing)
       return
     }
-    const folder = add(parent, { title: item.title, dateAdded: item.dateAdded, children: [], ...flag })
-    for (const child of item.children) addSeed(folder, child, managed)
+    const folder = add(parent, { title: item.title, dateAdded: item.dateAdded, children: [], ...flag }, syncing)
+    for (const child of item.children) addSeed(folder, child, managed, syncing)
+  }
+
+  // The browser's three folders, filled with the seed. The local set goes
+  // first and the account's after it, so ids don't move when there is none.
+  function addBrowserFolders(root: Node, contents: FakeFolders, syncing: boolean): void {
+    const filled: Array<[Node, FakeNode[] | undefined]> = [
+      [add(root, { title: 'Bookmarks bar', folderType: 'bookmarks-bar', children: [] }, syncing), contents.bar],
+      [add(root, { title: 'Other bookmarks', folderType: 'other', children: [] }, syncing), contents.other],
+      [add(root, { title: 'Mobile bookmarks', folderType: 'mobile', children: [] }, syncing), contents.mobile],
+    ]
+    for (const [folder, items] of filled) {
+      for (const item of items ?? []) addSeed(folder, item, false, syncing)
+    }
   }
 
   const root = add(null, { title: '', children: [] })
-  const filled: Array<[Node, FakeNode[] | undefined]> = [
-    [add(root, { title: 'Bookmarks bar', folderType: 'bookmarks-bar', children: [] }), seed.bar],
-    [add(root, { title: 'Other bookmarks', folderType: 'other', children: [] }), seed.other],
-    [add(root, { title: 'Mobile bookmarks', folderType: 'mobile', children: [] }), seed.mobile],
-  ]
-  for (const [folder, items] of filled) {
-    for (const item of items ?? []) addSeed(folder, item, false)
-  }
+  addBrowserFolders(root, seed, false)
+  if (seed.account) addBrowserFolders(root, seed.account, true)
   if (seed.managed) {
     const folder = add(root, {
       title: 'Managed bookmarks',
