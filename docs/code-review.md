@@ -1,6 +1,6 @@
 # Code review del paso 18
 
-Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`, PR #4), hecho el 27-10-2026 con la skill `code-review` a nivel max. Diez búsquedas desde ángulos distintos dejaron 18 hallazgos. El review se cortó por el límite de uso con 9 verificados; los otros 9 los verifiqué a mano el mismo día, leyendo el código y midiendo cuando hacía falta. Al verificarlos salió uno más, el 6. Arreglados en la PR #4: el 11, el 12, el 13 y el 14; el 1 y el 2, en `fix/backup-downloads` (ver [Antes de fusionar la PR #4](#antes-de-fusionar-la-pr-4)); el resto sigue sin arreglar.
+Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`, PR #4), hecho el 27-10-2026 con la skill `code-review` a nivel max. Diez búsquedas desde ángulos distintos dejaron 18 hallazgos. El review se cortó por el límite de uso con 9 verificados; los otros 9 los verifiqué a mano el mismo día, leyendo el código y midiendo cuando hacía falta. Al verificarlos salió uno más, el 6. Arreglados en la PR #4: el 11, el 12, el 13 y el 14; el 1 y el 2, en `fix/backup-downloads` (ver [Antes de fusionar la PR #4](#antes-de-fusionar-la-pr-4)); el 3, el 4 y el 5, en `fix/folder-ids`; el resto sigue sin arreglar.
 
 **En resumen:** 19 hallazgos: 10 confirmados, 5 probables y 4 descartados. Del paso 18 solo vienen tres (11, 15 y 17), y ninguno rompe nada. Los fallos de verdad ya estaban en `main`: lo más serio es que la copia de seguridad no está garantizada (1 y 2).
 
@@ -54,19 +54,25 @@ El nombre solo lleva la fecha: `bookmarks-AAAA-MM-DD_deleted.html`. Si se aplica
 
 ## Las carpetas se identifican por su nombre
 
-La ruta de cada marcador (`folderPath`) se construye con los nombres de sus carpetas (`ChromeAdapter.ts:103`), y el filtro (`src/store/selectors.ts:52-64`), el menú (`src/components/FilterBarTabs.tsx:129`) y la copia (`src/core/adapters/serializer.ts:31-47`) las distinguen por esos nombres. El borrado no se ve afectado, porque va por id. Los tres hallazgos tienen un arreglo común: que cada `Bookmark` lleve los ids de sus carpetas para identificarlas y los nombres solo para mostrarlas.
+La ruta de cada marcador (`folderPath`) se construye con los nombres de sus carpetas (`ChromeAdapter.ts:103`), y el filtro (`src/store/selectors.ts:52-64`), el menú (`src/components/FilterBarTabs.tsx:129`) y la copia (`src/core/adapters/serializer.ts:31-47`) las distinguen por esos nombres. El borrado no se ve afectado, porque va por id. Los tres hallazgos tienen un arreglo común: que cada `Bookmark` lleve los ids de sus carpetas para identificarlas y los nombres solo para mostrarlas. **Arreglados** así en `fix/folder-ids`, en tres partes: `folderIds` e `inAccount` en `Bookmark` y el serializador por id (`src/core/types.ts`, `ChromeAdapter.ts`, `serializer.ts`); el filtro y el menú por id, con etiquetas «(cuenta)» / «(este dispositivo)» y «(2)» (`src/store/selectors.ts`, `FilterBarTabs.tsx`); y la documentación.
 
 ### 3. Dos carpetas distintas con la misma etiqueta
 
-**Confirmado.** Una carpeta llamada «A / B» y otra «A» con una «B» dentro dan la misma etiqueta: «Bookmarks bar / A / B». El filtro las separa bien, pero el menú marca las dos como seleccionadas, porque `FilterBarTabs.tsx:129` compara etiquetas. Arreglo suelto: comparar con `samePath` o `folderKey`.
+**Confirmado. Arreglado** en `fix/folder-ids`: el filtro y el menú comparan por el id de la carpeta, y cuando la etiqueta sigue repitiéndose, la segunda en el orden de Chrome lleva «(2)». `src/store/selectors.ts` (`selectFolders`, `folderLabel`), `src/components/FilterBarTabs.tsx`.
+
+Una carpeta llamada «A / B» y otra «A» con una «B» dentro dan la misma etiqueta: «Bookmarks bar / A / B». El filtro las separa bien, pero el menú marca las dos como seleccionadas, porque `FilterBarTabs.tsx:129` compara etiquetas.
 
 ### 4. Las barras de marcadores de cuenta y locales se juntan
 
-**Confirmado.** Desde que Chrome separa los marcadores de la cuenta de los locales (campos desde Chrome 134, despliegue desde junio de 2025), `getTree()` puede devolver dos «Barra de marcadores», una con `syncing: true` y otra con `syncing: false`. Sus marcadores se juntan en una sola carpeta en el filtro y en la copia, y lo mismo sus subcarpetas con el mismo nombre. El falso solo tiene un juego de carpetas (`fakeChromeBookmarks.ts:40`, `syncing` siempre `false`), así que los tests no lo cubren. Las dos barras tienen `folderType`, así que `isUserFolder` nunca las borra.
+**Confirmado. Arreglado** en `fix/folder-ids`: `ChromeAdapter` guarda `folderIds` e `inAccount` (el `syncing` de la carpeta del navegador), así que las dos barras son carpetas distintas en el filtro y en la copia, y el menú añade «(cuenta)» o «(este dispositivo)» cuando hay marcadores de las dos clases. El falso crea un segundo juego de carpetas con `syncing: true` (`account`) y `npm run dev` trae una «Trabajo» de la cuenta. En Chrome real no se prueba (habría que iniciar sesión, y eso borraría marcadores de esa cuenta en todos sus dispositivos): solo con `npm run dev`.
+
+Desde que Chrome separa los marcadores de la cuenta de los locales (campos desde Chrome 134, despliegue desde junio de 2025), `getTree()` puede devolver dos «Barra de marcadores», una con `syncing: true` y otra con `syncing: false`. Sus marcadores se juntan en una sola carpeta en el filtro y en la copia, y lo mismo sus subcarpetas con el mismo nombre. El falso solo tiene un juego de carpetas (`fakeChromeBookmarks.ts:40`, `syncing` siempre `false`), así que los tests no lo cubren. Las dos barras tienen `folderType`, así que `isUserFolder` nunca las borra.
 
 ### 5. Las carpetas hermanas con el mismo nombre se funden
 
-**Confirmado, leve.** Chrome permite dos carpetas «Trabajo» en el mismo sitio, y el falso tampoco lo impide. El filtro las muestra como una sola, y la copia las funde en un único `<H3>`: al restaurarla, sus marcadores vuelven mezclados en una carpeta. No se pierde ningún marcador. Además, la copia escribe las subcarpetas antes que los marcadores (`adapters/serializer.ts:54-64`), así que el orden dentro de cada carpeta no es el de Chrome.
+**Confirmado, leve. Arreglado** en `fix/folder-ids`: el filtro y la copia agrupan por id, así que dos «Trabajo» hermanas son dos entradas del menú (la segunda, «(2)») y dos `<H3>` en la copia. El serializador escribe marcadores y subcarpetas en el orden de Chrome, y `commit()` arma la lista en el orden del árbol actual. `src/core/adapters/serializer.ts`, `ChromeAdapter.ts`.
+
+Chrome permite dos carpetas «Trabajo» en el mismo sitio, y el falso tampoco lo impide. El filtro las muestra como una sola, y la copia las funde en un único `<H3>`: al restaurarla, sus marcadores vuelven mezclados en una carpeta. No se pierde ningún marcador. Además, la copia escribe las subcarpetas antes que los marcadores (`adapters/serializer.ts:54-64`), así que el orden dentro de cada carpeta no es el de Chrome.
 
 ## Rendimiento con miles de marcadores
 
