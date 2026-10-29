@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 28-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), y el 3, el 4 y el 5 (carpetas por id) en la rama `fix/folder-ids`, las tres partes hechas; falta probarlo en Chrome y fusionar la PR.
+**Última actualización:** 28-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), y el 3, el 4 y el 5 (carpetas por id) en la rama `fix/folder-ids`, las tres partes hechas y probadas en Chrome; falta fusionar la PR.
 
 ## Resumen
 
@@ -100,7 +100,7 @@ Cada marcador lleva los ids de sus carpetas para identificarlas y los nombres so
 1. [x] **Núcleo y copia** (28-10-2026): `folderIds` e `inAccount` en `Bookmark`, el falso con el juego de carpetas de la cuenta, y el serializador por id y en el orden de Chrome
 2. [x] **Filtro y menú** (28-10-2026): filtro por id, etiquetas con «(cuenta)» / «(este dispositivo)» y «(2)», filtro guardado en el formato antiguo descartado una vez, y el ejemplo de `npm run dev` con los tres casos
 3. [x] **Documentación** (28-10-2026): `CLAUDE.md`, `code-review.md`, las observaciones de la parte 2 y [`pruebas-carpetas.md`](./pruebas-carpetas.md)
-4. [ ] Probarlo en Chrome (perfil de prueba)
+4. [x] Probarlo en Chrome (perfil de prueba), con [`pruebas-carpetas.md`](./pruebas-carpetas.md) (28-10-2026; la migración, opcional, sin probar)
 5. [ ] Fusionar la PR
 
 Siguen sin hacer los hallazgos 6–10.
