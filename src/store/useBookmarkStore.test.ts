@@ -204,6 +204,25 @@ describe('useBookmarkStore', () => {
       expect(after.activeFilter).toBe(before.activeFilter)
     })
 
+    it('setFilter tells two folders with the same name apart', () => {
+      const store = useBookmarkStore.getState()
+      store.setFilter({ kind: 'folder', id: '20', path: ['Bar', 'Work'] })
+      store.setFilter({ kind: 'folder', id: '21', path: ['Bar', 'Work'] })
+      expect(useBookmarkStore.getState().activeFilter).toEqual({
+        kind: 'folder',
+        id: '21',
+        path: ['Bar', 'Work'],
+      })
+    })
+
+    it('setFilter is a no-op for the same folder, whatever its name is now', () => {
+      const store = useBookmarkStore.getState()
+      store.setFilter({ kind: 'folder', id: '20', path: ['Bar', 'Work'] })
+      const before = useBookmarkStore.getState().activeFilter
+      store.setFilter({ kind: 'folder', id: '20', path: ['Bar', 'Job'] }) // renamed since
+      expect(useBookmarkStore.getState().activeFilter).toBe(before)
+    })
+
     it('clearFilter goes back to null and clears the selection', async () => {
       const source = new FakeSource([B('a'), B('b'), B('c')])
       await useBookmarkStore.getState().load(source)
@@ -632,6 +651,29 @@ describe('useBookmarkStore', () => {
       expect(s.pendingDeletes).toBeInstanceOf(Set)
       expect([...s.pendingDeletes]).toEqual(['x'])
       expect(s.activeFilter).toEqual({ kind: 'duplicate' })
+    })
+
+    it('drops a folder filter saved by name and keeps the rest of the triage', async () => {
+      // Before the ids, a folder filter was just a path, which can't pick one
+      // of two folders with the same name: there is no folder to map it to.
+      localStorage.setItem(
+        PERSIST_KEY,
+        JSON.stringify({
+          state: {
+            pendingDeletes: { __set: ['x'] },
+            activeFilter: { kind: 'folder', path: ['Bar', 'Work'] },
+            activeSort: { kind: 'domain' },
+          },
+          version: 0,
+        }),
+      )
+
+      await useBookmarkStore.persist.rehydrate()
+
+      const s = useBookmarkStore.getState()
+      expect(s.activeFilter).toBeNull()
+      expect([...s.pendingDeletes]).toEqual(['x'])
+      expect(s.activeSort).toEqual({ kind: 'domain' })
     })
 
     it('applies the saved marks to the bookmarks loaded after rehydrating', async () => {

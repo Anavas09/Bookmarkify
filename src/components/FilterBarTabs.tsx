@@ -8,12 +8,14 @@ import {
 } from '@headlessui/react'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
 import {
-  folderKey,
+  folderLabel,
   selectDomainCounts,
   selectDuplicateCount,
   selectFolderCounts,
+  selectFolders,
   selectKeptBookmarks,
   type Filter,
+  type FolderStorage,
   type Sort,
 } from '../store/selectors.ts'
 import { isEditableTarget } from '../hooks/keyboardShortcuts.ts'
@@ -45,16 +47,8 @@ function sortToKey(s: Sort): SortKey {
   }
 }
 
-function formatFolder(path: string[]): string {
-  return path.join(' / ')
-}
-
 function domainLabel(f: Filter): string | null {
   return f?.kind === 'domain' ? f.value : null
-}
-
-function folderLabel(f: Filter): string | null {
-  return f?.kind === 'folder' ? formatFolder(f.path) : null
 }
 
 export function FilterBarTabs() {
@@ -74,13 +68,27 @@ export function FilterBarTabs() {
     [bookmarks, pendingDeletes],
   )
   const domainCounts = useMemo(() => selectDomainCounts(kept), [kept])
-  const folderCounts = useMemo(() => selectFolderCounts(kept), [kept])
+  // The names of the folders come from all the bookmarks, so a label doesn't
+  // change while deleting; only the counts are of the ones kept.
+  const folders = useMemo(() => selectFolders(bookmarks), [bookmarks])
+  const folderCounts = useMemo(() => selectFolderCounts(kept, folders), [kept, folders])
   const duplicateCount = useMemo(() => selectDuplicateCount(kept), [kept])
   const deletedCount = pendingDeletes.size
   const activeSortKey = sortToKey(activeSort)
 
+  const tagFolder = (storage: FolderStorage, name: string) =>
+    t(storage === 'account' ? 'filterBar.folderInAccount' : 'filterBar.folderOnDevice', { name })
+
   const activeDomain = domainLabel(activeFilter)
-  const activeFolder = folderLabel(activeFilter)
+  const activeFolderId = activeFilter?.kind === 'folder' ? activeFilter.id : null
+  // A folder with nothing left is no longer listed, and then its path names it.
+  const activeFolder =
+    activeFilter?.kind === 'folder'
+      ? folderLabel(
+          folders.get(activeFilter.id) ?? { path: activeFilter.path, storage: null, ordinal: 1 },
+          tagFolder,
+        )
+      : null
   const duplicateActive = activeFilter?.kind === 'duplicate'
   const deletedActive = activeFilter?.kind === 'deleted'
 
@@ -116,8 +124,10 @@ export function FilterBarTabs() {
         )}
       </ChipDropdown>
 
+      {/* title: the chip cuts the label at 180px, and a repeated folder's number comes last */}
       <ChipDropdown
         label={activeFolder ?? t('filterBar.chipFolderPlaceholder')}
+        title={activeFolder ?? undefined}
         active={activeFolder !== null}
       >
         {folderCounts.length === 0 ? (
@@ -125,12 +135,12 @@ export function FilterBarTabs() {
         ) : (
           folderCounts.map(f => (
             <MenuItem
-              key={folderKey(f.path)}
-              selected={activeFolder === formatFolder(f.path)}
+              key={f.id}
+              selected={activeFolderId === f.id}
               count={f.count}
-              onClick={() => setFilter({ kind: 'folder', path: f.path })}
+              onClick={() => setFilter({ kind: 'folder', id: f.id, path: f.path })}
             >
-              {formatFolder(f.path)}
+              {folderLabel(f, tagFolder)}
             </MenuItem>
           ))
         )}
@@ -207,14 +217,16 @@ function Chip({ label, active, disabled, onClick }: ChipProps) {
 
 interface ChipDropdownProps {
   label: string
+  title?: string
   active: boolean
   children: ReactNode
 }
 
-function ChipDropdown({ label, active, children }: ChipDropdownProps) {
+function ChipDropdown({ label, title, active, children }: ChipDropdownProps) {
   return (
     <Menu as="div" className="relative">
       <MenuButton
+        title={title}
         className={cx(
           'flex items-center gap-1 px-3 py-1 rounded-sm border transition-colors focus:outline-none data-focus:border-ink-mute',
           active
