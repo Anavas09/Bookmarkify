@@ -4,7 +4,7 @@ Rama `fix/folder-ids` (hallazgos 3, 4 y 5 del [code review](./code-review.md)). 
 
 ## Preparación
 
-- [x] Usar un perfil de Chrome aparte, **sin sincronización y sin iniciar sesión**. El hallazgo 4 (cuenta frente a dispositivo) no se prueba aquí: iniciar sesión con una cuenta borraría marcadores de esa cuenta en todos sus dispositivos. Se ve con `npm run dev` (caso 7).
+- [x] Usar un perfil de Chrome aparte, **sin sincronización y sin iniciar sesión**. El hallazgo 4 (cuenta frente a dispositivo) no se prueba aquí: con tu cuenta de verdad, «Aplicar» borraría marcadores de esa cuenta en todos sus dispositivos (con una cuenta de Google desechable no habría riesgo). Se ve con `npm run dev` (caso 7).
 - [x] `npm run build`.
 - [x] En `chrome://extensions`, pulsar ↻ en la tarjeta de Bookmarkify y recargar la pestaña de la app.
 - [x] En el Administrador de marcadores, crear en la barra de marcadores, cada una con 2–3 marcadores:
@@ -44,6 +44,7 @@ Rama `fix/folder-ids` (hallazgos 3, 4 y 5 del [code review](./code-review.md)). 
 - [x] Abrir el HTML en un editor de texto: tiene **dos** `<H3>Trabajo</H3>`, cada una con sus marcadores, y ninguna lleva «(2)».
 - [x] En la primera «Trabajo», la subcarpeta sale entre los marcadores, no antes de todos ni después de todos: el orden es el del Administrador.
 - [x] Si eliminaste de «A / B» y de «B» dentro de «A»: salen por separado, como `<H3>A / B</H3>` y como `<H3>A</H3>` con `<H3>B</H3>` dentro.
+- [ ] (Opcional) Importar la copia en el Administrador de marcadores (⋮ · Importar marcadores). Según el código del importador de Chrome, las dos «Trabajo» vuelven fundidas en **una** sola carpeta, dentro de la carpeta de importación (no es un fallo de la app). Comprueba que no falta ningún marcador y anota aquí cómo queda el orden.
 
 ## 6. Migración del filtro guardado (opcional)
 

@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 28-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), y el 3, el 4 y el 5 (carpetas por id) en la rama `fix/folder-ids`, las tres partes hechas y probadas en Chrome; falta fusionar la PR.
+**Última actualización:** 29-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), y el 3, el 4 y el 5 (carpetas por id) en la rama `fix/folder-ids`, las tres partes hechas, probadas en Chrome y revisadas con un agente; falta fusionar la PR.
 
 ## Resumen
 
