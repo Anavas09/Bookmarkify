@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { normalizeUrl } from './normalizeUrl.ts'
 
 describe('normalizeUrl', () => {
@@ -61,5 +61,33 @@ describe('normalizeUrl', () => {
     const a = normalizeUrl('https://Example.com/path/?utm_source=news#top')
     const b = normalizeUrl('https://example.com/path')
     expect(a).toBe(b)
+  })
+
+  it('parses each URL once, however many times it is asked', () => {
+    let parses = 0
+    const Real = URL
+    vi.stubGlobal(
+      'URL',
+      class extends Real {
+        constructor(url: string | URL, base?: string | URL) {
+          parses++
+          super(url, base)
+        }
+      },
+    )
+    try {
+      const url = 'https://once.example/path/?utm_source=x&b=2&a=1'
+      for (let i = 0; i < 5; i++) expect(normalizeUrl(url)).toBe('https://once.example/path?a=1&b=2')
+      expect(parses).toBe(1)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('also remembers the URLs it rejects', () => {
+    for (let i = 0; i < 3; i++) {
+      expect(normalizeUrl('not a url')).toBeNull()
+      expect(normalizeUrl('ftp://example.com/file')).toBeNull()
+    }
   })
 })

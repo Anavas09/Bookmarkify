@@ -1,6 +1,6 @@
 # Code review del paso 18
 
-Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`, PR #4), hecho el 27-10-2026 con la skill `code-review` a nivel max. Diez búsquedas desde ángulos distintos dejaron 18 hallazgos. El review se cortó por el límite de uso con 9 verificados; los otros 9 los verifiqué a mano el mismo día, leyendo el código y midiendo cuando hacía falta. Al verificarlos salió uno más, el 6. Arreglados en la PR #4: el 11, el 12, el 13 y el 14; el 1 y el 2, en `fix/backup-downloads` (ver [Antes de fusionar la PR #4](#antes-de-fusionar-la-pr-4)); el 3, el 4 y el 5, en `fix/folder-ids`; el resto sigue sin arreglar.
+Review de la rama `refactor/remove-import` contra `main` (`git diff main...HEAD`, PR #4), hecho el 27-10-2026 con la skill `code-review` a nivel max. Diez búsquedas desde ángulos distintos dejaron 18 hallazgos. El review se cortó por el límite de uso con 9 verificados; los otros 9 los verifiqué a mano el mismo día, leyendo el código y midiendo cuando hacía falta. Al verificarlos salió uno más, el 6. Arreglados en la PR #4: el 11, el 12, el 13 y el 14; el 1 y el 2, en `fix/backup-downloads` (ver [Antes de fusionar la PR #4](#antes-de-fusionar-la-pr-4)); el 3, el 4 y el 5, en `fix/folder-ids`; el 6 y el 7, en `fix/sort-performance`; el resto sigue sin arreglar.
 
 **En resumen:** 19 hallazgos: 10 confirmados, 5 probables y 4 descartados. Del paso 18 solo vienen tres (11, 15 y 17), y ninguno rompe nada. Los fallos de verdad ya estaban en `main`: lo más serio es que la copia de seguridad no está garantizada (1 y 2).
 
@@ -80,7 +80,7 @@ Chrome permite dos carpetas «Trabajo» en el mismo sitio, y el falso tampoco lo
 
 ### 6. Ordenar por título o dominio con miles de marcadores
 
-**Confirmado, medido.** Hallazgo nuevo, salido al verificar el 7. `src/store/selectors.ts:144-165`, `src/store/useBookmarkStore.ts:258-267`, `src/store/animatedActions.ts:8-12`, `src/lib/gridMotion.ts:112`.
+**Confirmado, medido. Arreglado** en `fix/sort-performance`, junto con el 7: un `Intl.Collator` compartido en `selectors.ts` para el orden por título y por dominio, y `domainOf` y `normalizeUrl` guardan lo que ya analizaron, así que cada URL se analiza una vez. El orden no cambia (tests nuevos con acentos, `www` y URL que no se analizan). Medido en Node 24 con 5.000 marcadores sintéticos y la misma carga antes y después: título de ~195 ms a ~6 ms, dominio de ~215 ms a ~7 ms (10 ms la primera vez, con las URL aún sin analizar). En Chrome 156 el problema era bastante mayor (ver abajo). Hallazgo nuevo, salido al verificar el 7. `src/store/selectors.ts:144-165`, `src/store/useBookmarkStore.ts:258-267`, `src/store/animatedActions.ts:8-12`, `src/lib/gridMotion.ts:112`.
 
 El orden por título llama a `localeCompare` con opciones en cada comparación, y el de dominio, además, analiza las dos URL en cada comparación (`domainOf`, que hace `new URL`). Con una ordenación activa, la lista se recalcula en cada eliminar, restaurar o deshacer, dos veces: en `useVisibleBookmarks` y en `animateGridChange` (`visibleIds()`).
 
@@ -91,11 +91,15 @@ Medido en Node 24 con los selectores reales y 5.000 marcadores sintéticos, por 
 | Título | 189 ms | 3 ms, con un `Intl.Collator` compartido |
 | Dominio | 119-790 ms, según las URL | 17 ms, con el dominio calculado antes de ordenar |
 
-Con 2.000 marcadores, el orden por dominio tarda unos 50 ms. En Chrome no lo he medido.
+Con 2.000 marcadores, el orden por dominio tarda unos 50 ms en Node.
+
+**Medido en Chrome 156 (30-10-2026), con 5.000 marcadores sintéticos.** Un cálculo de la lista ordenada costaba ~700 ms por título y ~1.000 ms por dominio, y ahora ~19 y ~22 ms: entre 3 y 5 veces más lento que en Node, que subestimó el problema. Un `new URL()` cuesta 1,8 µs y cada orden por dominio llama a `domainOf` unas 103.000 veces. Además, la lista se calcula 2 veces por cada eliminar, restaurar o deshacer con un orden activo (3 en desarrollo, porque StrictMode repite el render).
+
+De punta a punta, en la app con el orden por dominio activo, del pulsar al pintado: borrar la primera card pasó de 7,5 s a 1,2 s, deshacer las 5.000 de 12,8 s a 1,7 s, `Ctrl`+`A` de 6,1 s a 1,2 s y borrar la última de 0,8 s a 0,25 s. Elegir un orden pasó de 2,4 s a 1,8 s (título) y de 2,0 s a 1,5 s (dominio). Tablas, condiciones y lo que sigue lento después del arreglo (el render de las cards, que no es de este hallazgo) en [`pruebas-rendimiento.md`](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026).
 
 ### 7. Los contadores se recalculan en cada borrado
 
-**Probable, marginal.** `FilterBarTabs.tsx:71-79`. Cada cambio de `pendingDeletes` recalcula los contadores de dominios, carpetas y duplicados sobre todos los conservados, analizando cada URL. Medido en Node: unos 9 ms con 5.000 marcadores, 4 ms con 2.000 y 1 ms con 500. Lo confirmaría un perfil de rendimiento en Chrome con 5.000. Si para el 6 se calculan el dominio y la URL normalizada una vez por marcador al cargar, esto se arregla de paso.
+**Probable, marginal. Arreglado** con el 6, sin tocar `FilterBarTabs.tsx`: al guardar `domainOf` y `normalizeUrl`, los contadores pasan de ~9 ms a ~3 ms con 5.000 marcadores (misma medición que el 6). `FilterBarTabs.tsx:71-79`. Cada cambio de `pendingDeletes` recalcula los contadores de dominios, carpetas y duplicados sobre todos los conservados, analizando cada URL. Medido en Node: unos 9 ms con 5.000 marcadores, 4 ms con 2.000 y 1 ms con 500. Lo confirmaría un perfil de rendimiento en Chrome con 5.000. Si para el 6 se calculan el dominio y la URL normalizada una vez por marcador al cargar, esto se arregla de paso.
 
 ### 10. Se borra de uno en uno
 

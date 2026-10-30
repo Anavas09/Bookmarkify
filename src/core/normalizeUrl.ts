@@ -10,7 +10,18 @@ function isTrackingParam(name: string): boolean {
   return TRACKING_PARAM_PATTERNS.some(p => p.test(lower))
 }
 
+// The duplicate counters ask again on every delete, so each URL is worked out once.
+const normalized = new Map<string, string | null>()
+
 export function normalizeUrl(raw: string): string | null {
+  const known = normalized.get(raw)
+  if (known !== undefined) return known
+  const result = normalize(raw)
+  normalized.set(raw, result)
+  return result
+}
+
+function normalize(raw: string): string | null {
   let url: URL
   try {
     url = new URL(raw)

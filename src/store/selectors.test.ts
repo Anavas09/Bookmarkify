@@ -451,6 +451,40 @@ describe('selectVisibleSortedBookmarks', () => {
         selectVisibleSortedBookmarks(sameDomain, NO_DELETES, null, { kind: 'domain' }).map(b => b.id),
       ).toEqual(['p', 'q', 'r'])
     })
+
+    it('treats www.x and x as the same domain, and keeps their original order', () => {
+      const mixed: Bookmark[] = [
+        { id: 'w', title: 'W', url: 'https://www.b.com/1' },
+        { id: 'x', title: 'X', url: 'https://a.com/1' },
+        { id: 'y', title: 'Y', url: 'https://B.com/2' },
+      ]
+      expect(
+        selectVisibleSortedBookmarks(mixed, NO_DELETES, null, { kind: 'domain' }).map(b => b.id),
+      ).toEqual(['x', 'w', 'y'])
+    })
+
+    it('sorts a URL that does not parse by its raw text', () => {
+      const broken: Bookmark[] = [
+        { id: 'n', title: 'N', url: 'not a url' },
+        { id: 'z', title: 'Z', url: 'https://z.com' },
+        { id: 'a', title: 'A', url: 'https://a.com' },
+      ]
+      expect(
+        selectVisibleSortedBookmarks(broken, NO_DELETES, null, { kind: 'domain' }).map(b => b.id),
+      ).toEqual(['a', 'n', 'z'])
+    })
+  })
+
+  it('ignores accents and case in the title order, and keeps ties in their original order', () => {
+    const accents: Bookmark[] = [
+      { id: '1', title: 'Zeta', url: 'https://x.com/1' },
+      { id: '2', title: 'árbol', url: 'https://x.com/2' },
+      { id: '3', title: 'Alpha', url: 'https://x.com/3' },
+      { id: '4', title: 'ARBOL', url: 'https://x.com/4' },
+    ]
+    expect(
+      selectVisibleSortedBookmarks(accents, NO_DELETES, null, { kind: 'title', dir: 'asc' }).map(b => b.id),
+    ).toEqual(['3', '2', '4', '1'])
   })
 
   it('applies filter before sort (pipeline)', () => {

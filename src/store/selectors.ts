@@ -2,6 +2,10 @@ import type { Bookmark } from '../core/types.ts'
 import { normalizeUrl } from '../core/normalizeUrl.ts'
 import { domainOf } from '../lib/domain.ts'
 
+// One collator for every comparison: `localeCompare` with options builds a new
+// one each time, which with thousands of bookmarks was most of the sort.
+const collator = new Intl.Collator(undefined, { sensitivity: 'base' })
+
 export type Filter =
   | { kind: 'domain'; value: string }
   // `id` is the folder holding the bookmarks; `path` only names it when it is gone.
@@ -187,7 +191,7 @@ export function selectVisibleSortedBookmarks(
   switch (activeSort.kind) {
     case 'title': {
       const dir = activeSort.dir === 'asc' ? 1 : -1
-      sorted.sort((a, b) => dir * a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
+      sorted.sort((a, b) => dir * collator.compare(a.title, b.title))
       return sorted
     }
     case 'date': {
@@ -201,9 +205,7 @@ export function selectVisibleSortedBookmarks(
       return sorted
     }
     case 'domain': {
-      sorted.sort((a, b) =>
-        domainOf(a.url).localeCompare(domainOf(b.url), undefined, { sensitivity: 'base' }),
-      )
+      sorted.sort((a, b) => collator.compare(domainOf(a.url), domainOf(b.url)))
       return sorted
     }
   }

@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 29-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), y el 3, el 4 y el 5 (carpetas por id) en la rama `fix/folder-ids`, las tres partes hechas, probadas en Chrome y revisadas con un agente; falta fusionar la PR.
+**Última actualización:** 30-10-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5) y el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6). En la rama `fix/sort-performance`, el 6 y el 7 (rendimiento) hechos y medidos en Chrome; falta fusionar la PR. Siguen los hallazgos 8–10.
 
 ## Resumen
 
@@ -101,9 +101,19 @@ Cada marcador lleva los ids de sus carpetas para identificarlas y los nombres so
 2. [x] **Filtro y menú** (28-10-2026): filtro por id, etiquetas con «(cuenta)» / «(este dispositivo)» y «(2)», filtro guardado en el formato antiguo descartado una vez, y el ejemplo de `npm run dev` con los tres casos
 3. [x] **Documentación** (28-10-2026): `CLAUDE.md`, `code-review.md`, las observaciones de la parte 2 y [`pruebas-carpetas.md`](./pruebas-carpetas.md)
 4. [x] Probarlo en Chrome (perfil de prueba), con [`pruebas-carpetas.md`](./pruebas-carpetas.md) (28-10-2026; la migración, opcional, sin probar)
+5. [x] Fusionar la PR (PR #6, 29-10-2026)
+
+### #6 y #7 — Rendimiento del orden y los contadores (`fix/sort-performance`)
+
+Un `Intl.Collator` compartido para el orden por título y por dominio, y `domainOf` y `normalizeUrl` guardan lo que ya analizaron. Sin cambios en `Bookmark` ni en el puerto.
+
+1. [x] **Tests primero** (29-10-2026): orden con acentos, `www` y URL que no se analizan, y «cada URL se analiza una vez» (fallaban antes del cambio)
+2. [x] **Arreglo** (29-10-2026): título de ~195 ms a ~6 ms y dominio de ~215 ms a ~7 ms con 5.000 marcadores; contadores de ~9 ms a ~3 ms
+3. [x] **Documentación**: `code-review.md` y este roadmap
+4. [x] Medirlo en Chrome con 5.000 marcadores (30-10-2026, automatizado y en el servidor de desarrollo, no en la extensión; [resultados](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026)): borrar la primera card pasa de 7,5 s a 1,2 s y deshacer las 5.000, de 12,8 s a 1,7 s. Queda lento el render de las cards (fuera de estos hallazgos). La prueba manual con la extensión cargada es opcional
 5. [ ] Fusionar la PR
 
-Siguen sin hacer los hallazgos 6–10.
+Siguen sin hacer los hallazgos 8–10.
 
 ## Paso 19 — Enlaces rotos
 
