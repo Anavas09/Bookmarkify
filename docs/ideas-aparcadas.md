@@ -1,6 +1,6 @@
 # Ideas aparcadas
 
-Ideas que se quedaron fuera en el recorte YAGNI del 12-10-2026, guardadas por si se retoman. El roadmap confirmado ese día es:
+Ideas que se quedaron fuera por YAGNI (el recorte del 12-10-2026 y las que fueron saliendo después), guardadas por si se retoman. El roadmap confirmado el 12-10-2026 es:
 
 - **17:** ChromeAdapter y extensión.
 - **18:** retirada de la importación.
@@ -47,3 +47,19 @@ Marcadores que nunca se han abierto, según `dateLastUsed` (aparece en todas las
 - **Por qué se aparcó:** en la captura, 117 de 121 marcadores salían como «sin usar», así que el filtro casi no separa nada. Además, Chrome solo da ese dato desde la versión 114 (2023).
 - **Qué haría falta:** leer `dateLastUsed` en el ChromeAdapter y añadir un filtro y un orden por último uso. Complejidad baja.
 - **Dónde encajaría:** en cualquier momento después del paso 17.
+
+## Virtualizar el grid
+
+Montar solo las cards que se ven (con `@tanstack/react-virtual`) en vez de las 5.000.
+
+- **Por qué se aparcó (30-10-2026):** se consideró YAGNI. Con 5.000 marcadores y los hallazgos 6 y 7 arreglados, cada acción cuesta entre 0,25 s y 1,7 s en el servidor de desarrollo (borrar la primera card 1,2 s; ordenar o deshacer las 5.000, 1,7 s; abrir un menú, 0,4 s), y `Ctrl`+`A` deja el hilo ocupado 4,4 s. Producción sin medir. [Mediciones](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026).
+- **Qué haría falta:**
+  - `useWindowVirtualizer`: se virtualizan filas y las columnas de la rejilla `auto-fill` se calculan a mano, con la altura de la card fija;
+  - sustituir el lazo de react-selecto por uno por geometría, o aceptar que solo alcance las cards montadas (`Ctrl`+`A` y `Shift`+clic van por ids y no cambian);
+  - rediseñar `gridMotion.ts`, que mide todas las cards del DOM, usa el índice del DOM como hueco y clona nodos para el fundido;
+  - que `card-in` no se repita al montar cada card al hacer scroll, y simular el tamaño en los tests de componentes (jsdom no tiene layout).
+
+  Complejidad alta, del tamaño de los pasos 14 y 16.
+- **Antes, más barato (cada uno arregla solo una parte, sin probar):** `content-visibility: auto` en las cards, que podría recortar el menú y el layout pero no el coste de React; y numerar con contadores CSS en vez de pasar `index`, para que borrar la primera cueste como borrar la última, aunque no ayuda a ordenar ni a `Ctrl`+`A`. Conviene medir antes la build de producción.
+- **Dónde encajaría:** al final, junto al paso 20: los dos reescriben `BookmarkGrid` y una vista de lista es el caso fácil del virtualizador.
+- **Aviso para el paso 19:** si el escaneo de enlaces escribe en el store por cada resultado, puede repintar el grid entero en cada uno. Se evita al diseñarlo, agrupando las escrituras o guardando los estados aparte.
