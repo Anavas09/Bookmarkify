@@ -4,7 +4,11 @@ import { createFakeBookmarks, type FakeBookmarks, type FakeTree } from './fakeCh
 const day = (iso: string) => new Date(`${iso}T12:00:00`).getTime()
 
 // Varied on purpose: nested folders, duplicates (a trailing slash, a utm_
-// parameter), dates from 2014 on and a bookmarklet the app leaves out.
+// parameter), dates from 2014 on and a bookmarklet the app leaves out. Also
+// the folders whose names repeat: two "Trabajo" side by side, a folder called
+// "Viajes / Japón 2019" next to Japón 2019 inside Viajes, and a "Trabajo" in
+// the Google account next to the ones of the device (a test profile has no
+// account, so this is the only place to see that one).
 // Built on call, so the extension build does not keep any of it.
 function sample(): FakeTree {
   return {
@@ -36,6 +40,14 @@ function sample(): FakeTree {
           { title: 'Hacker News', url: 'https://news.ycombinator.com/', dateAdded: day('2017-03-03') },
           { title: 'El País', url: 'https://elpais.com/', dateAdded: day('2015-10-21') },
           { title: 'The Verge', url: 'https://www.theverge.com/', dateAdded: day('2018-01-09') },
+        ],
+      },
+      {
+        title: 'Trabajo',
+        dateAdded: day('2022-02-07'),
+        children: [
+          { title: 'Notion', url: 'https://www.notion.so/', dateAdded: day('2022-02-07') },
+          { title: 'Google Calendar', url: 'https://calendar.google.com/', dateAdded: day('2022-02-08') },
         ],
       },
       {
@@ -101,6 +113,14 @@ function sample(): FakeTree {
         ],
       },
       {
+        title: 'Viajes / Japón 2019',
+        dateAdded: day('2019-06-01'),
+        children: [
+          { title: 'Tokyo Cheapo', url: 'https://tokyocheapo.com/', dateAdded: day('2019-06-01') },
+          { title: 'Japan Guide', url: 'https://www.japan-guide.com/', dateAdded: day('2019-06-03') },
+        ],
+      },
+      {
         title: 'Cursos sin terminar',
         dateAdded: day('2020-09-01'),
         children: [
@@ -119,6 +139,18 @@ function sample(): FakeTree {
       { title: 'Google Maps', url: 'https://maps.google.com/', dateAdded: day('2016-05-20') },
       { title: 'Wikipedia', url: 'https://es.wikipedia.org/', dateAdded: day('2015-01-08') },
     ],
+    account: {
+      bar: [
+        {
+          title: 'Trabajo',
+          dateAdded: day('2023-09-04'),
+          children: [
+            { title: 'Linear', url: 'https://linear.app/', dateAdded: day('2023-09-04') },
+            { title: 'Figma', url: 'https://www.figma.com/', dateAdded: day('2023-09-05') },
+          ],
+        },
+      ],
+    },
   }
 }
 

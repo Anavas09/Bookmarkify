@@ -103,6 +103,8 @@
       "domainAZ": "domain A→Z"
     },
     "menuNoDomains": "no domains",
-    "menuNoFolders": "no folders"
+    "menuNoFolders": "no folders",
+    "folderInAccount": "{{name}} (account)",
+    "folderOnDevice": "{{name}} (this device)"
   }
 }

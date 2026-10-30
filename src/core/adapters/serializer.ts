@@ -1,8 +1,10 @@
 import type { Bookmark } from '../types.ts'
 
+// What a folder holds, bookmarks and subfolders in the order they came.
 interface FolderNode {
-  subfolders: Map<string, FolderNode>
-  bookmarks: Bookmark[]
+  name: string
+  children: Array<Bookmark | FolderNode>
+  byKey: Map<string, FolderNode>
 }
 
 // The backup of the bookmarks about to be deleted, in the format Chrome's
@@ -24,42 +26,46 @@ export function serializeNetscape(bookmarks: Bookmark[]): string {
   return lines.join('\n') + '\n'
 }
 
-function makeNode(): FolderNode {
-  return { subfolders: new Map(), bookmarks: [] }
+function makeNode(name: string): FolderNode {
+  return { name, children: [], byKey: new Map() }
 }
 
+// Folders are told apart by id: two can share a name (siblings, or the bar
+// of the account and the bar of the device). Without ids, by name.
 function buildTree(bookmarks: Bookmark[]): FolderNode {
-  const root = makeNode()
+  const root = makeNode('')
   for (const b of bookmarks) {
     const path = b.folderPath ?? []
     let node = root
-    for (const segment of path) {
-      let child = node.subfolders.get(segment)
+    path.forEach((name, i) => {
+      const key = b.folderIds?.[i] ?? `name:${name}`
+      let child = node.byKey.get(key)
       if (!child) {
-        child = makeNode()
-        node.subfolders.set(segment, child)
+        child = makeNode(name)
+        node.byKey.set(key, child)
+        node.children.push(child)
       }
       node = child
-    }
-    node.bookmarks.push(b)
+    })
+    node.children.push(b)
   }
   return root
 }
 
 /**
- * Emits subfolders first, then bookmarks. Preserves insertion order within
- * each level (Map preserves insertion order in JS, so subfolders come out
- * in the order the first bookmark referenced them).
+ * Emits each folder's children in the order they came, so a subfolder sits
+ * where its first bookmark was, as in Chrome.
  */
 function emit(node: FolderNode, indent: string, out: string[]): void {
-  for (const [name, sub] of node.subfolders) {
-    out.push(`${indent}<DT><H3>${escapeText(name)}</H3>`)
-    out.push(`${indent}<DL><p>`)
-    emit(sub, indent + '    ', out)
-    out.push(`${indent}</DL><p>`)
-  }
-  for (const b of node.bookmarks) {
-    out.push(bookmarkToLine(b, indent))
+  for (const child of node.children) {
+    if ('children' in child) {
+      out.push(`${indent}<DT><H3>${escapeText(child.name)}</H3>`)
+      out.push(`${indent}<DL><p>`)
+      emit(child, indent + '    ', out)
+      out.push(`${indent}</DL><p>`)
+    } else {
+      out.push(bookmarkToLine(child, indent))
+    }
   }
 }
 

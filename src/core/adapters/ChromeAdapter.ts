@@ -43,11 +43,10 @@ export class ChromeAdapter implements BookmarkSource {
     const tree = await this.api.getTree()
     const current = new Map(collectBookmarks(tree).map(b => [b.id, b]))
     // One deleted or edited in Chrome since loading is no longer what the
-    // user decided on, so it is left alone.
-    const doomed = removed.flatMap(b => {
-      const now = current.get(b.id)
-      return now !== undefined && now.url === b.url ? [now] : []
-    })
+    // user decided on, so it is left alone. They come in the order of the
+    // current tree, which is the order the copy keeps.
+    const wanted = new Map(removed.map(b => [b.id, b]))
+    const doomed = [...current.values()].filter(now => wanted.get(now.id)?.url === now.url)
     if (doomed.length === 0) {
       return { deleted: 0, skipped: removed.length, folders: 0, backupFilename: null }
     }
@@ -104,21 +103,25 @@ export class ChromeAdapter implements BookmarkSource {
 
 // Depth-first, so the bookmarks come in the order the manager shows them.
 // The root holds the browser's folders (bookmarks bar, other, mobile), and
-// folderPath starts with them, as in the manager.
+// folderPath starts with them, as in the manager. Names repeat (two folders
+// called "Work", or the bar of the account and the bar of the device), so
+// folderIds carries the ids, and `syncing` on the browser's folder says
+// whether what hangs from it is in the account.
 function collectBookmarks(tree: Node[]): Bookmark[] {
   const out: Bookmark[] = []
   for (const root of tree) {
-    for (const top of root.children ?? []) collect(top, [], out)
+    for (const top of root.children ?? []) collect(top, [], [], top.syncing === true, out)
   }
   return out
 }
 
-function collect(node: Node, path: string[], out: Bookmark[]): void {
+function collect(node: Node, path: string[], ids: string[], inAccount: boolean, out: Bookmark[]): void {
   // Set up by an administrator: Chrome won't let them be deleted.
   if (node.unmodifiable !== undefined) return
   if (node.url === undefined) {
-    const inside = [...path, node.title]
-    for (const child of node.children ?? []) collect(child, inside, out)
+    const insidePath = [...path, node.title]
+    const insideIds = [...ids, node.id]
+    for (const child of node.children ?? []) collect(child, insidePath, insideIds, inAccount, out)
     return
   }
   // Bookmarklets run code instead of opening a page.
@@ -129,6 +132,8 @@ function collect(node: Node, path: string[], out: Bookmark[]): void {
     url: node.url,
     addedAt: node.dateAdded,
     folderPath: path,
+    folderIds: ids,
+    inAccount,
   })
 }
 

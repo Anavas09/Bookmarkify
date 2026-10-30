@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import type { Bookmark } from '../core/types.ts'
 import {
+  folderLabel,
   selectDomainCounts,
+  selectFolders,
   selectFolderCounts,
   selectDuplicateGroups,
   selectDuplicateIds,
@@ -9,14 +11,28 @@ import {
   selectKeptBookmarks,
   selectVisibleBookmarks,
   selectVisibleSortedBookmarks,
+  type FolderInfo,
 } from './selectors.ts'
 
-const B = (id: string, url: string, folderPath?: string[]): Bookmark => ({
+// folderPath and folderIds run in parallel, root-first, as the adapter fills them.
+const B = (
+  id: string,
+  url: string,
+  folderPath?: string[],
+  folderIds?: string[],
+  inAccount?: boolean,
+): Bookmark => ({
   id,
   title: id,
   url,
   ...(folderPath !== undefined && { folderPath }),
+  ...(folderIds !== undefined && { folderIds }),
+  ...(inAccount !== undefined && { inAccount }),
 })
+
+// A bookmark inside folders, which is all the folder tests care about.
+const F = (id: string, names: string[], ids: string[], inAccount = false): Bookmark =>
+  B(id, `https://${id}.example`, names, ids, inAccount)
 
 const NO_DELETES = new Set<string>()
 
@@ -44,25 +60,149 @@ describe('selectDomainCounts', () => {
   })
 })
 
-describe('selectFolderCounts', () => {
-  it('groups by full folder path', () => {
+describe('selectFolders', () => {
+  const ordinals = (list: Bookmark[]) =>
+    [...selectFolders(list).values()].map(f => [f.id, f.ordinal])
+
+  it('lists each folder once, by id, in the order the bookmarks come', () => {
     const list = [
-      B('1', 'https://x.com/1', ['Work']),
-      B('2', 'https://x.com/2', ['Work']),
-      B('3', 'https://x.com/3', ['Work', 'Docs']),
-      B('4', 'https://x.com/4'),
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Work', 'Docs'], ['10', '20', '21']),
+      F('3', ['Bar', 'Work'], ['10', '20']),
     ]
-    const counts = selectFolderCounts(list)
-    expect(counts).toEqual([
-      { path: ['Work'], count: 2 },
-      { path: [], count: 1 },
-      { path: ['Work', 'Docs'], count: 1 },
+    expect([...selectFolders(list)]).toEqual([
+      ['20', { id: '20', path: ['Bar', 'Work'], storage: null, ordinal: 1 }],
+      ['21', { id: '21', path: ['Bar', 'Work', 'Docs'], storage: null, ordinal: 1 }],
     ])
   })
 
-  it('treats undefined folderPath as root []', () => {
-    const list = [B('1', 'https://a.com'), B('2', 'https://b.com')]
-    expect(selectFolderCounts(list)).toEqual([{ path: [], count: 2 }])
+  it('numbers sibling folders that share a name, in the order of Chrome', () => {
+    const list = [
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Work'], ['10', '21']),
+      F('3', ['Bar', 'Work'], ['10', '22']),
+    ]
+    expect(ordinals(list)).toEqual([['20', 1], ['21', 2], ['22', 3]])
+  })
+
+  it('numbers a folder called "A / B" apart from the folder B inside A', () => {
+    const list = [
+      F('1', ['Bar', 'A', 'B'], ['10', '20', '21']),
+      F('2', ['Bar', 'A / B'], ['10', '30']),
+    ]
+    expect(ordinals(list)).toEqual([['21', 1], ['30', 2]])
+  })
+
+  it('does not number folders whose names differ', () => {
+    const list = [
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Home'], ['10', '21']),
+    ]
+    expect(ordinals(list)).toEqual([['20', 1], ['21', 1]])
+  })
+
+  it('tells where each folder lives when there are bookmarks in the account and on the device', () => {
+    const list = [
+      F('1', ['Bar', 'Work'], ['10', '20'], false),
+      F('2', ['Bar', 'Work'], ['50', '60'], true),
+    ]
+    // Same names, but they read differently once tagged, so neither is numbered.
+    expect([...selectFolders(list).values()].map(f => [f.id, f.storage, f.ordinal])).toEqual([
+      ['20', 'device', 1],
+      ['60', 'account', 1],
+    ])
+  })
+
+  it('leaves the storage out when all the bookmarks are on one side', () => {
+    const onDevice = [F('1', ['Bar', 'Work'], ['10', '20'], false)]
+    const inAccount = [F('1', ['Bar', 'Work'], ['10', '20'], true)]
+    expect(selectFolders(onDevice).get('20')?.storage).toBeNull()
+    expect(selectFolders(inAccount).get('20')?.storage).toBeNull()
+  })
+
+  it('leaves out the bookmarks that hang from no folder', () => {
+    expect(selectFolders([B('1', 'https://a.com')]).size).toBe(0)
+  })
+})
+
+describe('selectFolderCounts', () => {
+  it('counts the bookmarks of each folder, by id', () => {
+    const list = [
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Work'], ['10', '20']),
+      F('3', ['Bar', 'Work', 'Docs'], ['10', '20', '21']),
+      B('4', 'https://x.com/4'), // hangs from no folder: nothing to count
+    ]
+    expect(selectFolderCounts(list, selectFolders(list))).toEqual([
+      { id: '20', path: ['Bar', 'Work'], storage: null, ordinal: 1, count: 2 },
+      { id: '21', path: ['Bar', 'Work', 'Docs'], storage: null, ordinal: 1, count: 1 },
+    ])
+  })
+
+  it('keeps two folders with the same name apart', () => {
+    const list = [
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Work'], ['10', '21']),
+      F('3', ['Bar', 'Work'], ['10', '21']),
+    ]
+    expect(selectFolderCounts(list, selectFolders(list)).map(f => [f.id, f.count])).toEqual([
+      ['21', 2],
+      ['20', 1],
+    ])
+  })
+
+  it('sorts by count, then by name, and keeps the order of Chrome among equal names', () => {
+    const list = [
+      F('1', ['Bar', 'Zeta'], ['10', '20']),
+      F('2', ['Bar', 'Alfa'], ['10', '21']),
+      F('3', ['Bar', 'Alfa'], ['10', '22']),
+      F('4', ['Bar', 'Beta'], ['10', '23']),
+      F('5', ['Bar', 'Beta'], ['10', '23']),
+    ]
+    expect(selectFolderCounts(list, selectFolders(list)).map(f => f.id)).toEqual([
+      '23', // Beta, two bookmarks
+      '21', // Alfa, the first of the two
+      '22', // Alfa, the second
+      '20', // Zeta
+    ])
+  })
+
+  it('leaves out the folders with nothing kept, without renumbering the rest', () => {
+    const all = [
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Work'], ['10', '21']),
+    ]
+    const kept = [all[1]]
+    expect(selectFolderCounts(kept, selectFolders(all))).toEqual([
+      { id: '21', path: ['Bar', 'Work'], storage: null, ordinal: 2, count: 1 },
+    ])
+  })
+})
+
+describe('folderLabel', () => {
+  const tag = (storage: 'account' | 'device', name: string) => `${name} [${storage}]`
+  const folder = (over: Partial<FolderInfo> = {}): FolderInfo => ({
+    id: 'f',
+    path: ['Bar', 'Work'],
+    storage: null,
+    ordinal: 1,
+    ...over,
+  })
+
+  it('joins the names with a slash', () => {
+    expect(folderLabel(folder(), tag)).toBe('Bar / Work')
+  })
+
+  it('tags the first name, the browser folder, with where it lives', () => {
+    expect(folderLabel(folder({ storage: 'account' }), tag)).toBe('Bar [account] / Work')
+    expect(folderLabel(folder({ storage: 'device', path: ['Bar'] }), tag)).toBe('Bar [device]')
+  })
+
+  it('numbers the folders from the second one with the same label', () => {
+    expect(folderLabel(folder({ ordinal: 2 }), tag)).toBe('Bar / Work (2)')
+    expect(folderLabel(folder({ storage: 'account', ordinal: 3 }), tag)).toBe(
+      'Bar [account] / Work (3)',
+    )
   })
 })
 
@@ -112,9 +252,9 @@ describe('selectKeptBookmarks', () => {
 
 describe('selectVisibleBookmarks', () => {
   const list: Bookmark[] = [
-    B('1', 'https://a.com', ['Work']),
-    B('2', 'https://b.com', ['Work']),
-    B('3', 'https://a.com/dup', ['Personal']),
+    B('1', 'https://a.com', ['Work'], ['w']),
+    B('2', 'https://b.com', ['Work'], ['w']),
+    B('3', 'https://a.com/dup', ['Personal'], ['p']),
     B('4', 'https://a.com/dup/'),
   ]
 
@@ -134,7 +274,7 @@ describe('selectVisibleBookmarks', () => {
         selectVisibleBookmarks(list, deleted, { kind: 'domain', value: 'a.com' }).map(b => b.id),
       ).toEqual(['4'])
       expect(
-        selectVisibleBookmarks(list, deleted, { kind: 'folder', path: ['Work'] }).map(b => b.id),
+        selectVisibleBookmarks(list, deleted, { kind: 'folder', id: 'w', path: ['Work'] }).map(b => b.id),
       ).toEqual(['2'])
       expect(
         selectVisibleBookmarks(list, deleted, { kind: 'text', query: 'a.com' }).map(b => b.id),
@@ -165,13 +305,17 @@ describe('selectVisibleBookmarks', () => {
     ).toEqual(['1', '3', '4'])
   })
 
-  it('filters by exact folder path (root [] included)', () => {
+  it('filters by the id of the folder, not by its name nor by the ones above it', () => {
+    const folders = [
+      F('1', ['Bar', 'Work'], ['10', '20']),
+      F('2', ['Bar', 'Work'], ['10', '21']),        // another folder called "Work"
+      F('3', ['Bar', 'Work', 'Docs'], ['10', '20', '22']), // inside the first one
+    ]
     expect(
-      selectVisibleBookmarks(list, NO_DELETES, { kind: 'folder', path: ['Work'] }).map(b => b.id),
-    ).toEqual(['1', '2'])
-    expect(
-      selectVisibleBookmarks(list, NO_DELETES, { kind: 'folder', path: [] }).map(b => b.id),
-    ).toEqual(['4'])
+      selectVisibleBookmarks(folders, NO_DELETES, { kind: 'folder', id: '20', path: ['Bar', 'Work'] }).map(
+        b => b.id,
+      ),
+    ).toEqual(['1'])
   })
 
   it('filters by duplicate (only urls that appear more than once)', () => {

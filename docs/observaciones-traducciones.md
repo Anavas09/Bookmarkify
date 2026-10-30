@@ -1,6 +1,6 @@
 # Observaciones de traducción
 
-Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`) al revisar las partes 1 y 2 del paso 18, el 25-10-2026. Nada de esto lo causó el paso 18. Decidido el 26-10-2026 (ver [Decisión](#decisión)).
+Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`) al revisar las partes 1 y 2 del paso 18, el 25-10-2026. Nada de esto lo causó el paso 18. Decidido el 26-10-2026 (ver [Decisión](#decisión)). Al final están las de la [parte 2 de «Carpetas por id»](#parte-2-de-carpetas-por-id-28-10-2026).
 
 ## Solo textos (`src/locales`)
 
@@ -32,3 +32,19 @@ Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`)
 - ✅ Los tres textos (1–3), en un commit pequeño: hechos en `f816231`. El agente de traducciones lo revisó y no hizo falta tocar nada más.
 - ✅ «(raíz)» (7): hecho en la parte 3 del paso 18 (`6df5de6`).
 - ⏳ El resto (4–6), al paso opcional final (paso 20).
+
+## Parte 2 de «Carpetas por id» (28-10-2026)
+
+Lo que encontró el agente al revisar el filtro y el menú de carpetas por id (`523dbc5`). No pide tocar `src/locales`: las dos claves nuevas, `filterBar.folderInAccount` y `filterBar.folderOnDevice`, están en los dos idiomas y con las mismas variables. Nada de esto lo causa el cambio, salvo la primera, que el cambio agrava.
+
+1. **El chip de carpeta recorta antes del nombre de la carpeta.** `max-w-[180px]` deja unos 24-25 caracteres, así que «Barra de marcadores (cuenta) / Trabajo» se ve como «Barra de marcadores (cue…», y también se pierde el «(2)» final. El `title` ayuda, pero solo con el ratón, no al enfocar con el teclado. Medido en el navegador de Playwright con el ejemplo de `npm run dev`: el texto del chip es más ancho que el chip. Remedio de código o CSS: más ancho al chip activo, o solo el último tramo en el chip y la ruta entera en el `title`. Solo afecta a quien tenga marcadores de la cuenta y del dispositivo a la vez.
+2. **Una carpeta que se llame de verdad «Trabajo (2)»**, junto a dos «Trabajo» hermanas, da dos filas iguales en el menú, aunque se siguen distinguiendo por id. La numeración solo compara nombres reales. Arreglo posible: guardar las etiquetas ya usadas y subir el número mientras esté cogida (unas 10 líneas y un test).
+3. **El aviso de sincronización puede quedarse corto.** `applyDialog.sync` dice «Si tienes activada la sincronización, el borrado también llega a tus otros dispositivos.» y ahora la UI habla de «cuenta». No se ha podido comprobar si Chrome propaga el borrado de un marcador de la cuenta con la sincronización desactivada, porque probarlo con una cuenta real borraría marcadores de verdad. Salida barata: solo la redacción (`applyDialog.sync` en los dos JSON y la última línea de «Aplicar en Chrome» en `CLAUDE.md`). Salida completa: mostrar el aviso según el `inAccount` de los marcadores que se van a borrar.
+4. **En `npm run dev` se mezclan idiomas.** El `chrome.bookmarks` falso nombra las carpetas del navegador en inglés (`fakeChromeBookmarks.ts`), así que con la app en español sale «Bookmarks bar (cuenta) / Trabajo». En Chrome real esos nombres los pone Chrome en su idioma.
+
+### Qué se hace con ellas
+
+Decidido el 28-10-2026, antes de la parte 3 del arreglo:
+
+- ⏳ 1 y 3, al paso opcional final (paso 20).
+- Descartadas: la 2 (rarísimo y solo visual) y la 4 (solo `npm run dev`; no es un fallo de los textos).

@@ -9,6 +9,9 @@ import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selector
 // in Chrome; the new key starts the triage over and leaves v1 as it was.
 export const PERSIST_KEY = 'bookmarkify:v2'
 
+// What is saved between visits.
+type Triage = Pick<BookmarkStore, 'pendingDeletes' | 'activeFilter' | 'activeSort'>
+
 export interface BookmarkStore {
   bookmarks: Bookmark[]
   pendingDeletes: Set<string>
@@ -210,6 +213,19 @@ export const useBookmarkStore = create<BookmarkStore>()(
     }),
     {
       name: PERSIST_KEY,
+      // The format of the saved triage. The key's v2 changes when the old data
+      // is of no use; this number, when it only needs adapting (see migrate).
+      version: 1,
+      // Version 0 saved the folder filter as a path of names. That can't pick
+      // one of two folders with the same name and there is no id to map it
+      // to, so it is dropped once: the user lands on «todos».
+      migrate: (saved, version): Triage => {
+        const triage = saved as Triage
+        if (version === 0 && triage.activeFilter?.kind === 'folder') {
+          return { ...triage, activeFilter: null }
+        }
+        return triage
+      },
       storage: createJSONStorage(() => localStorage, {
         replacer: (_key, value) =>
           value instanceof Set ? { __set: [...value] } : value,
@@ -217,7 +233,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
           isEncodedSet(value) ? new Set(value.__set) : value,
       }),
       // Only the triage: the bookmarks come from the source on every visit.
-      partialize: state => ({
+      partialize: (state): Triage => ({
         pendingDeletes: state.pendingDeletes,
         activeFilter: state.activeFilter,
         activeSort: state.activeSort,
@@ -270,10 +286,8 @@ function filtersEqual(a: Filter, b: Filter): boolean {
   if (a === null || b === null) return a === b
   if (a.kind !== b.kind) return false
   if (a.kind === 'domain' && b.kind === 'domain') return a.value === b.value
-  if (a.kind === 'folder' && b.kind === 'folder') {
-    if (a.path.length !== b.path.length) return false
-    return a.path.every((s, i) => s === b.path[i])
-  }
+  // The id is the folder; its path is only a name, which can change or repeat.
+  if (a.kind === 'folder' && b.kind === 'folder') return a.id === b.id
   if (a.kind === 'text' && b.kind === 'text') return a.query === b.query
   return true // 'duplicate' and 'deleted' carry no payload
 }
