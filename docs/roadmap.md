@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 02-11-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7). Siguen los hallazgos 8–10.
+**Última actualización:** 02-11-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7). En la rama `fix/refetch-failure`, el 8 hecho; falta fusionar la PR. Siguen los hallazgos 9 y 10.
 
 ## Resumen
 
@@ -113,7 +113,16 @@ Un `Intl.Collator` compartido para el orden por título y por dominio, y `domain
 4. [x] Medirlo en Chrome con 5.000 marcadores (30-10-2026, automatizado y en el servidor de desarrollo, no en la extensión; [resultados](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026)): borrar la primera card pasa de 7,5 s a 1,2 s y deshacer las 5.000, de 12,8 s a 1,7 s. Queda lento el render de las cards (fuera de estos hallazgos). La prueba manual con la extensión cargada es opcional
 5. [x] Fusionar la PR (PR #7)
 
-Siguen sin hacer los hallazgos 8–10.
+### #8 — Si falla la relectura después de aplicar (`fix/refetch-failure`)
+
+`commit` del store ya no pierde el resultado si `load()` falla tras borrar: devuelve `reloadFailed` y el resumen avisa de recargar la pestaña.
+
+1. [x] **Test primero** (02-11-2026): `getTree` falla solo en la relectura (fallaba antes del cambio)
+2. [x] **Arreglo y UI** (02-11-2026): `AppliedResult`, aviso en `ApplyDialog` y su texto en español e inglés
+3. [x] **Documentación**: `code-review.md` y este roadmap
+4. [ ] Fusionar la PR
+
+Siguen sin hacer los hallazgos 9 y 10.
 
 ## Paso 19 — Enlaces rotos
 

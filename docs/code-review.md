@@ -109,7 +109,7 @@ De punta a punta, en la app con el orden por dominio activo, del pulsar al pinta
 
 ### 8. Si falla la relectura después de aplicar
 
-**Probable.** `src/store/useBookmarkStore.ts:202-209`, `ApplyDialog.tsx:33-40`.
+**Probable. Arreglado** en `fix/refetch-failure`: `commit` atrapa el error de la relectura y devuelve el resultado con `reloadFailed: true` (tipo `AppliedResult` en el store; el puerto no cambia). El resumen de `ApplyDialog` añade el aviso «los marcadores ya se borraron, recarga la pestaña». Test nuevo con un `getTree` que falla solo en la relectura. `src/store/useBookmarkStore.ts:202-209`, `ApplyDialog.tsx:33-40`.
 
 `commit` espera a `source.commit` y después a `load()`, sin proteger la relectura. Si `load()` falla, se pierde el resultado: el diálogo dice «No se pudo aplicar» aunque Chrome ya borró, las marcas viejas siguen y «Aplicar» sigue activo. Un segundo «Aplicar» devolvería `deleted: 0, skipped: N`.
 
