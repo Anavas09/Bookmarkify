@@ -51,21 +51,18 @@ No es de esta rama, pero ya hay 5.000 marcadores cargados y el #10 («se borra d
 
 Hechas por Claude con el navegador de Playwright (Chrome 156, 20 núcleos), **no con la extensión**: servidor de desarrollo (`npm run dev`, con React en modo desarrollo y StrictMode, que repite cada render) y un `chrome.bookmarks` falso con los 5.000 marcadores de `marcadores-5000.html`, inyectado antes de que cargue la app (70.074 nodos en el DOM). «Del pulsar al pintado» es la duración del evento (Event Timing) y «hilo ocupado», el tiempo hasta la última tarea larga (más de 50 ms). Cada cifra es una sola medición, sin traza ni DevTools abierto: con ellos la sobrecarga multiplica los tiempos por tres o más.
 
-«Antes» es la misma app con el código anterior de los selectores (comparador con `localeCompare` con opciones y sin caché de `domainOf` ni `normalizeUrl`), reconstruido interceptando esos tres módulos en el navegador, sin tocar el árbol de trabajo. Orden por dominio activo, salvo en las dos primeras filas.
+**Corrección (02-11-2026):** las cifras de la primera versión de esta sección estaban mal. Los «antes» salieron de una ventana en que el equipo iba lento (el equipo fluctúa 4–5× entre ventanas) y las de un cálculo suelto, de una micro-prueba en una página vacía que no vale. Lo que sigue son las cifras repetidas dentro de la app, alternando antes y después (ABABAB). Las cifras absolutas son orientativas.
 
-| Acción | Del pulsar al pintado | Hilo ocupado |
+«Antes» es la misma app con el código anterior de los selectores (comparador con `localeCompare` con opciones y sin caché de `domainOf` ni `normalizeUrl`), reconstruido interceptando esos tres módulos en el navegador, sin tocar el árbol de trabajo. Orden por dominio activo.
+
+| Acción (prueba alternada ABABAB) | Antes | Ahora |
 |---|---|---|
-| Elegir «title A→Z» | 2,44 s → 1,84 s | 3,5 s → 3,0 s |
-| Elegir «domain A→Z» | 1,97 s → 1,54 s | 3,1 s → 2,7 s |
-| `Supr` en la última card | 0,82 s → 0,25 s | 1,0 s → 0,4 s |
-| `Ctrl`+`Z` tras borrar la última | 0,81 s → 0,24 s | 1,6 s → 0,5 s |
-| `Supr` en la primera card | 7,47 s → 1,22 s | 7,7 s → 1,4 s |
-| `Ctrl`+`Z` tras borrar la primera | 7,82 s → 0,98 s | 8,3 s → 1,3 s |
-| `Ctrl`+`A` | 6,13 s → 1,18 s | 6,2 s → 4,4 s |
-| `Supr` con las 5.000 | 0,70 s → 0,16 s | 0,6 s → 0,1 s |
-| `Ctrl`+`Z` con las 5.000 | 12,77 s → 1,69 s | 14,1 s → 2,7 s |
+| `Supr` en la primera card | 1,66 s | 1,05 s |
+| `Ctrl`+`Z` tras borrar la primera | 1,58 s | 1,10 s |
 
-Un solo cálculo de la lista ordenada, en una página vacía de Chrome (tres repeticiones): por título 679–727 ms → 19 ms; por dominio 1.000–1.053 ms → 22 ms (42 ms la primera vez, con las URL aún sin analizar). Un `new URL()` cuesta 1,8 µs, y cada orden por dominio llama a `domainOf` unas 103.000 veces. Por acción, la lista se calcula 2 veces al ordenar y 3 al eliminar, restaurar o deshacer (en producción, sin StrictMode, serían 1 y 2).
+Es una mejora de 0,5–0,6 s (31–37 %). Con la referencia estable, abrir un menú tarda ~0,42 s.
+
+Un solo cálculo de la lista ordenada, medido dentro de la app: por título ~103 ms → ~3 ms; por dominio ~180 ms → ~5 ms (los contadores, de ~10 a ~1,5 ms). Node ya había dado 189 y 215 ms, así que no subestimó el problema. Un `new URL()` cuesta 1,8 µs, y cada orden por dominio llama a `domainOf` unas 103.000 veces. Por acción, la lista se calcula 2 veces al ordenar y 3 al eliminar, restaurar o deshacer (en producción, sin StrictMode, serían 1 y 2).
 
 ### Lo que sigue lento (no es de los hallazgos 6 y 7)
 

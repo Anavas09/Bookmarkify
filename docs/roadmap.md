@@ -110,7 +110,7 @@ Un `Intl.Collator` compartido para el orden por título y por dominio, y `domain
 1. [x] **Tests primero** (29-10-2026): orden con acentos, `www` y URL que no se analizan, y «cada URL se analiza una vez» (fallaban antes del cambio)
 2. [x] **Arreglo** (29-10-2026): título de ~195 ms a ~6 ms y dominio de ~215 ms a ~7 ms con 5.000 marcadores; contadores de ~9 ms a ~3 ms
 3. [x] **Documentación**: `code-review.md` y este roadmap
-4. [x] Medirlo en Chrome con 5.000 marcadores (30-10-2026, automatizado y en el servidor de desarrollo, no en la extensión; [resultados](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026)): borrar la primera card pasa de 7,5 s a 1,2 s y deshacer las 5.000, de 12,8 s a 1,7 s. Queda lento el render de las cards (fuera de estos hallazgos). La prueba manual con la extensión cargada es opcional
+4. [x] Medirlo en Chrome con 5.000 marcadores (30-10-2026, automatizado y en el servidor de desarrollo, no en la extensión; [resultados](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026)): en una prueba alternada, borrar la primera card pasa de 1,66 s a 1,05 s y deshacer, de 1,58 s a 1,10 s (cifras corregidas el 02-11-2026). Queda lento el render de las cards (fuera de estos hallazgos). La prueba manual con la extensión cargada es opcional
 5. [x] Fusionar la PR (PR #7)
 
 ### #8 — Si falla la relectura después de aplicar (`fix/refetch-failure`)

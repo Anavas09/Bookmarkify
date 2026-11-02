@@ -52,7 +52,7 @@ Marcadores que nunca se han abierto, según `dateLastUsed` (aparece en todas las
 
 Montar solo las cards que se ven (con `@tanstack/react-virtual`) en vez de las 5.000.
 
-- **Por qué se aparcó (30-10-2026):** se consideró YAGNI. Con 5.000 marcadores y los hallazgos 6 y 7 arreglados, cada acción cuesta entre 0,25 s y 1,7 s en el servidor de desarrollo (borrar la primera card 1,2 s; ordenar o deshacer las 5.000, 1,7 s; abrir un menú, 0,4 s), y `Ctrl`+`A` deja el hilo ocupado 4,4 s. Producción sin medir. [Mediciones](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026).
+- **Por qué se aparcó (30-10-2026):** se consideró YAGNI. Con 5.000 marcadores y los hallazgos 6 y 7 arreglados, cada acción cuesta del orden de 0,25 s a 1,7 s en el servidor de desarrollo (cifras orientativas: el equipo fluctúa 4–5×; borrar la primera card ~1,05 s; abrir un menú, ~0,4 s), y `Ctrl`+`A` deja el hilo ocupado 4,4 s. Producción sin medir. [Mediciones](./pruebas-rendimiento.md#mediciones-en-chrome-30-10-2026).
 - **Qué haría falta:**
   - `useWindowVirtualizer`: se virtualizan filas y las columnas de la rejilla `auto-fill` se calculan a mano, con la altura de la card fija;
   - sustituir el lazo de react-selecto por uno por geometría, o aceptar que solo alcance las cards montadas (`Ctrl`+`A` y `Shift`+clic van por ids y no cambian);
