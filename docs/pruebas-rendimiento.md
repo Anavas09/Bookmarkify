@@ -78,3 +78,20 @@ Con el arreglo, lo que queda es React pintando las 5.000 cards, sin virtualizar:
 - Los 385 errores de consola de las pruebas son 404 de favicon de dominios inventados, los esperados.
 
 Cómo se hizo: `addInitScript` con el `chrome.bookmarks` falso, y `PerformanceObserver` de `event` (con `durationThreshold` 16) y de `longtask`. La ordenación se guarda en `localStorage`, así que cada recarga arranca con la última. Los scripts no están en el repositorio.
+
+## Borrado real en Chromium (02-11-2026, hallazgo 10)
+
+Hechas por Claude con la **extensión real** (`dist/` cargado en Chromium 149 sin marca, sin ventana, perfil temporal vacío y sin sincronización) desde un script de Node con `playwright-core`; el Chrome de marca del MCP de Playwright no carga extensiones. Los marcadores se siembran con la API real en 20 carpetas. Alterné secuencial y paralelo tres veces cada uno, porque el equipo fluctúa.
+
+`chrome.bookmarks.remove` aislado (en el service worker), borrando todos los marcadores:
+
+| Marcadores | Secuencial (como `ChromeAdapter`) | Paralelo (`Promise.all`) |
+|---|---|---|
+| 1.000 | 0,16–0,28 s | 0,055–0,10 s |
+| 5.000 | 0,63–0,98 s | 0,59–0,94 s |
+
+Con 5.000, `getTree` tarda 60–95 ms y la limpieza de carpetas vacías 10–20 ms.
+
+«Aplicar» entero en la UI de la extensión (seleccionar todo, eliminar, apply y confirmar, hasta que sale el resumen), con la copia de seguridad incluida: 0,88 s con 1.000 marcadores y 0,93 s con 5.000, y 0 marcadores en Chrome después. Para pasar el diálogo en modo sin ventana hubo que usar una copia temporal de `dist/` con `downloads` como permiso obligatorio: el aviso nativo del permiso opcional no se puede aceptar.
+
+**Conclusión:** la estimación del review (1,5–5 s) estaba sobreestimada entre 3 y 5 veces, y el paralelo no gana de forma clara a 5.000, así que el borrado se deja como está. Sin cubrir: el Chrome real del usuario (sincronización, otras extensiones, perfil grande). Los scripts no están en el repositorio.
