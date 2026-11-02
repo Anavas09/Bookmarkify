@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 02-11-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7). En la rama `fix/refetch-failure`, el 8 hecho; falta fusionar la PR. Siguen los hallazgos 9 y 10.
+**Última actualización:** 02-11-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7) y el 8 (relectura) fusionado (PR #8). En la rama `fix/chrome-urls`, el 9 hecho y el 10 medido (sin cambios en el código); falta fusionar la PR. Sigue el paso 19.
 
 ## Resumen
 
@@ -120,9 +120,27 @@ Un `Intl.Collator` compartido para el orden por título y por dominio, y `domain
 1. [x] **Test primero** (02-11-2026): `getTree` falla solo en la relectura (fallaba antes del cambio)
 2. [x] **Arreglo y UI** (02-11-2026): `AppliedResult`, aviso en `ApplyDialog` y su texto en español e inglés
 3. [x] **Documentación**: `code-review.md` y este roadmap
-4. [ ] Fusionar la PR
+4. [x] Fusionar la PR (PR #8)
 
-Siguen sin hacer los hallazgos 9 y 10.
+### #9 — Los enlaces `chrome://` y `file://` no se abren (`fix/chrome-urls`)
+
+Las cards abren los marcadores con `chrome.tabs.create` dentro de la extensión; los `http(s)` del título siguen siendo un enlace normal.
+
+1. [x] **Reproducirlo** (02-11-2026): con la extensión real en Chromium 149 sin marca, `chrome://flags` y `file://` no se abrían; `chrome.tabs.create` sí
+2. [x] **Arreglo con test** (02-11-2026): `lib/openLink.ts` y su test, en `BookmarkCard`
+3. [x] **Comprobarlo** (02-11-2026): los seis casos (doble clic y título, con `chrome://`, `file://` y `https`) abren en la extensión real
+4. [x] **Documentación**: `code-review.md` y este roadmap
+5. [ ] Fusionar la PR
+
+### #10 — Se borra de uno en uno (medido, sin cambios en el código)
+
+Se midió antes de tocar nada, como acordamos: si era rápido, se dejaba como estaba.
+
+1. [x] **Medirlo** (02-11-2026): con la extensión real en Chromium 149, 5.000 marcadores se borran en 0,6–1,0 s y «Aplicar» entero tarda ~0,9 s ([resultados](./pruebas-rendimiento.md#borrado-real-en-chromium-02-11-2026-hallazgo-10))
+2. [x] **Decisión:** se deja como está; el paralelo no gana de forma clara y no compensa la complejidad
+3. [x] **Documentación**: `code-review.md`, `pruebas-rendimiento.md` y este roadmap
+
+Con esto terminan los hallazgos del code review; sigue el paso 19.
 
 ## Paso 19 — Enlaces rotos
 

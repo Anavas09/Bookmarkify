@@ -103,7 +103,9 @@ De punta a punta, en la app con el orden por dominio activo, del pulsar al pinta
 
 ### 10. Se borra de uno en uno
 
-**Probable.** `ChromeAdapter.ts:52-61` y `69-85`. Cada `remove` espera al anterior. Los borrados son independientes (`deleted` y `touched` no dependen del orden, y las carpetas van después), así que se podrían lanzar a la vez con `Promise.allSettled`: Chrome los procesa en serie igualmente, pero se solaparían las esperas. Sin medir: el review estimó entre 1,5 y 5 s en «borrando…» con 5.000 marcadores. Lo confirmaría cronometrar «Aplicar» con 1.000 y 5.000 marcadores en un perfil de prueba.
+**Medido (02-11-2026): no se toca.** Con la extensión real en Chromium 149, borrar 5.000 de uno en uno tarda 0,6–1,0 s (1.000, 0,16–0,28 s) y «Aplicar» entero, con la copia incluida, unos 0,9 s. El paralelo no gana de forma clara con 5.000 (ahorra unos 100 ms con 1.000). La estimación de 1,5–5 s estaba sobreestimada. Detalle en [`pruebas-rendimiento.md`](./pruebas-rendimiento.md#borrado-real-en-chromium-02-11-2026-hallazgo-10).
+
+`ChromeAdapter.ts:52-61` y `69-85`. Cada `remove` espera al anterior. Los borrados son independientes (`deleted` y `touched` no dependen del orden, y las carpetas van después), así que se podrían lanzar a la vez con `Promise.allSettled`: Chrome los procesa en serie igualmente, pero se solaparían las esperas. El review estimó, sin medir, entre 1,5 y 5 s en «borrando…» con 5.000 marcadores; la medición de arriba dice que no compensa.
 
 ## Otros fallos anteriores
 
@@ -117,7 +119,7 @@ El disparador es incierto: `getTree()` tendría que fallar justo después de hab
 
 ### 9. Los enlaces `chrome://` y `file://` no se abren
 
-**Probable, sin reproducir.** `src/components/BookmarkCard.tsx:39-41` y `79-88`. `ChromeAdapter.ts:108` solo deja fuera los `javascript:`, así que estos marcadores salen en el grid.
+**Confirmado, reproducido. Arreglado** en `fix/chrome-urls` (02-11-2026). Con la extensión real en Chromium 149 (sin marca), `chrome://flags` y `file://` no abrían nada ni con doble clic en la card ni con el título (con `window.open` la pestaña se quedaba en `about:blank`); un `https` sí. `chrome.tabs.create` los abre todos, con solo el permiso `bookmarks`. Arreglo: `lib/openLink.ts` (`openLink`, que usa `chrome.tabs.create` y, sin él, en `npm run dev`, `window.open`; e `isWebUrl`); el doble clic siempre pasa por él y el título solo para lo que no es `http(s)`, así que los enlaces normales conservan el clic central y los demás gestos del navegador. Tras el arreglo, los seis casos abren. No se probó que `file://` se vea: Chrome pide activar «Permitir acceso a URLs de archivo» en la extensión, y sin eso la pestaña se abre pero no carga el archivo. Original: `src/components/BookmarkCard.tsx:39-41` y `79-88`. `ChromeAdapter.ts:108` solo deja fuera los `javascript:`, así que estos marcadores salen en el grid.
 
 Las cards abren el enlace con `window.open` o con un `<a target="_blank">`. Según la documentación de extensiones, para abrir URL `chrome://` desde una extensión hay que usar `chrome.tabs.create`, que no pide permisos; los enlaces normales pueden quedar bloqueados. Los `file://` necesitan además que se active «Permitir acceso a URLs de archivo» en la extensión, también con `chrome.tabs.create`. Lo confirmaría hacer doble clic en la card de un marcador a `chrome://flags` con la extensión cargada.
 

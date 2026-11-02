@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { Bookmark } from '../core/types.ts'
 import { domainOf } from '../lib/domain.ts'
 import { faviconUrl } from '../lib/faviconUrl.ts'
+import { isWebUrl, openLink } from '../lib/openLink.ts'
 import { cx } from '../lib/cx.ts'
 
 interface Props {
@@ -37,7 +38,7 @@ export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Pro
   const cardStyle = { '--i': entranceStep } as CSSProperties
 
   function open() {
-    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
+    openLink(bookmark.url)
   }
 
   return (
@@ -82,6 +83,12 @@ export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Pro
             rel="noopener noreferrer"
             draggable={false}
             onDoubleClick={e => e.stopPropagation()}
+            onClick={e => {
+              // A plain link can't open chrome:// or file:// from the extension.
+              if (isWebUrl(bookmark.url)) return
+              e.preventDefault()
+              openLink(bookmark.url)
+            }}
             className="text-inherit no-underline hover:underline underline-offset-2 decoration-edge cursor-pointer"
           >
             {bookmark.title || domain}
