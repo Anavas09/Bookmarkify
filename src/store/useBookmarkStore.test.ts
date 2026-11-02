@@ -7,6 +7,7 @@ class FakeSource implements BookmarkSource {
   committed: BookmarkChange | null = null
   options: CommitOptions | null = null
   loads = 0
+  failLoad = false
   private seed: Bookmark[]
   private readonly skips: string[]
 
@@ -17,6 +18,7 @@ class FakeSource implements BookmarkSource {
 
   async load(): Promise<BookmarkDocument> {
     this.loads++
+    if (this.failLoad) throw new Error('getTree failed')
     return { bookmarks: this.seed }
   }
 
@@ -156,6 +158,24 @@ describe('useBookmarkStore', () => {
       expect(source.loads).toBe(2)
       expect(s.bookmarks.map(b => b.id)).toEqual(['a', 'c'])
       expect(s.pendingDeletes.size).toBe(0)
+    })
+
+    it('still returns the result when reading the source again fails', async () => {
+      const source = new FakeSource([B('a'), B('b')])
+      await useBookmarkStore.getState().load(source)
+      useBookmarkStore.getState().mark('b')
+      source.failLoad = true
+
+      const result = await useBookmarkStore.getState().commit(source, { backup: true })
+
+      // Chrome already deleted: the result must not turn into an error.
+      expect(result).toEqual({
+        deleted: 1,
+        skipped: 0,
+        folders: 0,
+        backupFilename: 'backup.html',
+        reloadFailed: true,
+      })
     })
 
     it('keeps marked what the source skipped', async () => {

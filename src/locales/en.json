@@ -71,6 +71,7 @@
     "doneFolders_other": "Also deleted {{count}} folders left empty.",
     "doneSkipped_one": "{{count}} wasn't deleted because it changed in Chrome meanwhile.",
     "doneSkipped_other": "{{count}} weren't deleted because they changed in Chrome meanwhile.",
+    "doneReloadFailed": "The bookmarks were already deleted in Chrome, but the list couldn't be reloaded, so the one you see is out of date. Reload the tab to see how they ended up.",
     "doneBackup": "copy saved: ",
     "failedTitle": "Couldn't apply",
     "failedHint": "Reload the tab to see how your bookmarks ended up.",

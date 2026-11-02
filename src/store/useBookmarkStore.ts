@@ -35,8 +35,11 @@ export interface BookmarkStore {
   clearFilter(): void
   setSort(s: Sort): void
   clearSort(): void
-  commit(source: BookmarkSource, options: CommitOptions): Promise<CommitResult>
+  commit(source: BookmarkSource, options: CommitOptions): Promise<AppliedResult>
 }
+
+// What the source reported, plus whether the grid could not be refreshed after it.
+export type AppliedResult = CommitResult & { reloadFailed?: true }
 
 export function getInitialState(): Pick<
   BookmarkStore,
@@ -206,8 +209,13 @@ export const useBookmarkStore = create<BookmarkStore>()(
         const { bookmarks, pendingDeletes } = get()
         const removed = bookmarks.filter(b => pendingDeletes.has(b.id))
         const result = await source.commit({ removed }, options)
-        // The source changed, so what the grid shows is out of date.
-        await get().load(source)
+        // The source changed, so what the grid shows is out of date. If reading
+        // it again fails the deletion still happened: report it, not an error.
+        try {
+          await get().load(source)
+        } catch {
+          return { ...result, reloadFailed: true }
+        }
         return result
       },
     }),

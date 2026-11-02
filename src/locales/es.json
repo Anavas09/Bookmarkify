@@ -71,6 +71,7 @@
     "doneFolders_other": "También se borraron {{count}} carpetas que se quedaron vacías.",
     "doneSkipped_one": "{{count}} no se borró porque cambió en Chrome mientras tanto.",
     "doneSkipped_other": "{{count}} no se borraron porque cambiaron en Chrome mientras tanto.",
+    "doneReloadFailed": "Los marcadores ya se borraron en Chrome, pero no se pudo releer la lista y la que ves está desactualizada. Recarga la pestaña para ver cómo quedaron.",
     "doneBackup": "copia guardada: ",
     "failedTitle": "No se pudo aplicar",
     "failedHint": "Recarga la pestaña para ver cómo han quedado tus marcadores.",
