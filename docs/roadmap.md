@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 02-11-2026. Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7) y el 8 (relectura) fusionado (PR #8). En la rama `fix/chrome-urls`, el 9 hecho y el 10 medido (sin cambios en el código); falta fusionar la PR. Sigue el paso 19.
+**Última actualización:** 02-11-2026 (paso 19 en curso, parte 1 hecha). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7) y el 8 (relectura) fusionado (PR #8). En la rama `fix/chrome-urls`, el 9 hecho y el 10 medido (sin cambios en el código); falta fusionar la PR. Sigue el paso 19.
 
 ## Resumen
 
@@ -11,7 +11,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
 | 18 | Retirada de la importación | ✅ hecho |
-| 19 | Enlaces rotos | ⏳ pendiente |
+| 19 | Enlaces rotos | 🔄 en curso (rama `feat/broken-links`) |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 
 ## Paso 17 — ChromeAdapter y extensión
@@ -144,9 +144,17 @@ Con esto terminan los hallazgos del code review; sigue el paso 19.
 
 ## Paso 19 — Enlaces rotos
 
-- Escaneo al abrir la pestaña y botón para volver a escanear.
-- Solo cuentan como rotos los 404/410 y los dominios que no responden.
-- 👍 «no está roto» para descartar los falsos positivos.
+Diseño: [`superpowers/specs/2026-11-02-enlaces-rotos-design.md`](./superpowers/specs/2026-11-02-enlaces-rotos-design.md). Plan: [`superpowers/plans/2026-11-02-enlaces-rotos.md`](./superpowers/plans/2026-11-02-enlaces-rotos.md). Se para tras cada parte.
+
+- Solo cuentan como rotos los 404/410 y los dominios que no responden (dos intentos); el resto no se marca.
+- Escaneo la primera vez, con aviso previo y permiso opcional de sitios; el resultado se guarda y no se repite al abrir. El botón re-escanea rotos, antiguos (30 días) y nuevos.
+- Marca de enchufe en la card, chip «rotos · N» y 👍 «no está roto» (en la card y en lote) que sobrevive al re-escaneo.
+
+1. [x] **Parte 1, núcleo** (02-11-2026): tipos, `classify`, `selectScanTargets`, `scanLinks` (reintento, cancelar, sin red), puerto `LinkChecker` con adaptador real y falso, y `optional_host_permissions` en el manifest. 251 tests, build y lint en verde.
+2. [ ] **Parte 2, store y filtro:** `useLinkStore`, filtro `broken`, descartar en lote.
+3. [ ] **Parte 3, UI de las marcas:** card, chip y barra de selección.
+4. [ ] **Parte 4, diálogos y cierre:** `ScanDialog`, botón del header, ejemplos de `npm run dev`, pruebas manuales y documentación.
+5. [ ] Revisión de la rama con un revisor, pruebas del usuario en Chrome y PR.
 
 ## Paso 20 (opcional final) — Lista o grid
 
