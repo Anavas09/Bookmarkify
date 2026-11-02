@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
-import { BackupFailedError, type BookmarkSource, type CommitResult } from '../core/ports/BookmarkSource.ts'
-import { useBookmarkStore } from '../store/useBookmarkStore.ts'
+import { BackupFailedError, type BookmarkSource } from '../core/ports/BookmarkSource.ts'
+import { useBookmarkStore, type AppliedResult } from '../store/useBookmarkStore.ts'
 import { cx } from '../lib/cx.ts'
 
 type Phase =
@@ -10,7 +10,7 @@ type Phase =
   | { kind: 'applying' }
   // Nothing is deleted yet: the copy could not be made, and going on is up to the user.
   | { kind: 'noBackup'; reason: 'denied' | 'failed' }
-  | { kind: 'done'; result: CommitResult }
+  | { kind: 'done'; result: AppliedResult }
   | { kind: 'failed'; message: string }
 
 interface Props {
@@ -192,7 +192,7 @@ function NoBackup({ count, reason, onProceed, onCancel }: NoBackupProps) {
   )
 }
 
-function Summary({ result, onClose }: { result: CommitResult; onClose: () => void }) {
+function Summary({ result, onClose }: { result: AppliedResult; onClose: () => void }) {
   const { t } = useTranslation()
   return (
     <>
@@ -216,6 +216,7 @@ function Summary({ result, onClose }: { result: CommitResult; onClose: () => voi
         {result.skipped > 0 && (
           <p className="m-0 text-accent">{t('applyDialog.doneSkipped', { count: result.skipped })}</p>
         )}
+        {result.reloadFailed && <p className="m-0 text-accent">{t('applyDialog.doneReloadFailed')}</p>}
       </div>
 
       <footer className="px-6 py-4 border-t border-edge flex justify-end">

@@ -88,10 +88,10 @@ Medido en Node 24 con los selectores reales y 5.000 marcadores sintéticos, por 
 
 | Orden | Ahora | Con el arreglo |
 |---|---|---|
-| Título | 189 ms | 3 ms, con un `Intl.Collator` compartido |
-| Dominio | 119-790 ms, según las URL | 17 ms, con el dominio calculado antes de ordenar |
+| Título | ~195 ms | ~6 ms, con un `Intl.Collator` compartido |
+| Dominio | ~215 ms | ~7 ms, con `Intl.Collator` y `domainOf` guardando lo que ya analizó |
 
-Con 2.000 marcadores, el orden por dominio tarda unos 50 ms en Node.
+Antes del arreglo, el orden por dominio iba de 119 a 790 ms según las URL. Con 2.000 marcadores, tardaba unos 50 ms en Node.
 
 **Medido en Chrome 156 (30-10-2026), con 5.000 marcadores sintéticos.** Un cálculo de la lista ordenada costaba ~700 ms por título y ~1.000 ms por dominio, y ahora ~19 y ~22 ms: entre 3 y 5 veces más lento que en Node, que subestimó el problema. Un `new URL()` cuesta 1,8 µs y cada orden por dominio llama a `domainOf` unas 103.000 veces. Además, la lista se calcula 2 veces por cada eliminar, restaurar o deshacer con un orden activo (3 en desarrollo, porque StrictMode repite el render).
 
@@ -109,7 +109,7 @@ De punta a punta, en la app con el orden por dominio activo, del pulsar al pinta
 
 ### 8. Si falla la relectura después de aplicar
 
-**Probable.** `src/store/useBookmarkStore.ts:202-209`, `ApplyDialog.tsx:33-40`.
+**Probable. Arreglado** en `fix/refetch-failure`: `commit` atrapa el error de la relectura y devuelve el resultado con `reloadFailed: true` (tipo `AppliedResult` en el store; el puerto no cambia). El resumen de `ApplyDialog` añade el aviso «los marcadores ya se borraron, recarga la pestaña». Test nuevo con un `getTree` que falla solo en la relectura. `src/store/useBookmarkStore.ts:202-209`, `ApplyDialog.tsx:33-40`.
 
 `commit` espera a `source.commit` y después a `load()`, sin proteger la relectura. Si `load()` falla, se pierde el resultado: el diálogo dice «No se pudo aplicar» aunque Chrome ya borró, las marcas viejas siguen y «Aplicar» sigue activo. Un segundo «Aplicar» devolvería `deleted: 0, skipped: N`.
 
