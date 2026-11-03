@@ -37,6 +37,7 @@
     "delete": "delete {{count}}",
     "orPress": "or press",
     "deleteKey": "Del",
+    "dismissBroken": "not broken · {{count}}",
     "restore": "restore {{count}}",
     "clear": "clear",
     "deleted_one": "{{count}} deleted",
@@ -84,7 +85,9 @@
     "emptyDeleted": "No deleted bookmarks."
   },
   "card": {
-    "markedAria": "marked for deletion"
+    "markedAria": "marked for deletion",
+    "brokenAria": "broken link",
+    "dismissBroken": "Not broken"
   },
   "filterBar": {
     "filter": "filter",
@@ -92,6 +95,7 @@
     "searchPlaceholder": "search title, url, folder…",
     "chipAll": "all · {{count}}",
     "chipDuplicates": "duplicates · {{count}}",
+    "chipBroken": "broken · {{count}}",
     "chipDeleted": "deleted · {{count}}",
     "chipDomainPlaceholder": "domain",
     "chipFolderPlaceholder": "folder",

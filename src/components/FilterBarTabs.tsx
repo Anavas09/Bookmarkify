@@ -7,9 +7,11 @@ import {
   MenuItems,
 } from '@headlessui/react'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
+import { useLinkStore } from '../store/useLinkStore.ts'
 import {
   folderLabel,
   selectDomainCounts,
+  selectBrokenCount,
   selectDuplicateCount,
   selectFolderCounts,
   selectFolders,
@@ -73,6 +75,9 @@ export function FilterBarTabs() {
   const folders = useMemo(() => selectFolders(bookmarks), [bookmarks])
   const folderCounts = useMemo(() => selectFolderCounts(kept, folders), [kept, folders])
   const duplicateCount = useMemo(() => selectDuplicateCount(kept), [kept])
+  const checks = useLinkStore(s => s.checks)
+  const scanned = Object.keys(checks).length > 0
+  const brokenCount = useMemo(() => selectBrokenCount(kept, checks), [kept, checks])
   const deletedCount = pendingDeletes.size
   const activeSortKey = sortToKey(activeSort)
 
@@ -91,6 +96,7 @@ export function FilterBarTabs() {
       : null
   const duplicateActive = activeFilter?.kind === 'duplicate'
   const deletedActive = activeFilter?.kind === 'deleted'
+  const brokenActive = activeFilter?.kind === 'broken'
 
   return (
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 sm:px-8 lg:px-12 font-mono text-[12px] bg-paper/95 backdrop-blur-sm border-b border-edge">
@@ -156,6 +162,19 @@ export function FilterBarTabs() {
           else setFilter({ kind: 'duplicate' })
         }}
       />
+
+      {/* Nothing to show until a first scan has left results. */}
+      {(scanned || brokenActive) && (
+        <Chip
+          label={t('filterBar.chipBroken', { count: brokenCount })}
+          active={brokenActive}
+          disabled={brokenCount === 0 && !brokenActive}
+          onClick={() => {
+            if (brokenActive) clearFilter()
+            else setFilter({ kind: 'broken' })
+          }}
+        />
+      )}
 
       <Chip
         label={t('filterBar.chipDeleted', { count: deletedCount })}
