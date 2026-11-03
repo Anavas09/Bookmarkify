@@ -1,5 +1,6 @@
 import type { Bookmark } from '../core/types.ts'
 import { normalizeUrl } from '../core/normalizeUrl.ts'
+import type { LinkChecks } from '../core/linkCheck/types.ts'
 import { domainOf } from '../lib/domain.ts'
 
 // One collator for every comparison: `localeCompare` with options builds a new
@@ -135,6 +136,19 @@ export function selectDuplicateIds(bookmarks: Bookmark[]): Set<string> {
 
 export function selectDuplicateCount(bookmarks: Bookmark[]): number {
   return selectDuplicateIds(bookmarks).size
+}
+
+// Ids whose URL (normalized, so duplicates share it) came out broken and was
+// not dismissed with a thumbs-up.
+export function selectBrokenIds(bookmarks: Bookmark[], checks: LinkChecks): Set<string> {
+  const ids = new Set<string>()
+  for (const b of bookmarks) {
+    const norm = normalizeUrl(b.url)
+    if (norm === null) continue
+    const check = checks[norm]
+    if (check?.status === 'broken' && !check.dismissed) ids.add(b.id)
+  }
+  return ids
 }
 
 export function selectKeptBookmarks(
