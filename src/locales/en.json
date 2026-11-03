@@ -73,7 +73,7 @@
     "cancelled_other": "Cancelled: {{count}} results were saved.",
     "offline": "Couldn't check: there seems to be no connection. Whatever didn't answer is not marked.",
     "deniedTitle": "No permission",
-    "deniedBody": "Without the permission to access sites nothing can be checked. You can try again with the «check links» button.",
+    "deniedBody": "Without the permission to access sites nothing can be checked. You can try again with the “check links” button.",
     "failedTitle": "Couldn't check",
     "done": "done",
     "close": "close"
