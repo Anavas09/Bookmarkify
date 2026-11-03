@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { Bookmark } from '../types.ts'
 import type { LinkChecks } from './types.ts'
-import { RESCAN_AFTER_DAYS, selectScanTargets } from './targets.ts'
+import { RESCAN_AFTER_DAYS, selectScanTargets as scanTargets } from './targets.ts'
 
 const DAY = 24 * 60 * 60 * 1000
 const NOW = Date.UTC(2026, 10, 2)
 
 const bm = (id: string, url: string): Bookmark => ({ id, title: id, url })
+
+// Most tests only care which links come out, not the URL that gets requested.
+const selectScanTargets = (bookmarks: Bookmark[], checks: LinkChecks, now: number) =>
+  scanTargets(bookmarks, checks, now).map(t => t.key)
 
 describe('selectScanTargets', () => {
   it('uses 30 days as the age after which a link is checked again', () => {
@@ -43,6 +47,16 @@ describe('selectScanTargets', () => {
     }
     const bookmarks = [bm('1', 'https://a.com/x'), bm('2', 'https://b.com/y')]
     expect(selectScanTargets(bookmarks, checks, NOW)).toEqual([])
+  })
+
+  it('requests the URL as the bookmark has it, and keys the result by the normalized one', () => {
+    const bookmarks = [
+      bm('1', 'https://a.com/x/?utm_source=tw&b=2&a=1#top'),
+      bm('2', 'https://a.com/x?a=1&b=2'),
+    ]
+    expect(scanTargets(bookmarks, {}, NOW)).toEqual([
+      { key: 'https://a.com/x?a=1&b=2', url: 'https://a.com/x/?utm_source=tw&b=2&a=1#top' },
+    ])
   })
 
   it('skips what is not http(s)', () => {

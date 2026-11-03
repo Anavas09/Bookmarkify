@@ -31,7 +31,7 @@ function fakeChecker(answers: (url: string) => ProbeOutcome | ProbeOutcome[]) {
 }
 
 const run = (urls: string[], checker: LinkChecker, extra: Partial<Parameters<typeof scanLinks>[2]> = {}) =>
-  scanLinks(urls, checker, {
+  scanLinks(urls.map(url => ({ key: url, url })), checker, {
     signal: new AbortController().signal,
     onProgress: () => {},
     now: () => NOW,
@@ -99,6 +99,36 @@ describe('scanLinks', () => {
     const out = await run(['https://fine.com/', ...dead], checker, { concurrency: 1 })
     expect(out.reason).toBe('offline')
     expect(out.checks['https://fine.com/'].status).toBe('ok')
+    expect(Object.values(out.checks).some(c => c.status === 'broken')).toBe(false)
+  })
+
+  it('requests the url of the target and stores the result under its key', async () => {
+    const { checker, calls } = fakeChecker(() => ok)
+    const out = await scanLinks([{ key: 'https://a.com/x', url: 'https://a.com/x/?ref=1' }], checker, {
+      signal: new AbortController().signal,
+      onProgress: () => {},
+      now: () => NOW,
+    })
+    expect(calls).toEqual(['https://a.com/x/?ref=1'])
+    expect(Object.keys(out.checks)).toEqual(['https://a.com/x'])
+  })
+
+  it('is offline when not a single answer arrives from several domains, even below the streak', async () => {
+    const { checker } = fakeChecker(() => net)
+    const out = await run(['https://a.example/', 'https://b.example/'], checker)
+    expect(out).toEqual({ reason: 'offline', checks: {} })
+  })
+
+  it('marks nothing broken when cancelled before any answer arrived from several domains', async () => {
+    const controller = new AbortController()
+    const { checker } = fakeChecker(url => {
+      if (url.includes('c.example')) controller.abort()
+      return net
+    })
+    const out = await run(['https://a.example/', 'https://b.example/', 'https://c.example/'], checker, {
+      signal: controller.signal,
+      concurrency: 1,
+    })
     expect(Object.values(out.checks).some(c => c.status === 'broken')).toBe(false)
   })
 
