@@ -25,6 +25,10 @@
       "deleted_one": "{{count}} deleted",
       "deleted_other": "{{count}} deleted"
     },
+    "scan": {
+      "idle": "check links",
+      "title": "look for broken links among your bookmarks"
+    },
     "apply": {
       "idle": "apply",
       "titleDisabled": "delete at least one to apply",

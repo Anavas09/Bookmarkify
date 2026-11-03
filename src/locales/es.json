@@ -25,6 +25,10 @@
       "deleted_one": "{{count}} eliminado",
       "deleted_other": "{{count}} eliminados"
     },
+    "scan": {
+      "idle": "comprobar enlaces",
+      "title": "buscar enlaces rotos entre tus marcadores"
+    },
     "apply": {
       "idle": "aplicar",
       "titleDisabled": "elimina al menos uno para aplicar",
