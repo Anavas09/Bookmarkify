@@ -39,7 +39,7 @@ Los marcadores reales se prueban en un perfil de Chrome aparte, sin sincronizaci
 
 ```
 public/
-  manifest.json               # Manifest V3: permiso bookmarks y, opcional, downloads (la copia de seguridad)
+  manifest.json               # Manifest V3: permiso bookmarks y, opcionales, downloads (la copia) y <all_urls> (comprobar enlaces)
   background.js               # service worker: abre la app en su pestaña al pulsar el icono
   theme-init.js               # tema antes de que monte React (la CSP bloquea los scripts inline)
 src/
@@ -47,18 +47,25 @@ src/
   core/
     ports/
       BookmarkSource.ts       # la interfaz del puerto — lo único que la UI conoce
+      LinkChecker.ts          # el puerto de comprobar enlaces: allow() (permiso) y probe(url) (una petición)
     adapters/
       ChromeAdapter.ts        # lee y borra con chrome.bookmarks
       createBookmarkSource.ts # elige la fuente: Chrome o, en npm run dev, la de ejemplo
       fakeChromeBookmarks.ts  # chrome.bookmarks en memoria, para los tests y npm run dev
       devBookmarks.ts         # los marcadores de ejemplo de npm run dev
+      ChromeLinkChecker.ts    # LinkChecker real: fetch con el permiso opcional de sitios
+      fakeLinkChecker.ts      # LinkChecker falso para los tests y npm run dev: responde según la URL
+      createLinkChecker.ts    # elige el comprobador: real en la extensión, falso en npm run dev
       chromeBackup.ts         # guarda la copia con chrome.downloads (confirma que llegó a disco) y pide su permiso opcional
       download.ts             # descarga con un enlace; solo para la copia en npm run dev
       serializer.ts           # marcadores → HTML Netscape (puro, testeable), para la copia de seguridad; carpetas por id y en el orden de Chrome
+    linkCheck/                # lógica pura del escaneo: classify, selectScanTargets, scanLinks y sus tipos
     types.ts                  # Bookmark, BookmarkDocument, etc.
     normalizeUrl.ts           # normalización de URLs para detectar duplicados
   store/
     useBookmarkStore.ts       # store de Zustand
+    useLinkStore.ts           # resultados de la comprobación de enlaces (clave propia en localStorage)
+    linkActions.ts            # descartar enlaces rotos (👍), animado
   components/                 # solo UI — sin conocimiento de adapters ni del formato
 ```
 
@@ -190,7 +197,12 @@ Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic sel
     - **UI** — fuera `FileUpload`, `ExportModal`, sus textos y los de «exportar», el CSS de la subida (`.sr-input`, `.progress-bar`) y los restos de la plantilla de Vite.
     - **Núcleo** — fuera `NetscapeAdapter` y `parser.ts`. `Bookmark` pierde `tags` e `icon`, y `BookmarkDocument` pierde `meta`. El puerto pasa a `commit({ removed })` y `CommitResult` pierde `downloaded` y `kind`. El serializer queda solo para la copia de seguridad, y `exportFilename.ts` pasa a `backupFilename.ts`.
     - **Documentación y `npm run preview`** — fuera el script `preview`, que solo mostraba el error de arranque, y el chip «(raíz)» del filtro por carpeta: en Chrome todo cuelga de una carpeta del navegador. Las observaciones de traducción están en `docs/observaciones-traducciones.md`.
-19. ⏳ Enlaces rotos: escaneo al abrir la pestaña y botón para volver a escanear. Solo cuentan como rotos los 404/410 y los dominios que no responden, y 👍 «no está roto» descarta los falsos positivos.
+19. 🔄 Enlaces rotos (rama `feat/broken-links`, a falta de la prueba en Chrome). Diseño y plan en `docs/superpowers/`; pruebas en `docs/pruebas-enlaces-rotos.md`.
+    - **Puerto `LinkChecker`** — `allow()` pide el permiso opcional `<all_urls>` (va en el clic de confirmar, sin `await` antes) y `probe(url, signal)` hace una petición y nunca rechaza: devuelve `http`, `network` o `timeout`. `ChromeLinkChecker` usa `fetch`; el falso (`npm run dev`) responde por la URL: `broken` es 404, `dead.example` no conecta y `forbidden` es 403.
+    - **Criterio de «roto»** — 404 o 410, o un fallo de red que se repite en un segundo intento. 403, 5xx, tiempo agotado y lo demás es `unknown` y no se marca. Solo `http(s)` (`normalizeUrl(url) !== null`). Si 20 dominios distintos fallan seguidos, o `navigator.onLine` es falso, se da por «sin conexión»: nada se marca roto.
+    - **Escaneo** — `scanLinks` (8 peticiones a la vez, cancelable con `AbortController`) y `selectScanTargets`: comprueba lo nunca comprobado, lo roto y lo que tiene más de 30 días (`RESCAN_AFTER_DAYS`); los descartados no se vuelven a comprobar. Una URL con dos marcadores se comprueba una vez.
+    - **Store** — `useLinkStore` guarda `checks` por URL normalizada en `bookmarkify:links:v1` (aparte de `bookmarkify:v2`; tolera JSON corrupto) y `firstScanPrompted`. Los resultados se escriben de una vez al acabar o cancelar (`applyScan`), para no repintar el grid por resultado, y conservan `dismissed`.
+    - **UI** — `ScanDialog` (confirmar → comprobando → resumen, sin cierre con `Esc` mientras escanea) sale solo la primera vez que hay marcadores y siempre desde el botón «comprobar enlaces» del header. La card rota lleva un enchufe y 👍 «no está roto»; el chip «rotos · N» (filtro `{ kind: 'broken' }`, solo tras un primer escaneo) junta las rotas; la barra de selección ofrece «no están rotos · N». Descartar afecta también a las URL gemelas (`dismissBrokenAnimated`).
 20. ⏳ Paso opcional final: elegir si los marcadores se ven como lista o como grid.
 
 ## Aplicar en Chrome

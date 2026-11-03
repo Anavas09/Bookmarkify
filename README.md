@@ -119,6 +119,15 @@ Al pulsar **Aplicar** y confirmar, la extensión:
 
 Chrome no puede deshacerlo. Si te arrepientes, importa la copia en el Administrador de marcadores: Chrome importa de forma aditiva, así que los marcadores vuelven, pero dentro de una carpeta nueva y no en su sitio.
 
+## Comprobar enlaces
+
+El botón **comprobar enlaces** pide cada página desde tu ordenador y marca las cards rotas. La primera vez que abres la pestaña con marcadores se ofrece solo, una vez; el botón del header lo abre cuando quieras.
+
+- Solo se marca como roto lo que responde **404 o 410**, o un dominio que **no responde ni al reintentar**. Un 403, un fallo del servidor o un tiempo agotado no se marca. Sin conexión no se marca nada.
+- Chrome pide un permiso **opcional** para acceder a los sitios (`<all_urls>`), que solo se usa para esto. Si lo rechazas, no se comprueba nada.
+- El chip «rotos · N» junta las cards marcadas, y el 👍 «no está roto» (en la card o en lote desde la barra de selección) las descarta; el 👍 sobrevive a los re-escaneos.
+- Un enlace se vuelve a comprobar si estaba roto o tiene más de 30 días; los descartados no.
+
 ## Estado
 
 Los 18 primeros pasos del plan están hechos: la app es solo una extensión de Chrome y ya no queda código de la importación por HTML. Lo siguiente es detectar los enlaces rotos (paso 19). El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
