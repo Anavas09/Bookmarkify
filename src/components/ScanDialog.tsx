@@ -21,6 +21,11 @@ interface Props {
   onClose: () => void
 }
 
+// Every update of the bar paints a new frame of the page behind the dialog, and
+// with thousands of cards each frame costs tens of ms: updating on every result
+// kept the main thread busy and slowed the scan down. The bar doesn't need more.
+const PROGRESS_EVERY_MS = 250
+
 const BTN_CLASS =
   'px-4 py-1.5 rounded-sm border font-mono text-[12px] tracking-wide transition-colors ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-mute'
@@ -38,6 +43,7 @@ export function ScanDialog({ checker, onClose }: Props) {
   })
   const [phase, setPhase] = useState<Phase>({ kind: 'confirm' })
   const controller = useRef<AbortController | null>(null)
+  const lastProgress = useRef(0)
 
   // The permission prompt needs the click's user gesture, so asking is the
   // first thing the click does, before anything is awaited.
@@ -53,7 +59,12 @@ export function ScanDialog({ checker, onClose }: Props) {
       setPhase({ kind: 'scanning', done: 0, total: targets.length })
       const outcome = await scanLinks(targets, checker, {
         signal: abort.signal,
-        onProgress: (done, total) => setPhase({ kind: 'scanning', done, total }),
+        onProgress: (done, total) => {
+          const at = performance.now()
+          if (done < total && at - lastProgress.current < PROGRESS_EVERY_MS) return
+          lastProgress.current = at
+          setPhase({ kind: 'scanning', done, total })
+        },
       })
       // One write at the end (or on cancelling), so the grid doesn't repaint per result.
       useLinkStore.getState().applyScan(outcome.checks)
@@ -158,7 +169,7 @@ function Progress({ done, total, onCancel }: { done: number; total: number; onCa
           className="h-1.5 w-full overflow-hidden rounded-full bg-paper-soft"
         >
           <div
-            className="h-full bg-ink transition-[width] duration-150"
+            className="h-full bg-ink"
             style={{ width: `${total === 0 ? 0 : (done / total) * 100}%` }}
           />
         </div>
