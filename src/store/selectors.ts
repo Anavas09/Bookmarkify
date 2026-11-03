@@ -14,6 +14,7 @@ export type Filter =
   | { kind: 'duplicate' }
   | { kind: 'text'; query: string }
   | { kind: 'deleted' }
+  | { kind: 'broken' }
   | null
 
 export type Sort =
@@ -151,6 +152,10 @@ export function selectBrokenIds(bookmarks: Bookmark[], checks: LinkChecks): Set<
   return ids
 }
 
+export function selectBrokenCount(kept: Bookmark[], checks: LinkChecks): number {
+  return selectBrokenIds(kept, checks).size
+}
+
 export function selectKeptBookmarks(
   bookmarks: Bookmark[],
   pendingDeletes: Set<string>,
@@ -165,6 +170,7 @@ export function selectVisibleBookmarks(
   bookmarks: Bookmark[],
   pendingDeletes: Set<string>,
   activeFilter: Filter,
+  checks: LinkChecks = {},
 ): Bookmark[] {
   if (activeFilter?.kind === 'deleted') {
     return bookmarks.filter(b => pendingDeletes.has(b.id))
@@ -179,6 +185,10 @@ export function selectVisibleBookmarks(
     case 'duplicate': {
       const dupIds = selectDuplicateIds(kept)
       return kept.filter(b => dupIds.has(b.id))
+    }
+    case 'broken': {
+      const brokenIds = selectBrokenIds(kept, checks)
+      return kept.filter(b => brokenIds.has(b.id))
     }
     case 'text': {
       const q = activeFilter.query.trim().toLowerCase()
@@ -198,8 +208,9 @@ export function selectVisibleSortedBookmarks(
   pendingDeletes: Set<string>,
   activeFilter: Filter,
   activeSort: Sort,
+  checks: LinkChecks = {},
 ): Bookmark[] {
-  const filtered = selectVisibleBookmarks(bookmarks, pendingDeletes, activeFilter)
+  const filtered = selectVisibleBookmarks(bookmarks, pendingDeletes, activeFilter, checks)
   if (activeSort === null) return filtered
   const sorted = [...filtered]
   switch (activeSort.kind) {

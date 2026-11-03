@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBookmarkStore, getInitialState, PERSIST_KEY } from './useBookmarkStore.ts'
+import { useLinkStore } from './useLinkStore.ts'
 import type { Bookmark, BookmarkDocument } from '../core/types.ts'
 import type { BookmarkChange, BookmarkSource, CommitOptions, CommitResult } from '../core/ports/BookmarkSource.ts'
 
@@ -52,6 +53,7 @@ const B = (id: string, url = `https://${id}.com`, folderPath?: string[]): Bookma
 beforeEach(() => {
   localStorage.clear()
   useBookmarkStore.setState(getInitialState())
+  useLinkStore.setState({ checks: {}, firstScanPrompted: false })
 })
 
 describe('useBookmarkStore', () => {
@@ -406,6 +408,23 @@ describe('useBookmarkStore', () => {
         useBookmarkStore.getState().setFilter({ kind: 'domain', value: 'a.com' })
         useBookmarkStore.getState().selectAllVisible()
         expect([...useBookmarkStore.getState().selected].sort()).toEqual(['a', 'c'])
+      })
+
+      it('selectAllVisible in the broken view selects only the broken ones', async () => {
+        await useBookmarkStore.getState().load(
+          new FakeSource([B('a', 'https://a.com'), B('b', 'https://b.com'), B('c', 'https://a.com/')]),
+        )
+        useLinkStore.setState({ checks: { 'https://a.com/': { status: 'broken', checkedAt: 1 } } })
+        useBookmarkStore.getState().setFilter({ kind: 'broken' })
+        useBookmarkStore.getState().selectAllVisible()
+        expect([...useBookmarkStore.getState().selected].sort()).toEqual(['a', 'c'])
+      })
+
+      it('setting the broken filter twice keeps the selection', () => {
+        useBookmarkStore.getState().setFilter({ kind: 'broken' })
+        useBookmarkStore.getState().setSelection(['a'], 'a')
+        useBookmarkStore.getState().setFilter({ kind: 'broken' })
+        expect([...useBookmarkStore.getState().selected]).toEqual(['a'])
       })
 
       it('clearSelection empties the selection and the anchor', () => {

@@ -9,6 +9,7 @@ import {
   selectDuplicateIds,
   selectDuplicateCount,
   selectKeptBookmarks,
+  selectBrokenCount,
   selectVisibleBookmarks,
   selectVisibleSortedBookmarks,
   type FolderInfo,
@@ -247,6 +248,43 @@ describe('selectKeptBookmarks', () => {
 
   it('returns the same array when nothing is deleted', () => {
     expect(selectKeptBookmarks(list, NO_DELETES)).toBe(list)
+  })
+})
+
+describe('broken filter', () => {
+  const bookmarks = [
+    B('1', 'https://a.com/x'),
+    B('2', 'https://a.com/x/'),
+    B('3', 'https://b.com/'),
+    B('4', 'https://c.com/'),
+  ]
+  const checks = {
+    'https://a.com/x': { status: 'broken' as const, checkedAt: 1 },
+    'https://c.com/': { status: 'broken' as const, checkedAt: 1, dismissed: true },
+  }
+  const broken = { kind: 'broken' } as const
+
+  it('shows only the kept bookmarks whose URL is broken and not dismissed', () => {
+    const ids = selectVisibleBookmarks(bookmarks, NO_DELETES, broken, checks).map(b => b.id)
+    expect(ids).toEqual(['1', '2'])
+  })
+
+  it('leaves out a broken bookmark that is deleted', () => {
+    const ids = selectVisibleBookmarks(bookmarks, new Set(['1']), broken, checks).map(b => b.id)
+    expect(ids).toEqual(['2'])
+  })
+
+  it('shows nothing without checks', () => {
+    expect(selectVisibleBookmarks(bookmarks, NO_DELETES, broken)).toEqual([])
+  })
+
+  it('sorted view applies the filter too', () => {
+    const ids = selectVisibleSortedBookmarks(bookmarks, NO_DELETES, broken, null, checks).map(b => b.id)
+    expect(ids).toEqual(['1', '2'])
+  })
+
+  it('selectBrokenCount counts only the kept ones', () => {
+    expect(selectBrokenCount(selectKeptBookmarks(bookmarks, new Set(['1'])), checks)).toBe(1)
   })
 })
 

@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { useMemo } from 'react'
 import type { Bookmark } from '../core/types.ts'
 import type { BookmarkSource, CommitOptions, CommitResult } from '../core/ports/BookmarkSource.ts'
+import { useLinkStore } from './useLinkStore.ts'
 import { selectVisibleSortedBookmarks, type Filter, type Sort } from './selectors.ts'
 
 // v1 also saved the bookmarks of an uploaded file, whose ids mean nothing
@@ -258,6 +259,7 @@ function selectVisible(
     state.pendingDeletes,
     state.activeFilter,
     state.activeSort,
+    useLinkStore.getState().checks,
   )
 }
 
@@ -284,9 +286,10 @@ export function useVisibleBookmarks(): Bookmark[] {
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const activeFilter = useBookmarkStore(s => s.activeFilter)
   const activeSort = useBookmarkStore(s => s.activeSort)
+  const checks = useLinkStore(s => s.checks)
   return useMemo(
-    () => selectVisibleSortedBookmarks(bookmarks, pendingDeletes, activeFilter, activeSort),
-    [bookmarks, pendingDeletes, activeFilter, activeSort],
+    () => selectVisibleSortedBookmarks(bookmarks, pendingDeletes, activeFilter, activeSort, checks),
+    [bookmarks, pendingDeletes, activeFilter, activeSort, checks],
   )
 }
 
@@ -297,7 +300,7 @@ function filtersEqual(a: Filter, b: Filter): boolean {
   // The id is the folder; its path is only a name, which can change or repeat.
   if (a.kind === 'folder' && b.kind === 'folder') return a.id === b.id
   if (a.kind === 'text' && b.kind === 'text') return a.query === b.query
-  return true // 'duplicate' and 'deleted' carry no payload
+  return true // 'duplicate', 'deleted' and 'broken' carry no payload
 }
 
 function sortsEqual(a: Sort, b: Sort): boolean {
