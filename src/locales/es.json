@@ -25,6 +25,10 @@
       "deleted_one": "{{count}} eliminado",
       "deleted_other": "{{count}} eliminados"
     },
+    "scan": {
+      "idle": "comprobar enlaces",
+      "title": "buscar enlaces rotos entre tus marcadores"
+    },
     "apply": {
       "idle": "aplicar",
       "titleDisabled": "elimina al menos uno para aplicar",
@@ -37,6 +41,8 @@
     "delete": "eliminar {{count}}",
     "orPress": "o pulsa",
     "deleteKey": "Supr",
+    "dismissBroken_one": "no está roto · {{count}}",
+    "dismissBroken_other": "no están rotos · {{count}}",
     "restore": "restaurar {{count}}",
     "clear": "limpiar",
     "deleted_one": "{{count}} eliminado",
@@ -47,6 +53,30 @@
     "loading": "cargando marcadores…",
     "failedTitle": "No se pudieron leer los marcadores",
     "emptyTitle": "No hay marcadores que revisar"
+  },
+  "scanDialog": {
+    "title": "Comprobar enlaces",
+    "count_one": "{{count}} enlace por comprobar.",
+    "count_other": "{{count}} enlaces por comprobar.",
+    "nothing": "No hay enlaces por comprobar: todos están al día.",
+    "headsUpLabel": "aviso",
+    "headsUpBody": "Para saber si un enlace sigue vivo, la extensión pide la página a cada sitio desde tu ordenador. Chrome te pedirá un permiso para acceder a los sitios; es opcional y solo se usa para esto.",
+    "criteria": "Solo se marca como roto lo que responde 404 o 410, o un dominio que no responde ni al reintentar. Un error 403, un fallo del servidor o un tiempo agotado no se marca.",
+    "start": "comprobar",
+    "cancel": "cancelar",
+    "scanningTitle": "Comprobando…",
+    "progress": "{{done}} de {{total}}",
+    "doneTitle": "Enlaces comprobados",
+    "broken_one": "{{count}} enlace roto.",
+    "broken_other": "{{count}} enlaces rotos.",
+    "cancelled_one": "Cancelado: se guardó {{count}} resultado.",
+    "cancelled_other": "Cancelado: se guardaron {{count}} resultados.",
+    "offline": "No se pudo comprobar: parece que no hay conexión. Lo que no respondió no se marca.",
+    "deniedTitle": "Sin permiso",
+    "deniedBody": "Sin el permiso para acceder a los sitios no se puede comprobar nada. Puedes volver a intentarlo con el botón «comprobar enlaces».",
+    "failedTitle": "No se pudo comprobar",
+    "done": "hecho",
+    "close": "cerrar"
   },
   "applyDialog": {
     "title_one": "Borrar {{count}} marcador de Chrome",
@@ -84,7 +114,9 @@
     "emptyDeleted": "No hay marcadores eliminados."
   },
   "card": {
-    "markedAria": "marcado para eliminar"
+    "markedAria": "marcado para eliminar",
+    "brokenAria": "enlace roto",
+    "dismissBroken": "No está roto"
   },
   "filterBar": {
     "filter": "filtrar",
@@ -92,6 +124,7 @@
     "searchPlaceholder": "busca en título, url, carpeta…",
     "chipAll": "todos · {{count}}",
     "chipDuplicates": "duplicados · {{count}}",
+    "chipBroken": "rotos · {{count}}",
     "chipDeleted": "eliminados · {{count}}",
     "chipDomainPlaceholder": "dominio",
     "chipFolderPlaceholder": "carpeta",

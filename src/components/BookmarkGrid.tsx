@@ -1,9 +1,11 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import Selecto, { type OnSelectEnd } from 'react-selecto'
 import { m, type Transition } from 'motion/react'
 import type { Bookmark } from '../core/types.ts'
 import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
+import { useLinkStore } from '../store/useLinkStore.ts'
+import { selectBrokenIds } from '../store/selectors.ts'
 import { useGridMotion } from '../lib/gridMotion.ts'
 import { BookmarkCard } from './BookmarkCard.tsx'
 
@@ -27,6 +29,9 @@ export function BookmarkGrid() {
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const selected = useBookmarkStore(s => s.selected)
   const filterKind = useBookmarkStore(s => s.activeFilter?.kind ?? null)
+  const checks = useLinkStore(s => s.checks)
+  // Once per change, not per card.
+  const brokenIds = useMemo(() => selectBrokenIds(visible, checks), [visible, checks])
   const epoch = useGridMotion(s => s.epoch)
   const near = useGridMotion(s => s.near)
   const entering = useGridMotion(s => s.entering)
@@ -83,8 +88,8 @@ export function BookmarkGrid() {
         selectFromInside
         hitRate={0}
         toggleContinueSelect={[['ctrl'], ['meta']]}
-        // Clicking the title opens the link instead of selecting.
-        dragCondition={e => !(e.inputEvent.target as Element | null)?.closest('a')}
+        // Clicking the title opens the link, and the thumbs-up acts on its own: neither selects.
+        dragCondition={e => !(e.inputEvent.target as Element | null)?.closest('a, button')}
         scrollOptions={{
           container: document.body,
           threshold: 40,
@@ -106,6 +111,7 @@ export function BookmarkGrid() {
             stagger={entering.has(b.id) ? 0 : i}
             marked={pendingDeletes.has(b.id)}
             selected={selected.has(b.id)}
+            broken={brokenIds.has(b.id)}
             layoutDependency={near.has(b.id) ? epoch : 0}
           />
         ))}
@@ -120,6 +126,7 @@ interface GridItemProps {
   stagger: number
   marked: boolean
   selected: boolean
+  broken: boolean
   layoutDependency: number
 }
 

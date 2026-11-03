@@ -2,6 +2,9 @@ import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AnimatePresence, m, useIsPresent, type Transition } from 'motion/react'
 import { useBookmarkStore } from '../store/useBookmarkStore.ts'
+import { useLinkStore } from '../store/useLinkStore.ts'
+import { selectBrokenIds, selectKeptBookmarks } from '../store/selectors.ts'
+import { dismissSelectedBrokenAnimated } from '../store/linkActions.ts'
 import {
   deleteSelectedAnimated,
   restoreSelectedAnimated,
@@ -21,6 +24,7 @@ interface BarContent {
   selectedCount: number
   keptInSelection: number
   deletedInSelection: number
+  brokenInSelection: number
   undoCount: number
 }
 
@@ -38,6 +42,8 @@ const LINK_BTN_CLASS =
 export function SelectionBar() {
   const selected = useBookmarkStore(s => s.selected)
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
+  const bookmarks = useBookmarkStore(s => s.bookmarks)
+  const checks = useLinkStore(s => s.checks)
   const lastDeleted = useBookmarkStore(s => s.lastDeleted)
   const dismissUndo = useBookmarkStore(s => s.dismissUndo)
 
@@ -54,6 +60,16 @@ export function SelectionBar() {
     for (const id of selected) if (pendingDeletes.has(id)) n++
     return n
   }, [selected, pendingDeletes])
+  // Only the kept ones can be dismissed, as in the «broken» view.
+  const brokenIds = useMemo(
+    () => selectBrokenIds(selectKeptBookmarks(bookmarks, pendingDeletes), checks),
+    [bookmarks, pendingDeletes, checks],
+  )
+  const brokenInSelection = useMemo(() => {
+    let n = 0
+    for (const id of selected) if (brokenIds.has(id)) n++
+    return n
+  }, [selected, brokenIds])
   const undoCount = lastDeleted?.length ?? 0
   const visible = selected.size > 0 || undoCount > 0
 
@@ -69,6 +85,7 @@ export function SelectionBar() {
               selectedCount: selected.size,
               keptInSelection: selected.size - deletedInSelection,
               deletedInSelection,
+              brokenInSelection,
               undoCount,
             }}
           />
@@ -110,6 +127,11 @@ function Bar({ content }: { content: BarContent }) {
                 <Key>{mac ? '⌫' : t('selectionBar.deleteKey')}</Key>
               </span>
             </span>
+          )}
+          {content.brokenInSelection > 0 && (
+            <button type="button" onClick={dismissSelectedBrokenAnimated} className={ACTION_BTN_CLASS}>
+              {t('selectionBar.dismissBroken', { count: content.brokenInSelection })}
+            </button>
           )}
           {content.deletedInSelection > 0 && (
             <button type="button" onClick={restoreSelectedAnimated} className={ACTION_BTN_CLASS}>

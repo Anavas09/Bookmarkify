@@ -25,6 +25,10 @@
       "deleted_one": "{{count}} deleted",
       "deleted_other": "{{count}} deleted"
     },
+    "scan": {
+      "idle": "check links",
+      "title": "look for broken links among your bookmarks"
+    },
     "apply": {
       "idle": "apply",
       "titleDisabled": "delete at least one to apply",
@@ -37,6 +41,8 @@
     "delete": "delete {{count}}",
     "orPress": "or press",
     "deleteKey": "Del",
+    "dismissBroken_one": "not broken · {{count}}",
+    "dismissBroken_other": "not broken · {{count}}",
     "restore": "restore {{count}}",
     "clear": "clear",
     "deleted_one": "{{count}} deleted",
@@ -47,6 +53,30 @@
     "loading": "loading bookmarks…",
     "failedTitle": "Couldn't read your bookmarks",
     "emptyTitle": "No bookmarks to review"
+  },
+  "scanDialog": {
+    "title": "Check links",
+    "count_one": "{{count}} link to check.",
+    "count_other": "{{count}} links to check.",
+    "nothing": "Nothing to check: every link is up to date.",
+    "headsUpLabel": "heads up",
+    "headsUpBody": "To know whether a link is still alive, the extension requests the page from each site on your computer. Chrome will ask for a permission to access sites; it is optional and only used for this.",
+    "criteria": "Only a 404 or 410 answer, or a domain that doesn't answer even on retry, is marked broken. A 403, a server error or a timeout is not marked.",
+    "start": "check",
+    "cancel": "cancel",
+    "scanningTitle": "Checking…",
+    "progress": "{{done}} of {{total}}",
+    "doneTitle": "Links checked",
+    "broken_one": "{{count}} broken link.",
+    "broken_other": "{{count}} broken links.",
+    "cancelled_one": "Cancelled: {{count}} result was saved.",
+    "cancelled_other": "Cancelled: {{count}} results were saved.",
+    "offline": "Couldn't check: there seems to be no connection. Whatever didn't answer is not marked.",
+    "deniedTitle": "No permission",
+    "deniedBody": "Without the permission to access sites nothing can be checked. You can try again with the “check links” button.",
+    "failedTitle": "Couldn't check",
+    "done": "done",
+    "close": "close"
   },
   "applyDialog": {
     "title_one": "Delete {{count}} bookmark from Chrome",
@@ -84,7 +114,9 @@
     "emptyDeleted": "No deleted bookmarks."
   },
   "card": {
-    "markedAria": "marked for deletion"
+    "markedAria": "marked for deletion",
+    "brokenAria": "broken link",
+    "dismissBroken": "Not broken"
   },
   "filterBar": {
     "filter": "filter",
@@ -92,6 +124,7 @@
     "searchPlaceholder": "search title, url, folder…",
     "chipAll": "all · {{count}}",
     "chipDuplicates": "duplicates · {{count}}",
+    "chipBroken": "broken · {{count}}",
     "chipDeleted": "deleted · {{count}}",
     "chipDomainPlaceholder": "domain",
     "chipFolderPlaceholder": "folder",

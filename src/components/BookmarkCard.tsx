@@ -5,6 +5,7 @@ import { domainOf } from '../lib/domain.ts'
 import { faviconUrl } from '../lib/faviconUrl.ts'
 import { isWebUrl, openLink } from '../lib/openLink.ts'
 import { cx } from '../lib/cx.ts'
+import { dismissBrokenAnimated } from '../store/linkActions.ts'
 
 interface Props {
   bookmark: Bookmark
@@ -12,6 +13,7 @@ interface Props {
   stagger: number // place in the entrance stagger; 0 fades in without delay
   marked: boolean
   selected: boolean
+  broken: boolean // the link answered 404/410 or does not exist anymore
 }
 
 function formatDate(ms: number | undefined): string | null {
@@ -23,11 +25,32 @@ function formatDate(ms: number | undefined): string | null {
   return `${yyyy}·${mm}·${dd}`
 }
 
+// A disconnected plug: the page does not answer.
+function UnplugIcon({ label }: { label: string }) {
+  return (
+    <svg
+      role="img"
+      aria-label={label}
+      viewBox="0 0 24 24"
+      className="h-4 w-4 text-accent"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <title>{label}</title>
+      <path d="M9 2v4M15 2v4M7 6h10v4a5 5 0 0 1-10 0V6ZM12 15v3a3 3 0 0 0 3 3h2" />
+      <path d="M3 3l18 18" />
+    </svg>
+  )
+}
+
 function catalogNumber(index: number): string {
   return '№' + String(index + 1).padStart(3, '0')
 }
 
-export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Props) {
+export function BookmarkCard({ bookmark, index, stagger, marked, selected, broken }: Props) {
   const { t } = useTranslation()
   const domain = domainOf(bookmark.url)
   const date = formatDate(bookmark.addedAt)
@@ -59,14 +82,35 @@ export function BookmarkCard({ bookmark, index, stagger, marked, selected }: Pro
         <span className="font-mono text-[0.7rem] tracking-wider text-ink-mute">
           {catalogNumber(index)}
         </span>
-        {marked && (
-          <span
-            className="font-mono text-[0.95rem] leading-none text-accent"
-            aria-label={t('card.markedAria')}
-          >
-            ⨯
-          </span>
-        )}
+        <span className="flex items-center gap-2">
+          {broken && (
+            <>
+              <UnplugIcon label={t('card.brokenAria')} />
+              <button
+                type="button"
+                title={t('card.dismissBroken')}
+                aria-label={t('card.dismissBroken')}
+                // Not a click on the card (selection) nor a double click (open).
+                onClick={e => {
+                  e.stopPropagation()
+                  dismissBrokenAnimated([bookmark.id])
+                }}
+                onDoubleClick={e => e.stopPropagation()}
+                className="cursor-pointer text-[0.8rem] leading-none opacity-60 hover:opacity-100 transition-opacity"
+              >
+                👍
+              </button>
+            </>
+          )}
+          {marked && (
+            <span
+              className="font-mono text-[0.95rem] leading-none text-accent"
+              aria-label={t('card.markedAria')}
+            >
+              ⨯
+            </span>
+          )}
+        </span>
       </header>
 
       <div className="flex-1">

@@ -1,5 +1,6 @@
 import type { Bookmark } from '../core/types.ts'
 import { normalizeUrl } from '../core/normalizeUrl.ts'
+import type { LinkChecks } from '../core/linkCheck/types.ts'
 import { domainOf } from '../lib/domain.ts'
 
 // One collator for every comparison: `localeCompare` with options builds a new
@@ -13,6 +14,7 @@ export type Filter =
   | { kind: 'duplicate' }
   | { kind: 'text'; query: string }
   | { kind: 'deleted' }
+  | { kind: 'broken' }
   | null
 
 export type Sort =
@@ -137,6 +139,23 @@ export function selectDuplicateCount(bookmarks: Bookmark[]): number {
   return selectDuplicateIds(bookmarks).size
 }
 
+// Ids whose URL (normalized, so duplicates share it) came out broken and was
+// not dismissed with a thumbs-up.
+export function selectBrokenIds(bookmarks: Bookmark[], checks: LinkChecks): Set<string> {
+  const ids = new Set<string>()
+  for (const b of bookmarks) {
+    const norm = normalizeUrl(b.url)
+    if (norm === null) continue
+    const check = checks[norm]
+    if (check?.status === 'broken' && !check.dismissed) ids.add(b.id)
+  }
+  return ids
+}
+
+export function selectBrokenCount(kept: Bookmark[], checks: LinkChecks): number {
+  return selectBrokenIds(kept, checks).size
+}
+
 export function selectKeptBookmarks(
   bookmarks: Bookmark[],
   pendingDeletes: Set<string>,
@@ -151,6 +170,7 @@ export function selectVisibleBookmarks(
   bookmarks: Bookmark[],
   pendingDeletes: Set<string>,
   activeFilter: Filter,
+  checks: LinkChecks = {},
 ): Bookmark[] {
   if (activeFilter?.kind === 'deleted') {
     return bookmarks.filter(b => pendingDeletes.has(b.id))
@@ -165,6 +185,10 @@ export function selectVisibleBookmarks(
     case 'duplicate': {
       const dupIds = selectDuplicateIds(kept)
       return kept.filter(b => dupIds.has(b.id))
+    }
+    case 'broken': {
+      const brokenIds = selectBrokenIds(kept, checks)
+      return kept.filter(b => brokenIds.has(b.id))
     }
     case 'text': {
       const q = activeFilter.query.trim().toLowerCase()
@@ -184,8 +208,9 @@ export function selectVisibleSortedBookmarks(
   pendingDeletes: Set<string>,
   activeFilter: Filter,
   activeSort: Sort,
+  checks: LinkChecks = {},
 ): Bookmark[] {
-  const filtered = selectVisibleBookmarks(bookmarks, pendingDeletes, activeFilter)
+  const filtered = selectVisibleBookmarks(bookmarks, pendingDeletes, activeFilter, checks)
   if (activeSort === null) return filtered
   const sorted = [...filtered]
   switch (activeSort.kind) {

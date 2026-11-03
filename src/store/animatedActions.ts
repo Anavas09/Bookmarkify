@@ -1,13 +1,15 @@
 import { animateGridChange } from '../lib/gridMotion.ts'
 import { selectVisibleSortedBookmarks } from './selectors.ts'
 import { useBookmarkStore } from './useBookmarkStore.ts'
+import { useLinkStore } from './useLinkStore.ts'
 
 // Store actions that add or remove cards from the grid, animated. Each one
 // checks first that something will change, so no card re-measures for nothing.
 
 function visibleIds(): string[] {
   const { bookmarks, pendingDeletes, activeFilter, activeSort } = useBookmarkStore.getState()
-  return selectVisibleSortedBookmarks(bookmarks, pendingDeletes, activeFilter, activeSort)
+  const { checks } = useLinkStore.getState()
+  return selectVisibleSortedBookmarks(bookmarks, pendingDeletes, activeFilter, activeSort, checks)
     .map(b => b.id)
 }
 

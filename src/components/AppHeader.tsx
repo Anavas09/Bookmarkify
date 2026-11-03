@@ -8,9 +8,10 @@ import { Key } from './Key.tsx'
 
 interface Props {
   onApply: () => void
+  onScan: () => void
 }
 
-export function AppHeader({ onApply }: Props) {
+export function AppHeader({ onApply, onScan }: Props) {
   const { t } = useTranslation()
   const total = useBookmarkStore(s => s.bookmarks.length)
   const deleted = useBookmarkStore(s => s.pendingDeletes.size)
@@ -64,6 +65,14 @@ export function AppHeader({ onApply }: Props) {
         <div className="flex items-center gap-4">
           <LanguageToggle />
           <ThemeToggle />
+          <button
+            type="button"
+            onClick={onScan}
+            title={t('header.scan.title')}
+            className="font-mono text-[12px] tracking-wide px-3 py-1.5 rounded-sm border border-edge text-ink-soft transition-colors hover:border-ink-mute hover:text-ink"
+          >
+            {t('header.scan.idle')}
+          </button>
           <button
             type="button"
             onClick={onApply}

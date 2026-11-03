@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LazyMotion, MotionConfig, domMax } from 'motion/react'
 import type { BookmarkSource } from './core/ports/BookmarkSource.ts'
+import type { LinkChecker } from './core/ports/LinkChecker.ts'
 import { useBookmarkStore } from './store/useBookmarkStore.ts'
+import { useLinkStore } from './store/useLinkStore.ts'
 import { useKeyboardShortcuts } from './hooks/keyboardShortcuts.ts'
 import { AppHeader } from './components/AppHeader.tsx'
 import { ApplyDialog } from './components/ApplyDialog.tsx'
 import { BookmarkGrid } from './components/BookmarkGrid.tsx'
 import { FilterBarTabs } from './components/FilterBarTabs.tsx'
+import { ScanDialog } from './components/ScanDialog.tsx'
 import { SelectionBar } from './components/SelectionBar.tsx'
 
 type Startup =
@@ -15,9 +18,10 @@ type Startup =
   | { status: 'ready' }
   | { status: 'failed'; message: string }
 
-function App({ source }: { source: BookmarkSource }) {
+function App({ source, checker }: { source: BookmarkSource; checker: LinkChecker }) {
   const [startup, setStartup] = useState<Startup>({ status: 'loading' })
   const [applyOpen, setApplyOpen] = useState(false)
+  const [scanOpen, setScanOpen] = useState(false)
   const hasBookmarks = useBookmarkStore(s => s.bookmarks.length > 0)
   useKeyboardShortcuts()
 
@@ -27,7 +31,15 @@ function App({ source }: { source: BookmarkSource }) {
     let current = true
     useBookmarkStore.getState().load(source).then(
       () => {
-        if (current) setStartup({ status: 'ready' })
+        if (!current) return
+        setStartup({ status: 'ready' })
+        // Offered once, the first time there are bookmarks: it is marked as
+        // offered as it opens, so closing it doesn't bring it back.
+        const links = useLinkStore.getState()
+        if (!links.firstScanPrompted && useBookmarkStore.getState().bookmarks.length > 0) {
+          links.markFirstScanPrompted()
+          setScanOpen(true)
+        }
       },
       (error: unknown) => {
         const message = error instanceof Error ? error.message : String(error)
@@ -48,7 +60,7 @@ function App({ source }: { source: BookmarkSource }) {
         <div className="min-h-screen flex flex-col">
           {startup.status === 'ready' && hasBookmarks ? (
             <>
-              <AppHeader onApply={() => setApplyOpen(true)} />
+              <AppHeader onApply={() => setApplyOpen(true)} onScan={() => setScanOpen(true)} />
               <FilterBarTabs />
               {/* Bottom padding leaves room for the floating SelectionBar. */}
               <main className="flex-1 px-4 pt-4 pb-28 sm:px-8 lg:px-12">
@@ -64,6 +76,7 @@ function App({ source }: { source: BookmarkSource }) {
         </div>
         {/* Outside the branch above: applying may delete every bookmark, and
             the summary has to outlive the grid. */}
+        {scanOpen && <ScanDialog checker={checker} onClose={() => setScanOpen(false)} />}
         {applyOpen && <ApplyDialog source={source} onClose={() => setApplyOpen(false)} />}
       </MotionConfig>
     </LazyMotion>

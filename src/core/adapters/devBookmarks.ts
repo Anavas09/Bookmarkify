@@ -8,7 +8,10 @@ const day = (iso: string) => new Date(`${iso}T12:00:00`).getTime()
 // the folders whose names repeat: two "Trabajo" side by side, a folder called
 // "Viajes / Japón 2019" next to Japón 2019 inside Viajes, and a "Trabajo" in
 // the Google account next to the ones of the device (a test profile has no
-// account, so this is the only place to see that one).
+// account, so this is the only place to see that one). And links to scan: the
+// fake LinkChecker answers by the look of the URL (`broken` is a 404,
+// `dead.example` does not connect, `forbidden` is a 403), with a broken pair
+// that is a duplicate too.
 // Built on call, so the extension build does not keep any of it.
 function sample(): FakeTree {
   return {
@@ -50,6 +53,11 @@ function sample(): FakeTree {
           { title: 'Google Calendar', url: 'https://calendar.google.com/', dateAdded: day('2022-02-08') },
         ],
       },
+      { title: 'Receta que ya no existe', url: 'https://recetas.example/broken/gazpacho', dateAdded: day('2018-05-05') },
+      { title: 'Blog antiguo', url: 'https://old-blog.example/broken-post', dateAdded: day('2016-02-02') },
+      { title: 'Blog antiguo (otra vez)', url: 'https://old-blog.example/broken-post/', dateAdded: day('2016-02-03') },
+      { title: 'Dominio caído', url: 'https://dead.example/', dateAdded: day('2015-03-03') },
+      { title: 'Zona de socios', url: 'https://club.example/forbidden/members', dateAdded: day('2019-09-09') },
       {
         title: 'Leer después',
         url: "javascript:void(open('https://getpocket.com/save?url='+encodeURIComponent(location.href)))",

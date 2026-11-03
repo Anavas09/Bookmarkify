@@ -5,6 +5,7 @@
   "description": "Visual triage for your bookmarks: review them in a grid, mark the ones you no longer need and delete them from Chrome.",
   "permissions": ["bookmarks"],
   "optional_permissions": ["downloads"],
+  "optional_host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
