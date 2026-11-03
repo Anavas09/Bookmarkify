@@ -152,7 +152,7 @@ Diseño: [`superpowers/specs/2026-11-02-enlaces-rotos-design.md`](./superpowers/
 
 1. [x] **Parte 1, núcleo** (02-11-2026): tipos, `classify`, `selectScanTargets`, `scanLinks` (reintento, cancelar, sin red), puerto `LinkChecker` con adaptador real y falso, y `optional_host_permissions` en el manifest. 251 tests, build y lint en verde.
 2. [x] **Parte 2, store y filtro** (02-11-2026): `useLinkStore` (clave `bookmarkify:links:v1`, tolera JSON corrupto), filtro `broken` con `selectBrokenIds`/`selectBrokenCount`, y `dismissBrokenAnimated`/`dismissSelectedBrokenAnimated` (el 👍 afecta también a las URL gemelas). 272 tests, build y lint en verde.
-3. [ ] **Parte 3, UI de las marcas:** card, chip y barra de selección.
+3. [x] **Parte 3, UI de las marcas** (02-11-2026): marca de enchufe y 👍 en la card (el 👍 queda fuera del lazo de Selecto), chip «rotos · N» (solo tras un primer escaneo) y «no están rotos» en la barra de selección. Textos revisados por el agente de traducciones. Sin tests de componentes (no hay testing-library): se comprueba a mano en la parte 4. 272 tests, build y lint en verde.
 4. [ ] **Parte 4, diálogos y cierre:** `ScanDialog`, botón del header, ejemplos de `npm run dev`, pruebas manuales y documentación.
 5. [ ] Revisión de la rama con un revisor, pruebas del usuario en Chrome y PR.
 
