@@ -130,7 +130,7 @@ El botón **comprobar enlaces** pide cada página desde tu ordenador y marca las
 
 ## Estado
 
-Los 18 primeros pasos del plan están hechos: la app es solo una extensión de Chrome y ya no queda código de la importación por HTML. Lo siguiente es detectar los enlaces rotos (paso 19). El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
+Los 19 primeros pasos del plan están hechos: la app es solo una extensión de Chrome, ya no queda código de la importación por HTML y detecta los enlaces rotos. Lo siguiente, opcional, es elegir si los marcadores se ven como lista o como grid (paso 20). El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
 
 ## Licencia
 

@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 03-11-2026 (paso 19 con las 4 partes hechas y probado en Chrome; faltan la revisión de la rama y la PR). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7) y el 8 (relectura) fusionado (PR #8). En la rama `fix/chrome-urls`, el 9 hecho y el 10 medido (sin cambios en el código); falta fusionar la PR. Sigue el paso 19.
+**Última actualización:** 03-11-2026 (paso 19 fusionado en `main`, PR #10). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
 
 ## Resumen
 
@@ -11,7 +11,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
 | 18 | Retirada de la importación | ✅ hecho |
-| 19 | Enlaces rotos | 🔄 probado en Chrome; pendiente de revisión y PR (rama `feat/broken-links`) |
+| 19 | Enlaces rotos | ✅ hecho (PR #10) |
 | 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
 
 ## Paso 17 — ChromeAdapter y extensión
@@ -155,7 +155,7 @@ Diseño: [`superpowers/specs/2026-11-02-enlaces-rotos-design.md`](./superpowers/
 3. [x] **Parte 3, UI de las marcas** (02-11-2026): marca de enchufe y 👍 en la card (el 👍 queda fuera del lazo de Selecto), chip «rotos · N» (solo tras un primer escaneo) y «no están rotos» en la barra de selección. Textos revisados por el agente de traducciones. Sin tests de componentes (no hay testing-library): se comprueba a mano en la parte 4. 272 tests, build y lint en verde.
 4. [x] **Parte 4, diálogos y cierre** (02-11-2026): `ScanDialog`, botón del header con el primer escaneo al abrir, ejemplos de `npm run dev` (404, dominio caído, 403 y una pareja duplicada rota), [`pruebas-enlaces-rotos.md`](./pruebas-enlaces-rotos.md), README y `CLAUDE.md`. 272 tests, build y lint en verde.
 5. [x] **Pruebas del usuario en Chrome** (03-11-2026): todas las de [`pruebas-enlaces-rotos.md`](./pruebas-enlaces-rotos.md) pasadas (permiso, primer escaneo, no repetir al abrir, cancelar, 👍, sin red y «Aplicar»).
-6. [ ] Revisión de la rama con un revisor (solo si el usuario la pide) y PR (solo si la pide).
+6. [x] **PR #10** fusionada en `main` (03-11-2026, `6a3a9ab`).
 
 ## Paso 20 (opcional final) — Lista o grid
 
