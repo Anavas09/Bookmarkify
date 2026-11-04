@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 03-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 en curso, con la parte 1 de 5 hecha). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
+**Última actualización:** 03-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 en curso, con las partes 1 y 2 de 5 hechas). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
 
 ## Resumen
 
@@ -166,7 +166,7 @@ Diseño: [`superpowers/specs/2026-11-03-vista-lista-design.md`](./superpowers/sp
 - De paso, cinco arreglos aparcados: las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md) (la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español) y dos de la [parte 2 de «Carpetas por id»](./observaciones-traducciones.md#parte-2-de-carpetas-por-id-28-10-2026): el chip de carpeta, que recorta la etiqueta, y el aviso de sincronización del diálogo «Aplicar».
 
 1. [x] **Parte 1, base** (03-11-2026): `useViewStore` (clave `bookmarkify:view`), `formatDate`, `catalogNumber` y el enchufe compartidos con la card, y el botón de vista en el header (aún sin lista detrás). 290 tests, build y lint en verde.
-2. [ ] **Parte 2, la lista:** `BookmarkRow` y `BookmarkGrid` con las dos vistas (selección, movimiento y estados, comprobados a mano).
+2. [x] **Parte 2, la lista** (03-11-2026): `BookmarkRow` y `BookmarkGrid` con las dos vistas. Comprobado a mano en `npm run dev`: selección (clic, `Ctrl`/`Shift`+clic, lazo, `Ctrl`+`A`, `Esc`), borrar, deshacer y restaurar con fundido y filas que suben (sin movimiento con `prefers-reduced-motion`), vista «eliminados» con tres marcas alineadas, 👍 sin seleccionar ni abrir, filas sin fecha, sin título, con título larguísimo y `chrome://`, ventana de 700 y 600 px, y Selecto sincronizado al cambiar de vista. 290 tests, build y lint en verde.
 3. [ ] **Parte 3, rendimiento:** medición con 5.000 marcadores; la virtualización solo se decide aparte si la lista sale peor que el grid.
 4. [ ] **Parte 4, los cinco arreglos «de paso»,** cada uno en su commit.
 5. [ ] **Parte 5, pruebas y documentación:** `pruebas-vista-lista.md`, `CLAUDE.md`, README y roadmap.
