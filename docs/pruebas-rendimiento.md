@@ -112,3 +112,24 @@ Hechas por Claude con la **extensión real** (`dist/` en Chromium 149 sin marca,
 **Lo que fue un error de medición:** la primera vez sondeé el diálogo con `waitForFunction` en cada fotograma, que por sí solo generaba cientos de tareas largas; con `polling: 1000` desaparecieron. Y con 2.000 marcadores el efecto casi no se ve (17 s frente a 12 s de la línea base): la cifra depende del tamaño de la página. Comparación antes/después con 2–5 repeticiones por lado, no alternadas una a una: lo medido de «antes» se repitió a lo largo de la sesión con resultados parecidos (62–75 s).
 
 **Sin cubrir:** el Chrome real del usuario, sitios reales (CORS, redirecciones, tiempos agotados), el permiso de «sitios específicos» y la memoria del escaneo. Los scripts no están en el repositorio.
+
+## Vista de lista con 5.000 marcadores (04-11-2026, paso 20)
+
+Hechas por Claude con el navegador de Playwright contra el servidor de desarrollo (`npm run dev`, con React en modo desarrollo y StrictMode) y un `chrome.bookmarks` falso con 5.000 marcadores en 20 carpetas (uno de cada 25 con la URL repetida), inyectado con `addInitScript` solo cuando la URL lleva `?fake=5000`, para no tocar el uso normal del navegador. Alterné grid y lista una a una, tres parejas por cada versión del código, y tras cada acción esperé a que el hilo llevara 1,5 s sin tareas largas.
+
+**Cómo se mide:** Event Timing y `long-animation-frame` no entregan nada en este navegador, así que la **latencia** es el tiempo del evento (`click` o `keydown`) al segundo `requestAnimationFrame` posterior, y el **hilo ocupado**, el tiempo hasta la última tarea larga (más de 50 ms). Las cifras absolutas son orientativas: el equipo iba lento (abrir un menú tardó 2–3 s, frente a 0,4 s el 30-10) y solo valen las comparaciones dentro de la sesión. Medianas de tres parejas, en «latencia / hilo ocupado»:
+
+| Acción (5.000 marcadores) | Grid | Lista |
+|---|---|---|
+| Abrir el menú «ordenar» (referencia) | 2,9 s / 4,4 s | 2,0 s / 3,4 s |
+| `Ctrl`+`A` | 5,1 s / 5,3 s | 4,2 s / 4,4 s |
+| `Supr` con el primero seleccionado | 4,2 s / 5,2 s | 4,3 s / 5,4 s |
+| `Ctrl`+`A` y `Supr` (eliminar los 5.000) | 1,2–1,3 s / 0,55–0,63 s | 1,0–1,3 s / 0,42–0,46 s |
+| Cambiar de vista | a lista: 7,0 s / 10,7 s | a grid: 10,0 s / 13,6 s |
+| Montar el grid al cargar (hilo ocupado, con el arranque) | 11,2 s | — |
+
+`Supr` con el primero: la lista va más rápida en dos de las tres parejas y 0,24 s más lenta en la tercera, así que cuenta como igual dentro del ruido. En «`Ctrl`+`A` y `Supr`» hay dos mediciones por vista y no se congela ninguna (los 5.000 salen). Cambiar de vista vuelve a montar los 5.000 elementos (la `key` lleva la vista): el cambio a lista cuesta menos que montar el grid al cargar y el cambio a grid, un 22 % más, porque además desmonta las 5.000 filas.
+
+**Qué pasaba:** la primera versión de la fila llevaba `transition-colors duration-150`. Con `Ctrl`+`A` cambia el fondo de las 5.000 filas a la vez y arranca 5.000 transiciones CSS, y los fotogramas de esos 150 ms mantenían el hilo ocupado 3,5–5 s después del primer pintado. La card no lo sufre porque al seleccionarse solo cambia el contorno, que no está en su lista de transiciones. Antes del arreglo, `Ctrl`+`A` dejaba la lista en 5,6 s / 9,0 s frente a 6,4 s / 6,5 s del grid (el hilo ocupado, un 38 % peor). Un A/B alternado en la lista inyectando `transition: none` (dos parejas) bajó el hilo ocupado de 9,5 y 11,2 s a 4,3 y 5,3 s. **Arreglo:** la fila no lleva transición de color, así que el hover y la selección cambian al instante. No hizo falta `content-visibility`, que no atacaba esto.
+
+**Lo que sigue lento, igual en las dos vistas:** `Ctrl`+`A` y borrar la primera dejan el hilo ocupado 4–5 s con 5.000 elementos, y cambiar de vista tarda 7–10 s. Es React en desarrollo pintando 5.000 elementos sin virtualizar; la lista no empeora nada de lo que ya había, así que no se virtualiza. **Sin cubrir:** producción (`npm run build`), el Chrome real del usuario y un equipo más rápido. Los 58 errores de consola de las pruebas son 404 de favicon de dominios inventados, los esperados. Los scripts no están en el repositorio.

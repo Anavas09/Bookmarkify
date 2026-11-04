@@ -43,8 +43,9 @@ export function BookmarkRow({ bookmark, index, stagger, marked, selected, broken
       onDoubleClick={open}
       style={rowStyle}
       className={cx(
+        // No color transition on purpose: Ctrl+A would start one on every row at
+        // once, and with 5,000 rows the frames of those 150ms kept the thread busy.
         'card-in relative flex h-8 items-center gap-3 border-b border-edge px-3 select-none cursor-default',
-        'transition-colors duration-150',
         // The outline goes inward so selecting never changes the row's size.
         selected
           ? 'bg-accent/10 outline outline-2 -outline-offset-2 outline-accent'
