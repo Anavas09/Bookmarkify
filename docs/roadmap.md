@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 03-11-2026 (paso 19 fusionado en `main`, PR #10). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
+**Última actualización:** 03-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 con el diseño y el plan aprobados). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
 
 ## Resumen
 
@@ -12,7 +12,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 | 17 | ChromeAdapter y extensión | ✅ hecho |
 | 18 | Retirada de la importación | ✅ hecho |
 | 19 | Enlaces rotos | ✅ hecho (PR #10) |
-| 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
+| 20 | Vista de lista o de grid (opcional final) | 🔄 diseño y plan aprobados; en curso (rama `feat/list-view`) |
 
 ## Paso 17 — ChromeAdapter y extensión
 
@@ -159,6 +159,14 @@ Diseño: [`superpowers/specs/2026-11-02-enlaces-rotos-design.md`](./superpowers/
 
 ## Paso 20 (opcional final) — Lista o grid
 
-Elegir si los marcadores se ven como lista o como grid.
+Diseño: [`superpowers/specs/2026-11-03-vista-lista-design.md`](./superpowers/specs/2026-11-03-vista-lista-design.md). Plan: [`superpowers/plans/2026-11-03-vista-lista.md`](./superpowers/plans/2026-11-03-vista-lista.md). Se para tras cada parte.
 
-De paso, las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md): la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español. Y dos de la [parte 2 de «Carpetas por id»](./observaciones-traducciones.md#parte-2-de-carpetas-por-id-28-10-2026): el chip de carpeta, que recorta la etiqueta, y el aviso de sincronización del diálogo «Aplicar».
+- Dos botones pegados (4 cuadrados y 3 líneas) a la izquierda del de idioma, con la vista activa marcada. Arranca en grid y la elección se recuerda (`bookmarkify:view`).
+- Fila de lista de 32 px y una línea, con los datos de la card, que se maneja igual que el grid. No se virtualiza: se mide con 5.000 marcadores.
+- De paso, cinco arreglos aparcados: las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md) (la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español) y dos de la [parte 2 de «Carpetas por id»](./observaciones-traducciones.md#parte-2-de-carpetas-por-id-28-10-2026): el chip de carpeta, que recorta la etiqueta, y el aviso de sincronización del diálogo «Aplicar».
+
+1. [ ] **Parte 1, base:** estado de la vista, piezas compartidas con la card y botón del header.
+2. [ ] **Parte 2, la lista:** `BookmarkRow` y `BookmarkGrid` con las dos vistas (selección, movimiento y estados, comprobados a mano).
+3. [ ] **Parte 3, rendimiento:** medición con 5.000 marcadores; la virtualización solo se decide aparte si la lista sale peor que el grid.
+4. [ ] **Parte 4, los cinco arreglos «de paso»,** cada uno en su commit.
+5. [ ] **Parte 5, pruebas y documentación:** `pruebas-vista-lista.md`, `CLAUDE.md`, README y roadmap.
