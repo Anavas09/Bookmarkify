@@ -28,6 +28,9 @@ dist-ssr
 .playwright-mcp/
 /*.png
 
+# Superpowers visual companion (local mockups)
+.superpowers/
+
 # design-sync (local tooling)
 .ds-sync/
 ds-bundle/
