@@ -63,3 +63,11 @@ Montar solo las cards que se ven (con `@tanstack/react-virtual`) en vez de las 5
 - **Antes, más barato (cada uno arregla solo una parte, sin probar):** `content-visibility: auto` en las cards, que podría recortar el menú y el layout pero no el coste de React; y numerar con contadores CSS en vez de pasar `index`, para que borrar la primera cueste como borrar la última, aunque no ayuda a ordenar ni a `Ctrl`+`A`. Conviene medir antes la build de producción.
 - **Dónde encajaría:** al final, junto al paso 20: los dos reescriben `BookmarkGrid` y una vista de lista es el caso fácil del virtualizador.
 - **Aviso para el paso 19:** si el escaneo de enlaces escribe en el store por cada resultado, puede repintar el grid entero en cada uno. Se evita al diseñarlo, agrupando las escrituras o guardando los estados aparte.
+
+## Agente que corrija mayúsculas y gramática
+
+Un agente que revise los textos del proyecto y corrija las mayúsculas y la gramática.
+
+- **Por qué se aparcó (03-11-2026):** desde el primer día los textos llevan casi ninguna mayúscula. Es algo conocido y estaba previsto corregirlo al final; no frena nada.
+- **Qué haría falta:** un agente nuevo en `.claude/agents/`, como el de traducciones (`i18n-translator`), que solo traduce y no corrige el estilo. Habría que decidir su alcance (`src/locales`, los docs y los comentarios) y qué criterio de mayúsculas se adopta, porque hoy las etiquetas de la interfaz van en minúscula a propósito.
+- **Dónde encajaría:** al terminar el paso 20, junto con la infografía final.
