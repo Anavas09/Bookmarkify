@@ -4,6 +4,7 @@ import { cx } from '../lib/cx.ts'
 import { isMac } from '../lib/platform.ts'
 import { ThemeToggle } from './ThemeToggle.tsx'
 import { LanguageToggle } from './LanguageToggle.tsx'
+import { ViewToggle } from './ViewToggle.tsx'
 import { Key } from './Key.tsx'
 
 interface Props {
@@ -63,6 +64,7 @@ export function AppHeader({ onApply, onScan }: Props) {
           </span>
         </p>
         <div className="flex items-center gap-4">
+          <ViewToggle />
           <LanguageToggle />
           <ThemeToggle />
           <button

@@ -10,6 +10,11 @@
     "toLightAria": "cambiar al tema claro",
     "toDarkAria": "cambiar al tema oscuro"
   },
+  "view": {
+    "group": "vista",
+    "grid": "vista en cuadrícula",
+    "list": "vista en lista"
+  },
   "header": {
     "shortcuts": {
       "drag": "arrastra para seleccionar",

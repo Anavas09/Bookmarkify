@@ -10,6 +10,11 @@
     "toLightAria": "switch to light theme",
     "toDarkAria": "switch to dark theme"
   },
+  "view": {
+    "group": "view",
+    "grid": "grid view",
+    "list": "list view"
+  },
   "header": {
     "shortcuts": {
       "drag": "drag to select",
