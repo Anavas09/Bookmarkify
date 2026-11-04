@@ -71,29 +71,31 @@ export function BookmarkRow({ bookmark, index, stagger, marked, selected, broken
         <span className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       )}
 
-      <a
-        href={bookmark.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        title={label}
-        draggable={false}
-        onDoubleClick={e => e.stopPropagation()}
-        onClick={e => {
-          // A plain link can't open chrome:// or file:// from the extension.
-          if (isWebUrl(bookmark.url)) return
-          e.preventDefault()
-          openLink(bookmark.url)
-        }}
-        className={cx(
-          'min-w-0 flex-1 truncate font-display text-[0.875rem] text-ink cursor-pointer',
-          marked
-            ? 'line-through decoration-accent'
-            : 'no-underline hover:underline underline-offset-2 decoration-edge',
-          dim,
-        )}
-      >
-        {label}
-      </a>
+      {/* The link is only the text: the empty space of the row selects it. */}
+      <span className={cx('min-w-0 flex-1 truncate font-display text-[0.875rem]', dim)}>
+        <a
+          href={bookmark.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={label}
+          draggable={false}
+          onDoubleClick={e => e.stopPropagation()}
+          onClick={e => {
+            // A plain link can't open chrome:// or file:// from the extension.
+            if (isWebUrl(bookmark.url)) return
+            e.preventDefault()
+            openLink(bookmark.url)
+          }}
+          className={cx(
+            'text-ink cursor-pointer',
+            marked
+              ? 'line-through decoration-accent'
+              : 'no-underline hover:underline underline-offset-2 decoration-edge',
+          )}
+        >
+          {label}
+        </a>
+      </span>
 
       <span
         className={cx(
