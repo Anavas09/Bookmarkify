@@ -38,7 +38,7 @@ Rama `feat/list-view`. Marca cada casilla al terminar la prueba.
 - [x] Eliminar una fila: se desvanece y las de abajo suben. El clon que se desvanece no se ve cortado por el borde del recuadro ni por el separador.
 - [x] «Deshacer» (barra o `Ctrl`/`Cmd`+`Z`) la devuelve a su sitio; restaurar desde «eliminados» también.
 - [x] Eliminar muchas a la vez (`Ctrl`+`A` y `Supr`) no congela la pestaña.
-- [ ] Con «reducir movimiento» activado en el sistema, los cambios son instantáneos. (Es un ajuste de accesibilidad del sistema operativo; en Windows 11: Configuración · Accesibilidad · Efectos visuales · Efectos de animación, desactivado. Sin tocar el sistema se simula en DevTools: ⋮ · Más herramientas · Renderizado · «Emular la función multimedia CSS prefers-reduced-motion» · reduce.)
+- [x] Con «reducir movimiento» activado en el sistema, los cambios son instantáneos. (Es un ajuste de accesibilidad del sistema operativo; en Windows 11: Configuración · Accesibilidad · Efectos visuales · Efectos de animación, desactivado. Sin tocar el sistema se simula en DevTools: ⋮ · Más herramientas · Renderizado · «Emular la función multimedia CSS prefers-reduced-motion» · reduce.)
 
 ## 5. Cambiar de vista con selección
 
