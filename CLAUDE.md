@@ -66,6 +66,7 @@ src/
     useBookmarkStore.ts       # store de Zustand
     useLinkStore.ts           # resultados de la comprobación de enlaces (clave propia en localStorage)
     linkActions.ts            # descartar enlaces rotos (👍), animado
+    useViewStore.ts           # la vista (grid o lista): una preferencia, con clave propia en localStorage
   components/                 # solo UI — sin conocimiento de adapters ni del formato
 ```
 
@@ -118,6 +119,8 @@ interface Bookmark {
 Las eliminaciones son **no destructivas**: los IDs marcados se acumulan en un `Set<string>` dentro del store de Zustand. Nada se borra de Chrome hasta que el usuario pulsa «Aplicar» y lo confirma: entonces `commit` pasa los eliminados al puerto. Mientras tanto, los eliminados se ocultan del grid y de los contadores; solo aparecen en la vista «eliminados» (paso 15), desde donde se restauran.
 
 Solo se persiste el triaje (`pendingDeletes`, `activeFilter` y `activeSort`), con la clave `bookmarkify:v2` en `localStorage`. Los marcadores se vuelven a leer de la fuente en cada visita, y `load()` descarta las marcas de los que ya no existen.
+
+La vista (grid o lista) no es triaje: es una preferencia y vive aparte, en `useViewStore` con la clave `bookmarkify:view`, igual que el tema y el idioma. Por eso no entra en `bookmarkify:v2`.
 
 Lo guardado lleva además `version: 1`, que no es la `v2` de la clave: la clave cambia cuando lo viejo no sirve y la versión, cuando solo hay que adaptarlo. La versión 0 guardaba el filtro de carpeta como una ruta de nombres; `migrate` lo descarta una vez (se vuelve a «todos») y conserva las marcas y el orden.
 
@@ -203,7 +206,13 @@ Interacciones: clic selecciona, `Ctrl`/`Cmd`+clic suma o quita, `Shift`+clic sel
     - **Escaneo** — `scanLinks` (8 peticiones a la vez, cancelable con `AbortController`) y `selectScanTargets`: comprueba lo nunca comprobado, lo roto y lo que tiene más de 30 días (`RESCAN_AFTER_DAYS`); los descartados no se vuelven a comprobar. Una URL con dos marcadores se comprueba una vez.
     - **Store** — `useLinkStore` guarda `checks` por URL normalizada en `bookmarkify:links:v1` (aparte de `bookmarkify:v2`; tolera JSON corrupto) y `firstScanPrompted`. Los resultados se escriben de una vez al acabar o cancelar (`applyScan`), para no repintar el grid por resultado, y conservan `dismissed`.
     - **UI** — `ScanDialog` (confirmar → comprobando → resumen, sin cierre con `Esc` mientras escanea) sale solo la primera vez que hay marcadores y siempre desde el botón «comprobar enlaces» del header. La card rota lleva un enchufe y 👍 «no está roto»; el chip «rotos · N» (filtro `{ kind: 'broken' }`, solo tras un primer escaneo) junta las rotas; la barra de selección ofrece «no están rotos · N». Descartar afecta también a las URL gemelas (`dismissBrokenAnimated`).
-20. ⏳ Paso opcional final: elegir si los marcadores se ven como lista o como grid.
+20. ✅ Vista de lista o de grid (rama `feat/list-view`, 04-11-2026; pendiente de probar en Chrome y de PR). Diseño y plan en `docs/superpowers/`; pruebas en `docs/pruebas-vista-lista.md`.
+    - **Estado** — `useViewStore` guarda `'grid' | 'list'` en `bookmarkify:view`, un texto plano como `bookmarkify:theme`. Cualquier valor que no sea `'list'` vale como `'grid'`, y la primera vez arranca en grid. No toca `useBookmarkStore`, los selectores ni los puertos.
+    - **Control** — dos botones pegados en el header, a la izquierda del de idioma (4 cuadrados y 3 líneas). El activo lleva `aria-pressed="true"` y no está `disabled`.
+    - **Fila** — `BookmarkRow` mide 32 px y una línea, con los datos de la card (número, favicon, título, dominio, fecha y marcas). Selección, lazo, 👍, eliminados y rotos van igual que en la card. `formatDate`, `catalogNumber` y el enchufe se comparten con ella (`lib/bookmarkFormat.ts`, `UnplugIcon`). En ventanas estrechas se ocultan primero la fecha y luego el dominio.
+    - **`BookmarkGrid` pinta las dos vistas** con la misma plomería: Selecto, la sincronización con el store y el movimiento (`gridMotion.ts`) son los mismos, y solo cambian el contenedor y el elemento. La vista va en la `key` de cada elemento, así que cambiar de vista vuelve a montarlos, y Selecto se resincroniza porque la vista es una dependencia del efecto. Cambiar de vista conserva la selección y no conserva el scroll.
+    - **Medición** — con 5.000 marcadores la lista no es peor que el grid en `Ctrl`+`A`, `Supr` ni abrir un menú, así que no se virtualiza. La fila no lleva `transition-colors`: con `Ctrl`+`A` arrancaba 5.000 transiciones a la vez y dejaba el hilo ocupado 3,5–5 s. Detalle en `docs/pruebas-rendimiento.md`.
+    - **Cinco arreglos «de paso»**, cada uno en su commit: la tecla «Mayús» (`header.shortcuts.shiftKey`), `html[lang]` que sigue al idioma (`syncHtmlLang`), la descripción de la extensión en español (`default_locale` y `_locales/`), el ancho del chip de carpeta activo (`wide`) y el aviso de sincronización con la cuenta de Google.
 
 ## Aplicar en Chrome
 

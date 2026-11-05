@@ -31,7 +31,7 @@ Lo que encontró el agente de traducciones (`.claude/agents/i18n-translator.md`)
 
 - ✅ Los tres textos (1–3), en un commit pequeño: hechos en `f816231`. El agente de traducciones lo revisó y no hizo falta tocar nada más.
 - ✅ «(raíz)» (7): hecho en la parte 3 del paso 18 (`6df5de6`).
-- ⏳ El resto (4–6), al paso opcional final (paso 20).
+- ✅ El resto (4–6), en la parte 4 del paso 20 (04-11-2026): la tecla «Mayús» (`ceb43c1`), el `lang` de `<html>` (`676919a`) y la descripción de la extensión (`b5e67ba`). El resto de teclas (`ctrl`, `esc`) siguen en minúscula a propósito.
 
 ## Parte 2 de «Carpetas por id» (28-10-2026)
 
@@ -46,5 +46,5 @@ Lo que encontró el agente al revisar el filtro y el menú de carpetas por id (`
 
 Decidido el 28-10-2026, antes de la parte 3 del arreglo:
 
-- ⏳ 1 y 3, al paso opcional final (paso 20).
+- ✅ 1 y 3, en la parte 4 del paso 20 (04-11-2026): el ancho del chip de carpeta activo (`4e8002e`) y el aviso de sincronización, con la salida barata (`f206859`).
 - Descartadas: la 2 (rarísimo y solo visual) y la 4 (solo `npm run dev`; no es un fallo de los textos).

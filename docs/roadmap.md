@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 04-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 en curso, con las partes 1 a 3 de 5 hechas). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
+**Última actualización:** 04-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 con las 5 partes hechas, pendiente de las pruebas del usuario en Chrome y de la PR). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
 
 ## Resumen
 
@@ -12,7 +12,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 | 17 | ChromeAdapter y extensión | ✅ hecho |
 | 18 | Retirada de la importación | ✅ hecho |
 | 19 | Enlaces rotos | ✅ hecho (PR #10) |
-| 20 | Vista de lista o de grid (opcional final) | 🔄 diseño y plan aprobados; en curso (rama `feat/list-view`) |
+| 20 | Vista de lista o de grid (opcional final) | 🔄 hecho en la rama `feat/list-view`; falta que el usuario lo pruebe en Chrome y la PR |
 
 ## Paso 17 — ChromeAdapter y extensión
 
@@ -169,4 +169,6 @@ Diseño: [`superpowers/specs/2026-11-03-vista-lista-design.md`](./superpowers/sp
 2. [x] **Parte 2, la lista** (03-11-2026): `BookmarkRow` y `BookmarkGrid` con las dos vistas. Comprobado a mano en `npm run dev`: selección (clic, `Ctrl`/`Shift`+clic, lazo, `Ctrl`+`A`, `Esc`), borrar, deshacer y restaurar con fundido y filas que suben (sin movimiento con `prefers-reduced-motion`), vista «eliminados» con tres marcas alineadas, 👍 sin seleccionar ni abrir, filas sin fecha, sin título, con título larguísimo y `chrome://`, ventana de 700 y 600 px, y Selecto sincronizado al cambiar de vista. 290 tests, build y lint en verde.
 3. [x] **Parte 3, rendimiento** (04-11-2026): medida con 5.000 marcadores, grid y lista alternados (tres parejas). La lista no es peor que el grid en `Ctrl`+`A`, `Supr` ni abrir un menú, y `Ctrl`+`A` y `Supr` sobre los 5.000 no se congela. La primera versión de la fila tenía una cola de 3,5–5 s tras `Ctrl`+`A` por 5.000 transiciones de fondo a la vez; quitada la transición, se iguala. No se virtualiza. Detalle en [`pruebas-rendimiento.md`](./pruebas-rendimiento.md#vista-de-lista-con-5000-marcadores-04-11-2026-paso-20).
 4. [x] **Parte 4, los cinco arreglos «de paso»** (04-11-2026), cada uno en su commit: tecla «Mayús» (`ceb43c1`), `lang` de `<html>` (`676919a`), descripción de la extensión en español (`b5e67ba`), ancho del chip de carpeta activo (`4e8002e`) y aviso de sincronización con la cuenta de Google (`f206859`). 295 tests, build y lint en verde. Falta comprobar en Chrome la descripción en español (lista de la parte 5).
-5. [ ] **Parte 5, pruebas y documentación:** `pruebas-vista-lista.md`, `CLAUDE.md`, README y roadmap.
+5. [x] **Parte 5, pruebas y documentación** (04-11-2026): [`pruebas-vista-lista.md`](./pruebas-vista-lista.md) (siete bloques, sin marcar), `CLAUDE.md` (paso 20 ✅), README, `ideas-aparcadas.md` y `observaciones-traducciones.md`. 295 tests, build y lint en verde.
+6. [ ] **Pruebas del usuario en Chrome** (las de `pruebas-vista-lista.md`, con la decisión sobre el scroll al cambiar de vista).
+7. [ ] **PR**, solo cuando el usuario la pida.

@@ -61,7 +61,8 @@ Montar solo las cards que se ven (con `@tanstack/react-virtual`) en vez de las 5
 
   Complejidad alta, del tamaño de los pasos 14 y 16.
 - **Antes, más barato (cada uno arregla solo una parte, sin probar):** `content-visibility: auto` en las cards, que podría recortar el menú y el layout pero no el coste de React; y numerar con contadores CSS en vez de pasar `index`, para que borrar la primera cueste como borrar la última, aunque no ayuda a ordenar ni a `Ctrl`+`A`. Conviene medir antes la build de producción.
-- **Dónde encajaría:** al final, junto al paso 20: los dos reescriben `BookmarkGrid` y una vista de lista es el caso fácil del virtualizador.
+- **Medido con la lista (04-11-2026, paso 20):** con 5.000 marcadores la lista no es peor que el grid en `Ctrl`+`A`, `Supr` ni abrir un menú, así que el paso 20 no la virtualizó. Lo que sigue lento, igual en las dos vistas, es React en desarrollo pintando 5.000 elementos: `Ctrl`+`A` y borrar la primera dejan el hilo ocupado 4–5 s, y cambiar de vista tarda 7–10 s. Producción sin medir. [Mediciones](./pruebas-rendimiento.md#vista-de-lista-con-5000-marcadores-04-11-2026-paso-20).
+- **Dónde encajaría:** sin fecha. Se pensó para el paso 20, pero la medición no la pidió. Si se retoma, la lista ya existe y es el caso fácil del virtualizador (filas de 32 px fijas); el movimiento (`gridMotion.ts`) y el lazo siguen siendo lo difícil.
 - **Aviso para el paso 19:** si el escaneo de enlaces escribe en el store por cada resultado, puede repintar el grid entero en cada uno. Se evita al diseñarlo, agrupando las escrituras o guardando los estados aparte.
 
 ## Agente que corrija mayúsculas y gramática
