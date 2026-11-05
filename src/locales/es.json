@@ -90,7 +90,7 @@
     "folders": "Las carpetas que se queden vacías también se borran.",
     "headsUpLabel": "aviso",
     "headsUpBody": "Chrome no lo puede deshacer. Antes de borrar se guarda una copia con estos marcadores en tus descargas: si te arrepientes, impórtala en el Administrador de marcadores y volverán, aunque en una carpeta nueva.",
-    "sync": "Si tienes activada la sincronización, el borrado también llega a tus otros dispositivos.",
+    "sync": "Si tus marcadores se sincronizan con tu cuenta de Google, el borrado también llega a tus otros dispositivos.",
     "cancel": "cancelar",
     "confirm": "borrar {{count}}",
     "applying": "borrando…",

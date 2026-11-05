@@ -90,7 +90,7 @@
     "folders": "Folders left empty are deleted too.",
     "headsUpLabel": "heads up",
     "headsUpBody": "Chrome can't undo this. Before deleting, a copy of these bookmarks is saved to your downloads: if you change your mind, import it in the Bookmark manager and they'll come back, though in a new folder.",
-    "sync": "If sync is on, the deletion also reaches your other devices.",
+    "sync": "If your bookmarks sync with your Google account, the deletion also reaches your other devices.",
     "cancel": "cancel",
     "confirm": "delete {{count}}",
     "applying": "deleting…",
