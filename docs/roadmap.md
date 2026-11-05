@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 03-11-2026 (paso 19 con las 4 partes hechas y probado en Chrome; faltan la revisión de la rama y la PR). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). En curso, antes del paso 19: los hallazgos del [code review](./code-review.md), el 1 y el 2 (copia de seguridad) fusionados (PR #5), el 3, el 4 y el 5 (carpetas por id) fusionados (PR #6) y el 6 y el 7 (rendimiento) fusionados (PR #7) y el 8 (relectura) fusionado (PR #8). En la rama `fix/chrome-urls`, el 9 hecho y el 10 medido (sin cambios en el código); falta fusionar la PR. Sigue el paso 19.
+**Última actualización:** 04-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 con las 5 partes hechas, pendiente de las pruebas del usuario en Chrome y de la PR). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
 
 ## Resumen
 
@@ -11,8 +11,8 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 | 1–16 | Web app de triaje: subir el HTML, grid, filtros, orden, selección, eliminar con deshacer y exportar | ✅ hecho |
 | 17 | ChromeAdapter y extensión | ✅ hecho |
 | 18 | Retirada de la importación | ✅ hecho |
-| 19 | Enlaces rotos | 🔄 probado en Chrome; pendiente de revisión y PR (rama `feat/broken-links`) |
-| 20 | Vista de lista o de grid (opcional final) | ⏳ pendiente |
+| 19 | Enlaces rotos | ✅ hecho (PR #10) |
+| 20 | Vista de lista o de grid (opcional final) | 🔄 hecho en la rama `feat/list-view`; falta que el usuario lo pruebe en Chrome y la PR |
 
 ## Paso 17 — ChromeAdapter y extensión
 
@@ -155,10 +155,20 @@ Diseño: [`superpowers/specs/2026-11-02-enlaces-rotos-design.md`](./superpowers/
 3. [x] **Parte 3, UI de las marcas** (02-11-2026): marca de enchufe y 👍 en la card (el 👍 queda fuera del lazo de Selecto), chip «rotos · N» (solo tras un primer escaneo) y «no están rotos» en la barra de selección. Textos revisados por el agente de traducciones. Sin tests de componentes (no hay testing-library): se comprueba a mano en la parte 4. 272 tests, build y lint en verde.
 4. [x] **Parte 4, diálogos y cierre** (02-11-2026): `ScanDialog`, botón del header con el primer escaneo al abrir, ejemplos de `npm run dev` (404, dominio caído, 403 y una pareja duplicada rota), [`pruebas-enlaces-rotos.md`](./pruebas-enlaces-rotos.md), README y `CLAUDE.md`. 272 tests, build y lint en verde.
 5. [x] **Pruebas del usuario en Chrome** (03-11-2026): todas las de [`pruebas-enlaces-rotos.md`](./pruebas-enlaces-rotos.md) pasadas (permiso, primer escaneo, no repetir al abrir, cancelar, 👍, sin red y «Aplicar»).
-6. [ ] Revisión de la rama con un revisor (solo si el usuario la pide) y PR (solo si la pide).
+6. [x] **PR #10** fusionada en `main` (03-11-2026, `6a3a9ab`).
 
 ## Paso 20 (opcional final) — Lista o grid
 
-Elegir si los marcadores se ven como lista o como grid.
+Diseño: [`superpowers/specs/2026-11-03-vista-lista-design.md`](./superpowers/specs/2026-11-03-vista-lista-design.md). Plan: [`superpowers/plans/2026-11-03-vista-lista.md`](./superpowers/plans/2026-11-03-vista-lista.md). Se para tras cada parte.
 
-De paso, las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md): la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español. Y dos de la [parte 2 de «Carpetas por id»](./observaciones-traducciones.md#parte-2-de-carpetas-por-id-28-10-2026): el chip de carpeta, que recorta la etiqueta, y el aviso de sincronización del diálogo «Aplicar».
+- Dos botones pegados (4 cuadrados y 3 líneas) a la izquierda del de idioma, con la vista activa marcada. Arranca en grid y la elección se recuerda (`bookmarkify:view`).
+- Fila de lista de 32 px y una línea, con los datos de la card, que se maneja igual que el grid. No se virtualiza: se mide con 5.000 marcadores.
+- De paso, cinco arreglos aparcados: las observaciones 4–6 de las [traducciones](./observaciones-traducciones.md) (la tecla «Mayús», el `lang` de `<html>` y la descripción de la extensión en español) y dos de la [parte 2 de «Carpetas por id»](./observaciones-traducciones.md#parte-2-de-carpetas-por-id-28-10-2026): el chip de carpeta, que recorta la etiqueta, y el aviso de sincronización del diálogo «Aplicar».
+
+1. [x] **Parte 1, base** (03-11-2026): `useViewStore` (clave `bookmarkify:view`), `formatDate`, `catalogNumber` y el enchufe compartidos con la card, y el botón de vista en el header (aún sin lista detrás). 290 tests, build y lint en verde.
+2. [x] **Parte 2, la lista** (03-11-2026): `BookmarkRow` y `BookmarkGrid` con las dos vistas. Comprobado a mano en `npm run dev`: selección (clic, `Ctrl`/`Shift`+clic, lazo, `Ctrl`+`A`, `Esc`), borrar, deshacer y restaurar con fundido y filas que suben (sin movimiento con `prefers-reduced-motion`), vista «eliminados» con tres marcas alineadas, 👍 sin seleccionar ni abrir, filas sin fecha, sin título, con título larguísimo y `chrome://`, ventana de 700 y 600 px, y Selecto sincronizado al cambiar de vista. 290 tests, build y lint en verde.
+3. [x] **Parte 3, rendimiento** (04-11-2026): medida con 5.000 marcadores, grid y lista alternados (tres parejas). La lista no es peor que el grid en `Ctrl`+`A`, `Supr` ni abrir un menú, y `Ctrl`+`A` y `Supr` sobre los 5.000 no se congela. La primera versión de la fila tenía una cola de 3,5–5 s tras `Ctrl`+`A` por 5.000 transiciones de fondo a la vez; quitada la transición, se iguala. No se virtualiza. Detalle en [`pruebas-rendimiento.md`](./pruebas-rendimiento.md#vista-de-lista-con-5000-marcadores-04-11-2026-paso-20).
+4. [x] **Parte 4, los cinco arreglos «de paso»** (04-11-2026), cada uno en su commit: tecla «Mayús» (`ceb43c1`), `lang` de `<html>` (`676919a`), descripción de la extensión en español (`b5e67ba`), ancho del chip de carpeta activo (`4e8002e`) y aviso de sincronización con la cuenta de Google (`f206859`). 295 tests, build y lint en verde. Falta comprobar en Chrome la descripción en español (lista de la parte 5).
+5. [x] **Parte 5, pruebas y documentación** (04-11-2026): [`pruebas-vista-lista.md`](./pruebas-vista-lista.md) (siete bloques, sin marcar), `CLAUDE.md` (paso 20 ✅), README, `ideas-aparcadas.md` y `observaciones-traducciones.md`. 295 tests, build y lint en verde.
+6. [x] **Pruebas del usuario en Chrome** (05-11-2026): todas las de [`pruebas-vista-lista.md`](./pruebas-vista-lista.md) pasadas, también «reducir movimiento». Sobre el scroll: el problema real es que el control de vista no está en la barra pegajosa; queda aparcado en [`ideas-aparcadas.md`](./ideas-aparcadas.md#botón-de-vista-en-la-barra-pegajosa). Al pasar el ratón, la fila se oscurece un poco (no se aclara): el código está bien y se corrigió el texto.
+7. [ ] **PR**, solo cuando el usuario la pida.

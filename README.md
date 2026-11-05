@@ -7,7 +7,7 @@ Hasta ese momento, eliminar es **no destructivo**: los marcadores eliminados se 
 ## Características
 
 - **Tus marcadores de Chrome**, con sus carpetas, leídos directamente del navegador.
-- **Grid de tarjetas** con favicon, dominio y fecha de cada marcador.
+- **Grid de tarjetas o lista**, a elegir con los dos botones del header: favicon, dominio y fecha de cada marcador. La lista enseña más marcadores a la vez en ventanas estrechas. La vista elegida se recuerda.
 - **Selección estilo Explorador de Windows**: clic, `Ctrl`/`Cmd`+clic, `Shift`+clic para rangos y lazo arrastrando con el ratón.
 - **Eliminar, restaurar y deshacer** desde una barra flotante. Los eliminados desaparecen del grid y se pueden recuperar en la vista «eliminados».
 - **Filtros** por dominio, carpeta y URL duplicada (normalizada), y búsqueda por título, URL o carpeta.
@@ -27,7 +27,7 @@ Hasta ese momento, eliminar es **no destructivo**: los marcadores eliminados se 
 | `Ctrl`/`Cmd` + `Z` | Deshacer el último borrado (mientras se ve el aviso) |
 | `/` | Ir a la búsqueda |
 
-Doble clic en una tarjeta, o clic en su título, abre el enlace.
+Doble clic en una tarjeta o fila, o clic en su título, abre el enlace.
 
 ## Instalación
 
@@ -130,7 +130,7 @@ El botón **comprobar enlaces** pide cada página desde tu ordenador y marca las
 
 ## Estado
 
-Los 18 primeros pasos del plan están hechos: la app es solo una extensión de Chrome y ya no queda código de la importación por HTML. Lo siguiente es detectar los enlaces rotos (paso 19). El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
+Los 20 pasos del plan están hechos: la app es solo una extensión de Chrome, ya no queda código de la importación por HTML, detecta los enlaces rotos y los marcadores se ven como grid o como lista. El paso 20 está pendiente de probar en Chrome ([`docs/pruebas-vista-lista.md`](./docs/pruebas-vista-lista.md)) y de PR. El plan está en [`docs/roadmap.md`](./docs/roadmap.md) y el detalle de cada paso, en [`CLAUDE.md`](./CLAUDE.md#orden-de-implementación).
 
 ## Licencia
 

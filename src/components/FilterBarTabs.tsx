@@ -130,11 +130,12 @@ export function FilterBarTabs() {
         )}
       </ChipDropdown>
 
-      {/* title: the chip cuts the label at 180px, and a repeated folder's number comes last */}
+      {/* wide: an active folder's label is a full path and a repeated folder's number comes last, so 180px would cut it */}
       <ChipDropdown
         label={activeFolder ?? t('filterBar.chipFolderPlaceholder')}
         title={activeFolder ?? undefined}
         active={activeFolder !== null}
+        wide={activeFolder !== null}
       >
         {folderCounts.length === 0 ? (
           <MenuEmpty>{t('filterBar.menuNoFolders')}</MenuEmpty>
@@ -238,10 +239,11 @@ interface ChipDropdownProps {
   label: string
   title?: string
   active: boolean
+  wide?: boolean
   children: ReactNode
 }
 
-function ChipDropdown({ label, title, active, children }: ChipDropdownProps) {
+function ChipDropdown({ label, title, active, wide, children }: ChipDropdownProps) {
   return (
     <Menu as="div" className="relative">
       <MenuButton
@@ -253,7 +255,7 @@ function ChipDropdown({ label, title, active, children }: ChipDropdownProps) {
             : 'border-edge bg-paper-card text-ink-soft hover:border-ink-mute',
         )}
       >
-        <span className="truncate max-w-[180px]">{label}</span>
+        <span className={cx('truncate', wide ? 'max-w-[28rem]' : 'max-w-[180px]')}>{label}</span>
         <span aria-hidden="true" className="text-[10px] leading-none">▾</span>
       </MenuButton>
       <MenuItems

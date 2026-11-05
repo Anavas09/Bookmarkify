@@ -5,9 +5,11 @@ import { m, type Transition } from 'motion/react'
 import type { Bookmark } from '../core/types.ts'
 import { useBookmarkStore, useVisibleBookmarks } from '../store/useBookmarkStore.ts'
 import { useLinkStore } from '../store/useLinkStore.ts'
+import { useViewStore, type View } from '../store/useViewStore.ts'
 import { selectBrokenIds } from '../store/selectors.ts'
 import { useGridMotion } from '../lib/gridMotion.ts'
 import { BookmarkCard } from './BookmarkCard.tsx'
+import { BookmarkRow } from './BookmarkRow.tsx'
 
 const CARD_SELECTOR = '[data-bookmark-id]'
 
@@ -23,8 +25,11 @@ function cardFromEvent(e: { inputEvent: unknown }): Element | null {
   return target instanceof Element ? target.closest(CARD_SELECTOR) : null
 }
 
+// Draws the bookmarks as a grid of cards or as a list of rows (useViewStore).
+// The lasso and the motion are the same for both, so it is one component.
 export function BookmarkGrid() {
   const { t } = useTranslation()
+  const view = useViewStore(s => s.view)
   const visible = useVisibleBookmarks()
   const pendingDeletes = useBookmarkStore(s => s.pendingDeletes)
   const selected = useBookmarkStore(s => s.selected)
@@ -39,7 +44,8 @@ export function BookmarkGrid() {
   const selectoRef = useRef<Selecto>(null)
 
   // Store → Selecto: keep Selecto's internal selection in sync when the store
-  // changes it (Ctrl+A, Esc, Shift+click range, delete, filter change).
+  // changes it (Ctrl+A, Esc, Shift+click range, delete, filter change) or when
+  // a change of view replaces the elements it was pointing to.
   useEffect(() => {
     const selecto = selectoRef.current
     const grid = gridRef.current
@@ -48,7 +54,7 @@ export function BookmarkGrid() {
       selected.has(el.dataset.bookmarkId ?? ''),
     )
     selecto.setSelectedTargets(targets)
-  }, [selected, visible])
+  }, [selected, visible, view])
 
   // Selecto → store
   function handleSelectEnd(e: OnSelectEnd) {
@@ -101,11 +107,19 @@ export function BookmarkGrid() {
       />
       <div
         ref={gridRef}
-        className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]"
+        className={
+          view === 'list'
+            ? // Every row draws its own bottom border, so the last one closes the box.
+              'overflow-hidden rounded-md border-x border-t border-edge bg-paper-card'
+            : 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]'
+        }
       >
         {visible.map((b, i) => (
           <GridItem
-            key={b.id}
+            // The view is in the key so Motion's wrappers mount again instead of
+            // carrying positions measured in the other layout.
+            key={`${view}:${b.id}`}
+            view={view}
             bookmark={b}
             index={i}
             stagger={entering.has(b.id) ? 0 : i}
@@ -128,6 +142,7 @@ interface GridItemProps {
   selected: boolean
   broken: boolean
   layoutDependency: number
+  view: View
 }
 
 // The wrapper slides the card when others leave or come back
@@ -135,7 +150,7 @@ interface GridItemProps {
 // layoutDependency, so it jumps. The card keeps its CSS entrance on its own element, so the two
 // transforms do not override each other. Memoized because Motion components
 // are slow to re-render: a click only re-renders the cards it selects.
-const GridItem = memo(function GridItem({ layoutDependency, ...card }: GridItemProps) {
+const GridItem = memo(function GridItem({ layoutDependency, view, ...card }: GridItemProps) {
   return (
     <m.div
       data-bookmark-id={card.bookmark.id}
@@ -146,7 +161,7 @@ const GridItem = memo(function GridItem({ layoutDependency, ...card }: GridItemP
       // than a grid per card when there are thousands.
       className="h-full"
     >
-      <BookmarkCard {...card} />
+      {view === 'list' ? <BookmarkRow {...card} /> : <BookmarkCard {...card} />}
     </m.div>
   )
 })

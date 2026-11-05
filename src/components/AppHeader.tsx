@@ -4,6 +4,7 @@ import { cx } from '../lib/cx.ts'
 import { isMac } from '../lib/platform.ts'
 import { ThemeToggle } from './ThemeToggle.tsx'
 import { LanguageToggle } from './LanguageToggle.tsx'
+import { ViewToggle } from './ViewToggle.tsx'
 import { Key } from './Key.tsx'
 
 interface Props {
@@ -38,7 +39,7 @@ export function AppHeader({ onApply, onScan }: Props) {
           </span>
           <span className="text-edge" aria-hidden="true">·</span>
           <span className="flex items-center gap-1">
-            <Key>shift</Key>
+            <Key>{t('header.shortcuts.shiftKey')}</Key>
             <span aria-hidden="true">+</span>
             <span>{t('header.shortcuts.clickRange')}</span>
           </span>
@@ -63,6 +64,7 @@ export function AppHeader({ onApply, onScan }: Props) {
           </span>
         </p>
         <div className="flex items-center gap-4">
+          <ViewToggle />
           <LanguageToggle />
           <ThemeToggle />
           <button

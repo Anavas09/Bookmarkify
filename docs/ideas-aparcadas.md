@@ -61,5 +61,22 @@ Montar solo las cards que se ven (con `@tanstack/react-virtual`) en vez de las 5
 
   Complejidad alta, del tamaño de los pasos 14 y 16.
 - **Antes, más barato (cada uno arregla solo una parte, sin probar):** `content-visibility: auto` en las cards, que podría recortar el menú y el layout pero no el coste de React; y numerar con contadores CSS en vez de pasar `index`, para que borrar la primera cueste como borrar la última, aunque no ayuda a ordenar ni a `Ctrl`+`A`. Conviene medir antes la build de producción.
-- **Dónde encajaría:** al final, junto al paso 20: los dos reescriben `BookmarkGrid` y una vista de lista es el caso fácil del virtualizador.
+- **Medido con la lista (04-11-2026, paso 20):** con 5.000 marcadores la lista no es peor que el grid en `Ctrl`+`A`, `Supr` ni abrir un menú, así que el paso 20 no la virtualizó. Lo que sigue lento, igual en las dos vistas, es React en desarrollo pintando 5.000 elementos: `Ctrl`+`A` y borrar la primera dejan el hilo ocupado 4–5 s, y cambiar de vista tarda 7–10 s. Producción sin medir. [Mediciones](./pruebas-rendimiento.md#vista-de-lista-con-5000-marcadores-04-11-2026-paso-20).
+- **Dónde encajaría:** sin fecha. Se pensó para el paso 20, pero la medición no la pidió. Si se retoma, la lista ya existe y es el caso fácil del virtualizador (filas de 32 px fijas); el movimiento (`gridMotion.ts`) y el lazo siguen siendo lo difícil.
 - **Aviso para el paso 19:** si el escaneo de enlaces escribe en el store por cada resultado, puede repintar el grid entero en cada uno. Se evita al diseñarlo, agrupando las escrituras o guardando los estados aparte.
+
+## Botón de vista en la barra pegajosa
+
+El control de vista (grid o lista) está en el header, que se va al hacer scroll. Solo la barra de filtros (`FilterBarTabs`) es pegajosa.
+
+- **Por qué se aparcó (05-11-2026):** lo vio el usuario al probar el paso 20: con mucho scroll hacia abajo hay que subir para cambiar de vista. De momento se deja así.
+- **Qué haría falta:** mover o duplicar `ViewToggle` en la barra de filtros, o hacer pegajoso el header. Si se cambia, decidir a la vez si se conserva el scroll al cambiar de vista (hoy no se conserva).
+- **Dónde encajaría:** en cualquier momento después del paso 20.
+
+## Agente que corrija mayúsculas y gramática
+
+Un agente que revise los textos del proyecto y corrija las mayúsculas y la gramática.
+
+- **Por qué se aparcó (03-11-2026):** desde el primer día los textos llevan casi ninguna mayúscula. Es algo conocido y estaba previsto corregirlo al final; no frena nada.
+- **Qué haría falta:** un agente nuevo en `.claude/agents/`, como el de traducciones (`i18n-translator`), que solo traduce y no corrige el estilo. Habría que decidir su alcance (`src/locales`, los docs y los comentarios) y qué criterio de mayúsculas se adopta, porque hoy las etiquetas de la interfaz van en minúscula a propósito.
+- **Dónde encajaría:** al terminar el paso 20, junto con la infografía final.
