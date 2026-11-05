@@ -2,27 +2,27 @@
   "language": {
     "en": "English",
     "es": "Español",
-    "switchTo": "cambiar a {{lang}}"
+    "switchTo": "Cambiar a {{lang}}"
   },
   "theme": {
-    "toLight": "cambiar a claro",
-    "toDark": "cambiar a oscuro",
-    "toLightAria": "cambiar al tema claro",
-    "toDarkAria": "cambiar al tema oscuro"
+    "toLight": "Cambiar a claro",
+    "toDark": "Cambiar a oscuro",
+    "toLightAria": "Cambiar al tema claro",
+    "toDarkAria": "Cambiar al tema oscuro"
   },
   "view": {
-    "group": "vista",
-    "grid": "vista en cuadrícula",
-    "list": "vista en lista"
+    "group": "Vista",
+    "grid": "Vista en cuadrícula",
+    "list": "Vista en lista"
   },
   "header": {
     "shortcuts": {
-      "drag": "arrastra para seleccionar",
-      "clickAdd": "clic suma",
-      "clickRange": "clic rango",
+      "drag": "Arrastra para seleccionar",
+      "clickAdd": "Clic suma",
+      "clickRange": "Clic rango",
       "shiftKey": "Mayús",
-      "doubleClickOpen": "doble clic abre",
-      "search": "buscar"
+      "doubleClickOpen": "Doble clic abre",
+      "search": "Buscar"
     },
     "stats": {
       "total": "{{count}} en total",
@@ -32,31 +32,31 @@
       "deleted_other": "{{count}} eliminados"
     },
     "scan": {
-      "idle": "comprobar enlaces",
-      "title": "buscar enlaces rotos entre tus marcadores"
+      "idle": "Comprobar enlaces",
+      "title": "Buscar enlaces rotos entre tus marcadores"
     },
     "apply": {
-      "idle": "aplicar",
-      "titleDisabled": "elimina al menos uno para aplicar",
-      "titleEnabled": "borrar de Chrome los eliminados"
+      "idle": "Aplicar",
+      "titleDisabled": "Elimina al menos uno para aplicar",
+      "titleEnabled": "Borrar de Chrome los eliminados"
     }
   },
   "selectionBar": {
     "count_one": "{{count}} seleccionado",
     "count_other": "{{count}} seleccionados",
-    "delete": "eliminar {{count}}",
-    "orPress": "o pulsa",
+    "delete": "Eliminar {{count}}",
+    "orPress": "O pulsa",
     "deleteKey": "Supr",
-    "dismissBroken_one": "no está roto · {{count}}",
-    "dismissBroken_other": "no están rotos · {{count}}",
-    "restore": "restaurar {{count}}",
-    "clear": "limpiar",
+    "dismissBroken_one": "No está roto · {{count}}",
+    "dismissBroken_other": "No están rotos · {{count}}",
+    "restore": "Restaurar {{count}}",
+    "clear": "Limpiar",
     "deleted_one": "{{count}} eliminado",
     "deleted_other": "{{count}} eliminados",
-    "undo": "deshacer"
+    "undo": "Deshacer"
   },
   "startup": {
-    "loading": "cargando marcadores…",
+    "loading": "Cargando marcadores…",
     "failedTitle": "No se pudieron leer los marcadores",
     "emptyTitle": "No hay marcadores que revisar"
   },
@@ -65,11 +65,11 @@
     "count_one": "{{count}} enlace por comprobar.",
     "count_other": "{{count}} enlaces por comprobar.",
     "nothing": "No hay enlaces por comprobar: todos están al día.",
-    "headsUpLabel": "aviso",
+    "headsUpLabel": "Aviso",
     "headsUpBody": "Para saber si un enlace sigue vivo, la extensión pide la página a cada sitio desde tu ordenador. Chrome te pedirá un permiso para acceder a los sitios; es opcional y solo se usa para esto.",
     "criteria": "Solo se marca como roto lo que responde 404 o 410, o un dominio que no responde ni al reintentar. Un error 403, un fallo del servidor o un tiempo agotado no se marca.",
-    "start": "comprobar",
-    "cancel": "cancelar",
+    "start": "Comprobar",
+    "cancel": "Cancelar",
     "scanningTitle": "Comprobando…",
     "progress": "{{done}} de {{total}}",
     "doneTitle": "Enlaces comprobados",
@@ -79,27 +79,27 @@
     "cancelled_other": "Cancelado: se guardaron {{count}} resultados.",
     "offline": "No se pudo comprobar: parece que no hay conexión. Lo que no respondió no se marca.",
     "deniedTitle": "Sin permiso",
-    "deniedBody": "Sin el permiso para acceder a los sitios no se puede comprobar nada. Puedes volver a intentarlo con el botón «comprobar enlaces».",
+    "deniedBody": "Sin el permiso para acceder a los sitios no se puede comprobar nada. Puedes volver a intentarlo con el botón «Comprobar enlaces».",
     "failedTitle": "No se pudo comprobar",
-    "done": "hecho",
-    "close": "cerrar"
+    "done": "Hecho",
+    "close": "Cerrar"
   },
   "applyDialog": {
     "title_one": "Borrar {{count}} marcador de Chrome",
     "title_other": "Borrar {{count}} marcadores de Chrome",
     "folders": "Las carpetas que se queden vacías también se borran.",
-    "headsUpLabel": "aviso",
+    "headsUpLabel": "Aviso",
     "headsUpBody": "Chrome no lo puede deshacer. Antes de borrar se guarda una copia con estos marcadores en tus descargas: si te arrepientes, impórtala en el Administrador de marcadores y volverán, aunque en una carpeta nueva.",
     "sync": "Si tus marcadores se sincronizan con tu cuenta de Google, el borrado también llega a tus otros dispositivos.",
-    "cancel": "cancelar",
-    "confirm": "borrar {{count}}",
-    "applying": "borrando…",
+    "cancel": "Cancelar",
+    "confirm": "Borrar {{count}}",
+    "applying": "Borrando…",
     "noBackupTitle": "Borrar sin copia de seguridad",
     "noBackupDenied": "No diste permiso para guardar descargas, así que no se puede guardar la copia.",
     "noBackupFailed": "La copia no se pudo guardar y todavía no se ha borrado nada.",
     "noBackupBody_one": "Si sigues, se borrará {{count}} marcador de Chrome sin copia y no se podrá recuperar.",
     "noBackupBody_other": "Si sigues, se borrarán {{count}} marcadores de Chrome sin copia y no se podrán recuperar.",
-    "noBackupConfirm": "borrar sin copia",
+    "noBackupConfirm": "Borrar sin copia",
     "doneTitle": "Triaje aplicado",
     "doneDeleted_one": "Se borró {{count}} marcador de Chrome.",
     "doneDeleted_other": "Se borraron {{count}} marcadores de Chrome.",
@@ -108,11 +108,11 @@
     "doneSkipped_one": "{{count}} no se borró porque cambió en Chrome mientras tanto.",
     "doneSkipped_other": "{{count}} no se borraron porque cambiaron en Chrome mientras tanto.",
     "doneReloadFailed": "Los marcadores ya se borraron en Chrome, pero no se pudo releer la lista y la que ves está desactualizada. Recarga la pestaña para ver cómo quedaron.",
-    "doneBackup": "copia guardada: ",
+    "doneBackup": "Copia guardada: ",
     "failedTitle": "No se pudo aplicar",
     "failedHint": "Recarga la pestaña para ver cómo han quedado tus marcadores.",
-    "done": "hecho",
-    "close": "cerrar"
+    "done": "Hecho",
+    "close": "Cerrar"
   },
   "grid": {
     "empty": "Ningún marcador coincide con el filtro.",
@@ -120,30 +120,30 @@
     "emptyDeleted": "No hay marcadores eliminados."
   },
   "card": {
-    "markedAria": "marcado para eliminar",
-    "brokenAria": "enlace roto",
+    "markedAria": "Marcado para eliminar",
+    "brokenAria": "Enlace roto",
     "dismissBroken": "No está roto"
   },
   "filterBar": {
-    "filter": "filtrar",
-    "sort": "ordenar",
-    "searchPlaceholder": "busca en título, url, carpeta…",
-    "chipAll": "todos · {{count}}",
-    "chipDuplicates": "duplicados · {{count}}",
-    "chipBroken": "rotos · {{count}}",
-    "chipDeleted": "eliminados · {{count}}",
-    "chipDomainPlaceholder": "dominio",
-    "chipFolderPlaceholder": "carpeta",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "searchPlaceholder": "Busca en título, url, carpeta…",
+    "chipAll": "Todos · {{count}}",
+    "chipDuplicates": "Duplicados · {{count}}",
+    "chipBroken": "Rotos · {{count}}",
+    "chipDeleted": "Eliminados · {{count}}",
+    "chipDomainPlaceholder": "Dominio",
+    "chipFolderPlaceholder": "Carpeta",
     "sortOptions": {
-      "original": "original",
-      "titleAZ": "título A→Z",
-      "titleZA": "título Z→A",
-      "newestFirst": "más recientes primero",
-      "oldestFirst": "más antiguos primero",
-      "domainAZ": "dominio A→Z"
+      "original": "Original",
+      "titleAZ": "Título A→Z",
+      "titleZA": "Título Z→A",
+      "newestFirst": "Más recientes primero",
+      "oldestFirst": "Más antiguos primero",
+      "domainAZ": "Dominio A→Z"
     },
-    "menuNoDomains": "sin dominios",
-    "menuNoFolders": "sin carpetas",
+    "menuNoDomains": "Sin dominios",
+    "menuNoFolders": "Sin carpetas",
     "folderInAccount": "{{name}} (cuenta)",
     "folderOnDevice": "{{name}} (este dispositivo)"
   }
