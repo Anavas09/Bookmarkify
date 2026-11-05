@@ -65,6 +65,14 @@ Montar solo las cards que se ven (con `@tanstack/react-virtual`) en vez de las 5
 - **Dónde encajaría:** sin fecha. Se pensó para el paso 20, pero la medición no la pidió. Si se retoma, la lista ya existe y es el caso fácil del virtualizador (filas de 32 px fijas); el movimiento (`gridMotion.ts`) y el lazo siguen siendo lo difícil.
 - **Aviso para el paso 19:** si el escaneo de enlaces escribe en el store por cada resultado, puede repintar el grid entero en cada uno. Se evita al diseñarlo, agrupando las escrituras o guardando los estados aparte.
 
+## Botón de vista en la barra pegajosa
+
+El control de vista (grid o lista) está en el header, que se va al hacer scroll. Solo la barra de filtros (`FilterBarTabs`) es pegajosa.
+
+- **Por qué se aparcó (05-11-2026):** lo vio el usuario al probar el paso 20: con mucho scroll hacia abajo hay que subir para cambiar de vista. De momento se deja así.
+- **Qué haría falta:** mover o duplicar `ViewToggle` en la barra de filtros, o hacer pegajoso el header. Si se cambia, decidir a la vez si se conserva el scroll al cambiar de vista (hoy no se conserva).
+- **Dónde encajaría:** en cualquier momento después del paso 20.
+
 ## Agente que corrija mayúsculas y gramática
 
 Un agente que revise los textos del proyecto y corrija las mayúsculas y la gramática.
