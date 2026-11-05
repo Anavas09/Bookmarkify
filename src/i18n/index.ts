@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import en from '../locales/en.json'
 import es from '../locales/es.json'
+import { syncHtmlLang } from './syncHtmlLang'
 
 void i18n
   .use(LanguageDetector)
@@ -27,5 +28,7 @@ void i18n
       useSuspense: false,
     },
   })
+
+syncHtmlLang(i18n, document.documentElement)
 
 export default i18n
