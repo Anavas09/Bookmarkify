@@ -20,6 +20,7 @@
       "drag": "drag to select",
       "clickAdd": "click adds",
       "clickRange": "click range",
+      "shiftKey": "Shift",
       "doubleClickOpen": "double-click opens",
       "search": "search"
     },

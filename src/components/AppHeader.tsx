@@ -39,7 +39,7 @@ export function AppHeader({ onApply, onScan }: Props) {
           </span>
           <span className="text-edge" aria-hidden="true">·</span>
           <span className="flex items-center gap-1">
-            <Key>shift</Key>
+            <Key>{t('header.shortcuts.shiftKey')}</Key>
             <span aria-hidden="true">+</span>
             <span>{t('header.shortcuts.clickRange')}</span>
           </span>
