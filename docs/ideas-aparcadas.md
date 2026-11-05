@@ -75,8 +75,7 @@ El control de vista (grid o lista) está en el header, que se va al hacer scroll
 
 ## Agente que corrija mayúsculas y gramática
 
-Un agente que revise los textos del proyecto y corrija las mayúsculas y la gramática.
+✅ Hecho el 05-11-2026: agente `text-proofreader` (`.claude/agents/text-proofreader.md`, de color rosa).
 
-- **Por qué se aparcó (03-11-2026):** desde el primer día los textos llevan casi ninguna mayúscula. Es algo conocido y estaba previsto corregirlo al final; no frena nada.
-- **Qué haría falta:** un agente nuevo en `.claude/agents/`, como el de traducciones (`i18n-translator`), que solo traduce y no corrige el estilo. Habría que decidir su alcance (`src/locales`, los docs y los comentarios) y qué criterio de mayúsculas se adopta, porque hoy las etiquetas de la interfaz van en minúscula a propósito.
-- **Dónde encajaría:** al terminar el paso 20, junto con la infografía final.
+- **Criterio decidido por el usuario:** todo texto empieza por mayúscula («Arrastra para seleccionar», «Clic suma»), salvo si empieza por una variable, un número o un símbolo («{{count}} en total»). Antes las etiquetas iban en minúscula a propósito. `i18n-translator` ya sigue el mismo criterio.
+- **Alcance:** solo `src/locales`; los docs y los comentarios del código solo si se le pide al invocarlo. Lo escrito a mano en los componentes (teclas `Ctrl`, `Esc`, `Z`) se corrigió a mano.
