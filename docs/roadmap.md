@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 05-11-2026 (pasos 19 y 20 fusionados en `main`, PR #10 y #11; el plan está completo). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). El paso 20 cerró el plan.
+**Última actualización:** 05-11-2026 (agentes `text-proofreader` y `plain-language` hechos en la rama `feat/text-proofreader`, aún sin PR; pasos 19 y 20 fusionados en `main`, PR #10 y #11; el plan está completo). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). El paso 20 cerró el plan.
 
 ## Resumen
 

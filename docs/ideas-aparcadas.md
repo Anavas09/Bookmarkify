@@ -79,3 +79,12 @@ El control de vista (grid o lista) está en el header, que se va al hacer scroll
 
 - **Criterio decidido por el usuario:** todo texto empieza por mayúscula («Arrastra para seleccionar», «Clic suma»), salvo si empieza por una variable, un número o un símbolo («{{count}} en total»). Antes las etiquetas iban en minúscula a propósito. `i18n-translator` ya sigue el mismo criterio.
 - **Alcance:** solo `src/locales`; los docs y los comentarios del código solo si se le pide al invocarlo. Lo escrito a mano en los componentes (teclas `Ctrl`, `Esc`, `Z`) se corrigió a mano.
+
+## Agente que pase los textos a un lenguaje cotidiano
+
+✅ Hecho el 05-11-2026: agente `plain-language` (`.claude/agents/plain-language.md`, de color azul). Por defecto solo propone; edita `src/locales` solo si se lo piden.
+
+- **Para qué:** quitar la jerga de lo que ve la persona. «Triaje» casi no se usa, y «grid» ya se llamaba «cuadrícula» en la interfaz.
+- **Primer repaso (05-11-2026):** unos 11 textos de unos 130. «Triaje aplicado» pasa a «Cambios aplicados»; la descripción de la extensión y el README dejan de decir «triaje» y «grid»; «Limpiar» pasa a «Quitar selección» y el orden «Original» a «Orden de Chrome». En inglés, «Remove/Removed» para marcar y «Delete» solo para quitar de Chrome, como en español «eliminar» y «borrar».
+- **Lo que se dejó como estaba:** «Aplicar», «dominio» y los nombres de la interfaz de Chrome. `CLAUDE.md` y `docs/` siguen usando «triaje» como término de trabajo. Las claves de traducción (`deleted_*`, `chipDeleted`) conservan su nombre aunque el texto diga «removed».
+- **Orden de uso:** `plain-language` propone, `text-proofreader` repasa la forma e `i18n-translator` comprueba que es y en sigan alineados.
