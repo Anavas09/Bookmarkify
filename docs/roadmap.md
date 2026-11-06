@@ -2,7 +2,7 @@
 
 Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada paso terminado está en [`CLAUDE.md`](../CLAUDE.md#orden-de-implementación).
 
-**Última actualización:** 04-11-2026 (paso 19 fusionado en `main`, PR #10; paso 20 con las 5 partes hechas, pendiente de las pruebas del usuario en Chrome y de la PR). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). Sigue el paso 20, en la rama `feat/list-view`.
+**Última actualización:** 05-11-2026 (agentes `text-proofreader` y `plain-language` hechos en la rama `feat/text-proofreader`, aún sin PR; pasos 19 y 20 fusionados en `main`, PR #10 y #11; el plan está completo). Pasos 17 y 18 fusionados en `main` (PR #3 y #4). Antes del paso 19 se cerraron los hallazgos del [code review](./code-review.md): el 1 y el 2 (copia de seguridad, PR #5), el 3, el 4 y el 5 (carpetas por id, PR #6), el 6 y el 7 (rendimiento, PR #7), el 8 (relectura, PR #8) y el 9 y el 10 (URL de Chrome y medición, PR #9). El paso 20 cerró el plan.
 
 ## Resumen
 
@@ -12,7 +12,7 @@ Estado del plan, actualizado mientras avanzamos. El detalle técnico de cada pas
 | 17 | ChromeAdapter y extensión | ✅ hecho |
 | 18 | Retirada de la importación | ✅ hecho |
 | 19 | Enlaces rotos | ✅ hecho (PR #10) |
-| 20 | Vista de lista o de grid (opcional final) | 🔄 hecho en la rama `feat/list-view`; falta que el usuario lo pruebe en Chrome y la PR |
+| 20 | Vista de lista o de grid (opcional final) | ✅ hecho (PR #11) |
 
 ## Paso 17 — ChromeAdapter y extensión
 
@@ -171,4 +171,4 @@ Diseño: [`superpowers/specs/2026-11-03-vista-lista-design.md`](./superpowers/sp
 4. [x] **Parte 4, los cinco arreglos «de paso»** (04-11-2026), cada uno en su commit: tecla «Mayús» (`ceb43c1`), `lang` de `<html>` (`676919a`), descripción de la extensión en español (`b5e67ba`), ancho del chip de carpeta activo (`4e8002e`) y aviso de sincronización con la cuenta de Google (`f206859`). 295 tests, build y lint en verde. Falta comprobar en Chrome la descripción en español (lista de la parte 5).
 5. [x] **Parte 5, pruebas y documentación** (04-11-2026): [`pruebas-vista-lista.md`](./pruebas-vista-lista.md) (siete bloques, sin marcar), `CLAUDE.md` (paso 20 ✅), README, `ideas-aparcadas.md` y `observaciones-traducciones.md`. 295 tests, build y lint en verde.
 6. [x] **Pruebas del usuario en Chrome** (05-11-2026): todas las de [`pruebas-vista-lista.md`](./pruebas-vista-lista.md) pasadas, también «reducir movimiento». Sobre el scroll: el problema real es que el control de vista no está en la barra pegajosa; queda aparcado en [`ideas-aparcadas.md`](./ideas-aparcadas.md#botón-de-vista-en-la-barra-pegajosa). Al pasar el ratón, la fila se oscurece un poco (no se aclara): el código está bien y se corrigió el texto.
-7. [ ] **PR**, solo cuando el usuario la pida.
+7. [x] **PR #11** fusionada en `main` (05-11-2026).

@@ -2,61 +2,61 @@
   "language": {
     "en": "English",
     "es": "Español",
-    "switchTo": "switch to {{lang}}"
+    "switchTo": "Switch to {{lang}}"
   },
   "theme": {
-    "toLight": "switch to light",
-    "toDark": "switch to dark",
-    "toLightAria": "switch to light theme",
-    "toDarkAria": "switch to dark theme"
+    "toLight": "Switch to light",
+    "toDark": "Switch to dark",
+    "toLightAria": "Switch to light theme",
+    "toDarkAria": "Switch to dark theme"
   },
   "view": {
-    "group": "view",
-    "grid": "grid view",
-    "list": "list view"
+    "group": "View",
+    "grid": "Grid view",
+    "list": "List view"
   },
   "header": {
     "shortcuts": {
-      "drag": "drag to select",
-      "clickAdd": "click adds",
-      "clickRange": "click range",
+      "drag": "Drag to select",
+      "clickAdd": "Click adds",
+      "clickRange": "Click range",
       "shiftKey": "Shift",
-      "doubleClickOpen": "double-click opens",
-      "search": "search"
+      "doubleClickOpen": "Double-click opens",
+      "search": "Search"
     },
     "stats": {
       "total": "{{count}} total",
       "kept_one": "{{count}} kept",
       "kept_other": "{{count}} kept",
-      "deleted_one": "{{count}} deleted",
-      "deleted_other": "{{count}} deleted"
+      "deleted_one": "{{count}} removed",
+      "deleted_other": "{{count}} removed"
     },
     "scan": {
-      "idle": "check links",
-      "title": "look for broken links among your bookmarks"
+      "idle": "Check links",
+      "title": "Look for broken links among your bookmarks"
     },
     "apply": {
-      "idle": "apply",
-      "titleDisabled": "delete at least one to apply",
-      "titleEnabled": "delete from Chrome the ones deleted here"
+      "idle": "Apply",
+      "titleDisabled": "Remove at least one to apply",
+      "titleEnabled": "Delete from Chrome the bookmarks you removed here"
     }
   },
   "selectionBar": {
     "count_one": "{{count}} selected",
     "count_other": "{{count}} selected",
-    "delete": "delete {{count}}",
-    "orPress": "or press",
+    "delete": "Remove {{count}}",
+    "orPress": "Or press",
     "deleteKey": "Del",
-    "dismissBroken_one": "not broken · {{count}}",
-    "dismissBroken_other": "not broken · {{count}}",
-    "restore": "restore {{count}}",
-    "clear": "clear",
-    "deleted_one": "{{count}} deleted",
-    "deleted_other": "{{count}} deleted",
-    "undo": "undo"
+    "dismissBroken_one": "Not broken · {{count}}",
+    "dismissBroken_other": "Not broken · {{count}}",
+    "restore": "Restore {{count}}",
+    "clear": "Clear selection",
+    "deleted_one": "{{count}} removed",
+    "deleted_other": "{{count}} removed",
+    "undo": "Undo"
   },
   "startup": {
-    "loading": "loading bookmarks…",
+    "loading": "Loading bookmarks…",
     "failedTitle": "Couldn't read your bookmarks",
     "emptyTitle": "No bookmarks to review"
   },
@@ -65,11 +65,11 @@
     "count_one": "{{count}} link to check.",
     "count_other": "{{count}} links to check.",
     "nothing": "Nothing to check: every link is up to date.",
-    "headsUpLabel": "heads up",
-    "headsUpBody": "To know whether a link is still alive, the extension requests the page from each site on your computer. Chrome will ask for a permission to access sites; it is optional and only used for this.",
-    "criteria": "Only a 404 or 410 answer, or a domain that doesn't answer even on retry, is marked broken. A 403, a server error or a timeout is not marked.",
-    "start": "check",
-    "cancel": "cancel",
+    "headsUpLabel": "Heads up",
+    "headsUpBody": "To tell whether a link still works, the extension visits each page from your computer. Chrome will ask for permission to access websites; it's optional and only used for this.",
+    "criteria": "A link is marked broken only if its page no longer exists (error 404 or 410) or its site doesn't answer even on retry. If it gives a 403 error, the server fails or it takes too long, it isn't marked.",
+    "start": "Check",
+    "cancel": "Cancel",
     "scanningTitle": "Checking…",
     "progress": "{{done}} of {{total}}",
     "doneTitle": "Links checked",
@@ -79,71 +79,71 @@
     "cancelled_other": "Cancelled: {{count}} results were saved.",
     "offline": "Couldn't check: there seems to be no connection. Whatever didn't answer is not marked.",
     "deniedTitle": "No permission",
-    "deniedBody": "Without the permission to access sites nothing can be checked. You can try again with the “check links” button.",
+    "deniedBody": "Without the permission to access sites nothing can be checked. You can try again with the “Check links” button.",
     "failedTitle": "Couldn't check",
-    "done": "done",
-    "close": "close"
+    "done": "Done",
+    "close": "Close"
   },
   "applyDialog": {
     "title_one": "Delete {{count}} bookmark from Chrome",
     "title_other": "Delete {{count}} bookmarks from Chrome",
     "folders": "Folders left empty are deleted too.",
-    "headsUpLabel": "heads up",
+    "headsUpLabel": "Heads up",
     "headsUpBody": "Chrome can't undo this. Before deleting, a copy of these bookmarks is saved to your downloads: if you change your mind, import it in the Bookmark manager and they'll come back, though in a new folder.",
     "sync": "If your bookmarks sync with your Google account, the deletion also reaches your other devices.",
-    "cancel": "cancel",
-    "confirm": "delete {{count}}",
-    "applying": "deleting…",
+    "cancel": "Cancel",
+    "confirm": "Delete {{count}}",
+    "applying": "Deleting…",
     "noBackupTitle": "Delete without a backup",
-    "noBackupDenied": "You didn't allow downloads, so the copy can't be saved.",
+    "noBackupDenied": "You didn't allow saving files to your downloads, so the copy can't be made.",
     "noBackupFailed": "The copy couldn't be saved, and nothing has been deleted yet.",
     "noBackupBody_one": "If you go on, {{count}} bookmark will be deleted from Chrome without a copy and can't be recovered.",
     "noBackupBody_other": "If you go on, {{count}} bookmarks will be deleted from Chrome without a copy and can't be recovered.",
-    "noBackupConfirm": "delete without a copy",
-    "doneTitle": "Triage applied",
+    "noBackupConfirm": "Delete without a copy",
+    "doneTitle": "Changes applied",
     "doneDeleted_one": "Deleted {{count}} bookmark from Chrome.",
     "doneDeleted_other": "Deleted {{count}} bookmarks from Chrome.",
     "doneFolders_one": "Also deleted {{count}} folder left empty.",
     "doneFolders_other": "Also deleted {{count}} folders left empty.",
     "doneSkipped_one": "{{count}} wasn't deleted because it changed in Chrome meanwhile.",
     "doneSkipped_other": "{{count}} weren't deleted because they changed in Chrome meanwhile.",
-    "doneReloadFailed": "The bookmarks were already deleted in Chrome, but the list couldn't be reloaded, so the one you see is out of date. Reload the tab to see how they ended up.",
-    "doneBackup": "copy saved: ",
+    "doneReloadFailed": "The bookmarks were already deleted in Chrome, but the list couldn't be reloaded, so the list you see is out of date. Reload the tab to see the result.",
+    "doneBackup": "Copy saved: ",
     "failedTitle": "Couldn't apply",
     "failedHint": "Reload the tab to see how your bookmarks ended up.",
-    "done": "done",
-    "close": "close"
+    "done": "Done",
+    "close": "Close"
   },
   "grid": {
     "empty": "No bookmarks match the current filter.",
-    "emptyAll": "No bookmarks left — all of them are deleted.",
-    "emptyDeleted": "No deleted bookmarks."
+    "emptyAll": "No bookmarks left — all of them are removed.",
+    "emptyDeleted": "No removed bookmarks."
   },
   "card": {
-    "markedAria": "marked for deletion",
-    "brokenAria": "broken link",
+    "markedAria": "Marked for removal",
+    "brokenAria": "Broken link",
     "dismissBroken": "Not broken"
   },
   "filterBar": {
-    "filter": "filter",
-    "sort": "sort",
-    "searchPlaceholder": "search title, url, folder…",
-    "chipAll": "all · {{count}}",
-    "chipDuplicates": "duplicates · {{count}}",
-    "chipBroken": "broken · {{count}}",
-    "chipDeleted": "deleted · {{count}}",
-    "chipDomainPlaceholder": "domain",
-    "chipFolderPlaceholder": "folder",
+    "filter": "Filter",
+    "sort": "Sort",
+    "searchPlaceholder": "Search by title, URL or folder…",
+    "chipAll": "All · {{count}}",
+    "chipDuplicates": "Duplicates · {{count}}",
+    "chipBroken": "Broken · {{count}}",
+    "chipDeleted": "Removed · {{count}}",
+    "chipDomainPlaceholder": "Domain",
+    "chipFolderPlaceholder": "Folder",
     "sortOptions": {
-      "original": "original",
-      "titleAZ": "title A→Z",
-      "titleZA": "title Z→A",
-      "newestFirst": "newest first",
-      "oldestFirst": "oldest first",
-      "domainAZ": "domain A→Z"
+      "original": "Chrome's order",
+      "titleAZ": "Title A→Z",
+      "titleZA": "Title Z→A",
+      "newestFirst": "Newest first",
+      "oldestFirst": "Oldest first",
+      "domainAZ": "Domain A→Z"
     },
-    "menuNoDomains": "no domains",
-    "menuNoFolders": "no folders",
+    "menuNoDomains": "No domains",
+    "menuNoFolders": "No folders",
     "folderInAccount": "{{name}} (account)",
     "folderOnDevice": "{{name}} (this device)"
   }

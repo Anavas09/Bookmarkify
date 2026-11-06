@@ -33,7 +33,7 @@ export function AppHeader({ onApply, onScan }: Props) {
           </span>
           <span className="text-edge" aria-hidden="true">·</span>
           <span className="flex items-center gap-1">
-            <Key>{mac ? '⌘' : 'ctrl'}</Key>
+            <Key>{mac ? '⌘' : 'Ctrl'}</Key>
             <span aria-hidden="true">+</span>
             <span>{t('header.shortcuts.clickAdd')}</span>
           </span>

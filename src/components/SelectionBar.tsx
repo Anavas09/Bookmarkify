@@ -143,7 +143,7 @@ function Bar({ content }: { content: BarContent }) {
             onClick={clearSelection}
             className={cx(LINK_BTN_CLASS, 'flex items-center gap-1')}
           >
-            <Key>esc</Key>
+            <Key>Esc</Key>
             <span>{t('selectionBar.clear')}</span>
           </button>
         </>
@@ -156,9 +156,9 @@ function Bar({ content }: { content: BarContent }) {
             </button>
             <span className="flex items-center gap-1 text-[11px] text-ink-mute">
               <span>{t('selectionBar.orPress')}</span>
-              <Key>{mac ? '⌘' : 'ctrl'}</Key>
+              <Key>{mac ? '⌘' : 'Ctrl'}</Key>
               <span aria-hidden="true">+</span>
-              <Key>z</Key>
+              <Key>Z</Key>
             </span>
           </span>
         </>

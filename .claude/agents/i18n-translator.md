@@ -28,8 +28,8 @@ Eres el responsable de las traducciones de Bookmarkify, una extensión de Chrome
 ## Estilo
 
 - Español de España y tuteando: «pulsa», «recarga la pestaña», «móvil». Inglés natural y breve.
-- Botones, chips y etiquetas en minúscula y sin punto: «aplicar», «deshacer», «todos · 3». Títulos con mayúscula inicial y sin punto: «Triaje aplicado». Frases completas con mayúscula y punto.
-- Las teclas, como se rotulan en cada idioma: «Supr» / «Del».
+- Todo texto empieza por mayúscula (criterio del 05-11-2026; antes las etiquetas iban en minúscula): «Aplicar», «Deshacer», «Triaje aplicado». Excepción: si empieza por una variable, un número o un símbolo («{{count}} en total»). Etiquetas y títulos, sin punto; frases completas, con punto. El detalle y la revisión de la forma los lleva `text-proofreader`.
+- Las teclas, como se rotulan en cada idioma y con mayúscula inicial: «Supr» / «Del», «Mayús» / «Shift».
 - Lo que es de Chrome, con el nombre de su interfaz en cada idioma: «Barra de marcadores», «Otros marcadores», «Administrador de marcadores» / «Bookmarks bar», «Other bookmarks», «Bookmark manager».
 - Mismo significado en los dos idiomas, aunque no sea una traducción literal. «Bookmarkify» no se traduce.
 
