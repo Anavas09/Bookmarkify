@@ -1,13 +1,13 @@
 # Bookmarkify
 
-Extensión de Chrome para hacer triaje visual de tus marcadores: los revisas en un grid de tarjetas, seleccionas los que ya no te sirven, los eliminas y, al pulsar «Aplicar», se borran de Chrome.
+Extensión de Chrome para revisar y limpiar tus marcadores de un vistazo: los ves en una cuadrícula de tarjetas, seleccionas los que ya no te sirven, los eliminas y, al pulsar «Aplicar», se borran de Chrome.
 
 Hasta ese momento, eliminar es **no destructivo**: los marcadores eliminados se ocultan, pero puedes restaurarlos o deshacer el borrado. Antes de borrar de Chrome, la extensión guarda una copia de seguridad con los que se van. Más detalles en [Aplicar en Chrome](#aplicar-en-chrome).
 
 ## Características
 
 - **Tus marcadores de Chrome**, con sus carpetas, leídos directamente del navegador.
-- **Grid de tarjetas o lista**, a elegir con los dos botones del header: favicon, dominio y fecha de cada marcador. La lista enseña más marcadores a la vez en ventanas estrechas. La vista elegida se recuerda.
+- **Cuadrícula de tarjetas o lista**, a elegir con los dos botones de la cabecera: favicon, dominio y fecha de cada marcador. La lista enseña más marcadores a la vez en ventanas estrechas. La vista elegida se recuerda.
 - **Selección estilo Explorador de Windows**: clic, `Ctrl`/`Cmd`+clic, `Shift`+clic para rangos y lazo arrastrando con el ratón.
 - **Eliminar, restaurar y deshacer** desde una barra flotante. Los eliminados desaparecen del grid y se pueden recuperar en la vista «eliminados».
 - **Filtros** por dominio, carpeta y URL duplicada (normalizada), y búsqueda por título, URL o carpeta.
@@ -121,11 +121,11 @@ Chrome no puede deshacerlo. Si te arrepientes, importa la copia en el Administra
 
 ## Comprobar enlaces
 
-El botón **comprobar enlaces** pide cada página desde tu ordenador y marca las cards rotas. La primera vez que abres la pestaña con marcadores se ofrece solo, una vez; el botón del header lo abre cuando quieras.
+El botón **Comprobar enlaces** pide cada página desde tu ordenador y marca las tarjetas rotas. La primera vez que abres la pestaña con marcadores se ofrece solo, una vez; el botón de la cabecera lo abre cuando quieras.
 
 - Solo se marca como roto lo que responde **404 o 410**, o un dominio que **no responde ni al reintentar**. Un 403, un fallo del servidor o un tiempo agotado no se marca. Sin conexión no se marca nada.
 - Chrome pide un permiso **opcional** para acceder a los sitios (`<all_urls>`), que solo se usa para esto. Si lo rechazas, no se comprueba nada.
-- El chip «rotos · N» junta las cards marcadas, y el 👍 «no está roto» (en la card o en lote desde la barra de selección) las descarta; el 👍 sobrevive a los re-escaneos.
+- La etiqueta «rotos · N» junta las tarjetas marcadas, y el 👍 «no está roto» (en la tarjeta o en lote desde la barra de selección) las descarta; el 👍 sobrevive a los re-escaneos.
 - Un enlace se vuelve a comprobar si estaba roto o tiene más de 30 días; los descartados no.
 
 ## Estado

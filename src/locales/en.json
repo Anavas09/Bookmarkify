@@ -28,8 +28,8 @@
       "total": "{{count}} total",
       "kept_one": "{{count}} kept",
       "kept_other": "{{count}} kept",
-      "deleted_one": "{{count}} deleted",
-      "deleted_other": "{{count}} deleted"
+      "deleted_one": "{{count}} removed",
+      "deleted_other": "{{count}} removed"
     },
     "scan": {
       "idle": "Check links",
@@ -37,22 +37,22 @@
     },
     "apply": {
       "idle": "Apply",
-      "titleDisabled": "Delete at least one to apply",
-      "titleEnabled": "Delete from Chrome the ones deleted here"
+      "titleDisabled": "Remove at least one to apply",
+      "titleEnabled": "Delete from Chrome the bookmarks you removed here"
     }
   },
   "selectionBar": {
     "count_one": "{{count}} selected",
     "count_other": "{{count}} selected",
-    "delete": "Delete {{count}}",
+    "delete": "Remove {{count}}",
     "orPress": "Or press",
     "deleteKey": "Del",
     "dismissBroken_one": "Not broken · {{count}}",
     "dismissBroken_other": "Not broken · {{count}}",
     "restore": "Restore {{count}}",
-    "clear": "Clear",
-    "deleted_one": "{{count}} deleted",
-    "deleted_other": "{{count}} deleted",
+    "clear": "Clear selection",
+    "deleted_one": "{{count}} removed",
+    "deleted_other": "{{count}} removed",
     "undo": "Undo"
   },
   "startup": {
@@ -66,8 +66,8 @@
     "count_other": "{{count}} links to check.",
     "nothing": "Nothing to check: every link is up to date.",
     "headsUpLabel": "Heads up",
-    "headsUpBody": "To know whether a link is still alive, the extension requests the page from each site on your computer. Chrome will ask for a permission to access sites; it is optional and only used for this.",
-    "criteria": "Only a 404 or 410 answer, or a domain that doesn't answer even on retry, is marked broken. A 403, a server error or a timeout is not marked.",
+    "headsUpBody": "To tell whether a link still works, the extension visits each page from your computer. Chrome will ask for permission to access websites; it's optional and only used for this.",
+    "criteria": "A link is marked broken only if its page no longer exists (error 404 or 410) or its site doesn't answer even on retry. If it gives a 403 error, the server fails or it takes too long, it isn't marked.",
     "start": "Check",
     "cancel": "Cancel",
     "scanningTitle": "Checking…",
@@ -95,19 +95,19 @@
     "confirm": "Delete {{count}}",
     "applying": "Deleting…",
     "noBackupTitle": "Delete without a backup",
-    "noBackupDenied": "You didn't allow downloads, so the copy can't be saved.",
+    "noBackupDenied": "You didn't allow saving files to your downloads, so the copy can't be made.",
     "noBackupFailed": "The copy couldn't be saved, and nothing has been deleted yet.",
     "noBackupBody_one": "If you go on, {{count}} bookmark will be deleted from Chrome without a copy and can't be recovered.",
     "noBackupBody_other": "If you go on, {{count}} bookmarks will be deleted from Chrome without a copy and can't be recovered.",
     "noBackupConfirm": "Delete without a copy",
-    "doneTitle": "Triage applied",
+    "doneTitle": "Changes applied",
     "doneDeleted_one": "Deleted {{count}} bookmark from Chrome.",
     "doneDeleted_other": "Deleted {{count}} bookmarks from Chrome.",
     "doneFolders_one": "Also deleted {{count}} folder left empty.",
     "doneFolders_other": "Also deleted {{count}} folders left empty.",
     "doneSkipped_one": "{{count}} wasn't deleted because it changed in Chrome meanwhile.",
     "doneSkipped_other": "{{count}} weren't deleted because they changed in Chrome meanwhile.",
-    "doneReloadFailed": "The bookmarks were already deleted in Chrome, but the list couldn't be reloaded, so the one you see is out of date. Reload the tab to see how they ended up.",
+    "doneReloadFailed": "The bookmarks were already deleted in Chrome, but the list couldn't be reloaded, so the list you see is out of date. Reload the tab to see the result.",
     "doneBackup": "Copy saved: ",
     "failedTitle": "Couldn't apply",
     "failedHint": "Reload the tab to see how your bookmarks ended up.",
@@ -116,26 +116,26 @@
   },
   "grid": {
     "empty": "No bookmarks match the current filter.",
-    "emptyAll": "No bookmarks left — all of them are deleted.",
-    "emptyDeleted": "No deleted bookmarks."
+    "emptyAll": "No bookmarks left — all of them are removed.",
+    "emptyDeleted": "No removed bookmarks."
   },
   "card": {
-    "markedAria": "Marked for deletion",
+    "markedAria": "Marked for removal",
     "brokenAria": "Broken link",
     "dismissBroken": "Not broken"
   },
   "filterBar": {
     "filter": "Filter",
     "sort": "Sort",
-    "searchPlaceholder": "Search title, url, folder…",
+    "searchPlaceholder": "Search by title, URL or folder…",
     "chipAll": "All · {{count}}",
     "chipDuplicates": "Duplicates · {{count}}",
     "chipBroken": "Broken · {{count}}",
-    "chipDeleted": "Deleted · {{count}}",
+    "chipDeleted": "Removed · {{count}}",
     "chipDomainPlaceholder": "Domain",
     "chipFolderPlaceholder": "Folder",
     "sortOptions": {
-      "original": "Original",
+      "original": "Chrome's order",
       "titleAZ": "Title A→Z",
       "titleZA": "Title Z→A",
       "newestFirst": "Newest first",
